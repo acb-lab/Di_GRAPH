@@ -3188,11 +3188,11 @@ echo "" >> "$log_file"
 
 
 # Allocating directories
-MYREF=/home/ibfg/GWSL/RG
-MYWD=/home/ibfg/GWSL/WD/
-CATEGORY_PATH=/home/ibfg/GWSL/Categories 
-MYBLAST=/home/ibfg/GWSL/BLAST/features_extraction
-MYREPORT=/home/ibfg/GWSL/Report_files
+#MYREF=/home/ibfg/GWSL/RG
+#MYWD=/home/ibfg/GWSL/WD/
+#CATEGORY_PATH=/home/ibfg/GWSL/Categories 
+#MYBLAST=/home/ibfg/GWSL/BLAST/features_extraction
+#MYREPORT=/home/ibfg/GWSL/Report_files
 
 
 # Create a log and stat file
