@@ -1,0 +1,3592 @@
+---
+title: "Di-GRAPH Report"
+author: "DSB-induced Genome-wide Repair Analysis and Profiling of Homologous Recombination"
+date: "`r Sys.time()`"
+output:
+  flexdashboard::flex_dashboard:
+    vertical_layout: scroll
+---
+
+```{=html}
+<style>                     
+.navbar {
+  background-color:darkblue;
+}
+.navbar-brand {
+color:white;
+font: Helvetica;
+}
+.value-box .value {
+    font-size: 25px;
+    font-weight: bold;
+    margin: 0 0 3px 0;
+    white-space: nowrap;
+    padding: 0;
+}
+.tab-content {
+  height: auto;
+  min-height: unset;
+}
+</style>
+```
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(readr)
+library(knitr)
+knitr::opts_chunk$set(echo = FALSE)
+library(DT)
+library(dplyr)
+
+# Working directory
+wd <- normalizePath(getwd())
+
+# List of mutant folders
+mutants <- sort(list.dirs(path = wd, recursive = FALSE, full.names = FALSE))
+n_mutants <- length(mutants) %>% as.numeric()
+mutants_vector <- sub(", ([^,]+)$", " and \\1", toString(mutants))
+
+text_caption <- ifelse(n_mutants > 1, paste0(n_mutants, " strains analyzed: ", mutants_vector), 
+                       paste0(n_mutants, " strain analyzed: ", mutants_vector))
+
+```
+
+# Overview {data-orientation="rows"}
+
+**This report is automatically generated after Di-GRAPH code execution.**
+
+## Row 1 - Di-GRAPH {data-height="120"}
+
+```{=html}
+<div style="
+  width: 100vw;        
+  margin: 0;           
+  padding: 0;          
+  overflow-x: auto
+">
+<pre style="
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.1;
+  color: #2C3E50;
+  background-color: #F5F5F5;   
+  border: 1px solid #F5F5F5;
+  margin: 0;
+  padding: 10px;             /* inner padding like code chunks */
+  white-space: pre;
+  overflow-x: auto;
+  height: 110px;             /* slightly less than row to fit padding */
+">
+     ██████╗               ██████╗ ██████╗  █████╗ ██████╗ ██╗  ██╗        
+     ██╔══██╗  ██╗        ██╔════╝ ██╔══██╗██╔══██╗██╔══██╗██║  ██║          ===========================================       
+     ██║  ██║  ╚═╝  ███╗  ██║  ███╗██████╔╝███████║██████╔╝███████║            DSB-induced Genome-wide Repair Analysis
+     ██║  ██║  ██╗  ╚══╝  ██║   ██║██╔╚██╗ ██╔══██║██╔═══╝ ██╔══██║           and Profiling of Homologous recombination
+     ██████╔╝  ██║        ╚██████╔╝██║ ╚██╗██║  ██║██║     ██║  ██║          =========================================== 
+     ╚═════╝   ╚═╝         ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝  ╚═╝
+</pre>
+</div>
+```
+## Row 2 - Alignment summary box {.row-height-auto}
+
+### Summary box
+
+```{r Alignment_summary-box}
+valueBox(
+  value = text_caption,
+  caption = "Alignment overview",
+  color = "darkblue",
+)
+```
+
+## Row 3 - Alignment statistics and log {.tabset}
+
+### **Alignment statistics**
+
+```{r results="asis"}
+cat(
+  '<pre style="font-size:12px; max-height:400px; overflow:auto;">',
+  paste(readLines("stats.txt"), collapse = "\n"),
+  '</pre><hr>'
+)
+```
+
+### **Alignment log**
+
+```{r results="asis"}
+cat(
+  '<pre style="font-size:12px; max-height:400px; overflow:auto;">',
+  paste(readLines("log_file.txt"), collapse = "\n"),
+  '</pre><hr>'
+)
+```
+
+# MAT analysis {data-orientation="rows"}
+
+This section covers MATa/MATa' analysis using:
+
+1.  75-mer, Q30, paired-end fastq files aligned with Bowtie as single-end reads (**Coverage Analysis: 75-mer concordant reads**)
+
+2.  18-mer, Q30, paired-end fastq files aligned with Bowtie as single-end reads (**Polymorphisms Analysis: 18-mer concordant reads**)
+
+3.  75-mer, Q30, paired-end fastq files aligned with Bowtie2 (**Gene Conversion Analysis: 75-mer discordant reads**)
+
+4.  18-mer, Q30, paired-end fastq files aligned with Bowtie2 (**Polymorphisms Analysis: 18-mer discordant reads**)
+
+## Row 1 - 75-mer-concordant box {data-height="65"}
+
+### 
+
+```{r value_box_summary}
+valueBox(
+  value = "Coverage Analysis: 75-mer concordant reads",
+  caption = "",
+  color = "darkblue",
+)
+```
+
+## Row 2 - MAT heatmaps {.tabset data-height="300"}
+
+**1. MATa/MATa' Coverage Heatmap - all strains analyzed**
+
+### **Coverage Heatmap - MATa Chr.III**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^plot_CHRIII_75nt_MATa_Coverage\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Coverage Heatmap - MATa' Chr.V**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^plot_CHRV_75nt_MATa_Coverage\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Coverage Heatmap - Chr.III**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^plot_CHRIII_75nt_Coverage\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Coverage Heatmap - Chr.V**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^plot_CHRV_75nt_Coverage\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+## Row 3 - 18-mer-concordant box {data-height="65"}
+
+### 
+
+```{r value_box_summary_18_concordant}
+valueBox(
+  value = "Polymorphisms Analysis: 18-mer concordant reads",
+  caption = "",
+  color = "darkblue",
+)
+```
+
+## Row 4 - Polymorphisms coverage {.tabset data-height="300"}
+
+**1. MATa/MATa' Polymorphisms Coverage - all strains analyzed**
+
+### **Coverage - Timepoint T0**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^plot_T0_18nt_MATa_Coverage\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Coverage - Non Selected Survivors (NSS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^plot_TSG_18nt_MATa_Coverage\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Coverage - Selected Survivors (SS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^plot_TLG_18nt_MATa_Coverage\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Coverage - Undamaged cells (UD)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^plot_TLR_18nt_MATa_Coverage\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+## Row 5 - Polymorphisms coverage quantification {.tabset data-height="300"}
+
+**2. MATa/MATa' Polymorphisms Coverage Quantification - all strains analyzed**
+
+### **Coverage Quantification - Non Selected Survivors (NSS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^plot_TSG_18nt_MATa_Coverage_Quant\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Coverage Quantification - Selected Survivors (SS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^plot_TLG_18nt_MATa_Coverage_Quant\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Coverage Quantification - Undamaged cells (UD)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^plot_TLR_18nt_MATa_Coverage_Quant\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+## Row 6 - 75-mer-discordant box {data-height="65"}
+
+### 
+
+```{r value_box_summary_75_discordant}
+valueBox(
+  value = "Gene Conversion Analysis: 75-mer discordant reads",
+  caption = "",
+  color = "darkblue",
+)
+```
+
+## Row 7 - Gene Conversion Profile {.tabset data-height="400"}
+
+**1. Gene Conversion Profile - all strains analyzed**
+
+### **Gene Conversion Profile - Non Selected Survivors (NSS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Average_MATa_MATa_coverage_.*_TSG\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  plot_file <- plot_file[!grepl("_r18", plot_file)]
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:320px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Gene Conversion Profile - Selected Survivors (SS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Average_MATa_MATa_coverage_.*_TLG\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  plot_file <- plot_file[!grepl("_r18", plot_file)]
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:320px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+## Row 8 - Gene Conversion Spatial Distribution {.tabset data-height="300"}
+
+**2. Gene Conversion Spatial Distribution - all strains analyzed**
+
+### **Gene Conversion Spatial Distribution - Non Selected Survivors (NSS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^MATa_MATa_pairs_.*_TSG\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  plot_file <- plot_file[!grepl("_r18", plot_file)]
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Gene Conversion Spatial Distribution - Selected Survivors (SS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^MATa_MATa_pairs_.*_TLG\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+
+  plot_file <- plot_file[!grepl("_r18", plot_file)]
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+## Row 9 - 18-mer-discordant box {data-height="65"}
+
+### 
+
+```{r value_box_summary_18_discordant}
+valueBox(
+  value = "Polymorphisms Analysis: 18-mer discordant reads",
+  caption = "",
+  color = "darkblue",
+)
+```
+
+## Row 10 - Polymorphisms Profile {.tabset data-height="400"}
+
+**1. Polymorphisms Profile - all strains analyzed**
+
+### **Polymorphisms Profile - Selected Survivors (SS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Average_MATa_MATa_coverage_r18.*_TLG\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:320px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Polymorphisms Profile Quantification - Selected Survivors (SS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^MATa_MATa_poly_distrib_vs_total_r18.*_TLG\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:320px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+## Row 11 - Gene Conversion Spatial Distribution {.tabset data-height="300"}
+
+**2. Gene Conversion Spatial Distribution - all strains analyzed**
+
+### **Gene Conversion Spatial Distribution - Selected Survivors (SS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^MATa_MATa_pairs_r18.*_TLG\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Gene Conversion Repair Product Distribution - Selected Survivors (SS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^MATa_MATa_GC_group_r18.*_TLG\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+# Mutagenic profiling at HO site {data-orientation="rows"}
+
+This section covers mutagenic profiling at HO site analysis using:
+
+1.  150-mer, Q30, paired-end fastq files aligned with BWA as single-end reads (**Mutagenic Profiling Analysis: 150-mer reads**)
+
+## Row 1 - 75-mer-mutagenic-analysis box {data-height="65"}
+
+### 
+
+```{r value_box_bwa}
+valueBox(
+  value = "Mutagenic Profiling Analysis: 150-mer reads",
+  caption = "",
+  color = "darkblue",
+)
+```
+
+## Row 2 - Repair heatmaps {.tabset data-height="300"}
+
+**1. HO Mutagenic Pattern - all strains analyzed**
+
+### **HO Mutagenic Pattern Heatmap - all repair pathways**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Repair_heatmap_plot_all_TLG_.*\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **HO Mutagenic Pattern Heatmap - Long HR**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Repair_heatmap_plot_lHR_TLG_.*\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **HO Mutagenic Pattern Heatmap - Short HR**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Repair_heatmap_plot_shHR_TLG_.*\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **HO Mutagenic Pattern Heatmap - NHEJ**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Repair_heatmap_plot_NHEJ_TLG_.*\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+## Row 3 - Repair product sequence {.tabset data-height="300"}
+
+**2. Repair Product Sequence - all strains analyzed**
+
+### **Repair Product Sequence Logo - all repair pathways**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Repair_logo_plot_all_TLG_.*\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Repair Product Sequence Logo - Long HR**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Repair_logo_plot_lHR_TLG_.*\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Repair Product Sequence Logo - Short HR**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Repair_logo_plot_shHR_TLG_.*\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Repair Product Sequence Logo - NHEJ**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Repair_logo_plot_NHEJ_TLG_.*\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+## Row 4 - Repair pathway choice {.tabset data-height="300"}
+
+**3. Repair Pathway Choice and Mutagenic Rate - all strains analyzed**
+
+### **Repair Pathway Choice**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Repair_pathway_only_repair_plot_.*\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Mutagenic Rate**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Mutagenic_rate_plot_all_TLG_.*\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+# Genome-wide analysis {data-orientation="rows"}
+
+This section covers genomic categories analysis using:
+
+1.  75-mer, Q30, paired-end fastq files aligned with Bowtie as single-end reads (**Genomic Concordant Coverage Analysis: 75-mer concordant reads**)
+
+2.  75-mer, Q30, paired-end fastq files aligned with Bowtie2 (**Genomic Discordant Coverage Analysis: 75-mer discordant reads**)
+
+## Row 1 - 75-mer-categories-analysis box {data-height="65"}
+
+### 
+
+```{r value_box_categories}
+valueBox(
+  value = "Genomic Concordant Coverage Analysis: 75-mer concordant reads",
+  caption = "",
+  color = "darkblue",
+)
+```
+
+## Row 2 - Genomic categories coverage profile {.tabset data-height="300"}
+
+**1. Genomic Coverage Profile - all strains analyzed**
+
+### **Coverage Profile - Non Selected Survivors (NSS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Genomic_Coverage_.*_T0vsTSG\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Coverage Profile - Selected Survivors (SS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Genomic_Coverage_.*_T0vsTLG\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Coverage Profile - Undamaged Cells (UD)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Genomic_Coverage_.*_T0vsTLR\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+## Row 3 - Genomic categories circular chr. {.tabset data-height="300"}
+
+**2. Genomic Coverage Chromosome Distribution - all strains analyzed**
+
+### **Chromosome Distribution - Non Selected Survivors (NSS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Chr_Percentages_Circular_<0.8_and_>1.2.*_T0vsTSG\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Chromosome Distribution - Selected Survivors (SS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Chr_Percentages_Circular_<0.8_and_>1.2.*_T0vsTLG\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Chromosome Distribution - Undamaged Cells (UD)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Chr_Percentages_Circular_<0.8_and_>1.2.*_T0vsTLR\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+## Row 3 - Genomic categories percentage {.tabset data-height="300"}
+
+**3. Genomic Coverage Categories Distribution - all strains analyzed**
+
+### **Genomic Categories Distribution - Non Selected Survivors (NSS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Percentages\ <0.8\ and\ >1.2.*_T0vsTSG\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Genomic Categories Distribution - Selected Survivors (SS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Percentages\ <0.8\ and\ >1.2.*_T0vsTLG\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Genomic Categories Distribution - Undamaged Cells (UD)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Percentages\ <0.8\ and\ >1.2.*_T0vsTLR\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+## Row 4 - Genomic categories percentage {.tabset data-height="300"}
+
+**4. Genomic Coverage Damaged vs Undamaged Cells - all strains analyzed**
+
+### **Genomic Damaged vs Undamaged Cells - Non Selected Survivors (NSS) vs Undamaged Cells (UD)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Gal_vs_raf_coverage.*_TSG\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Genomic Damaged vs Undamaged Cells - Selected Survivors (SS) vs Undamaged Cells (UD)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Gal_vs_raf_coverage.*_TLG\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+## Row 5 - Genomic categories violin {.tabset data-height="300"}
+
+**5. Genomic Coverage Distribution along Features - all strains analyzed**
+
+### **Distribution along Features - Non Selected Survivors (NSS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Violin.*_T0vsTSG\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Distribution along Features - Selected Survivors (SS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Violin.*_T0vsTLG\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Distribution along Features - Undamaged Cells (UD)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Violin.*_T0vsTLR\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+## Row 6 - 75-mer-discordant-analysis box {data-height="65"}
+
+### 
+
+```{r value_box_discordant}
+valueBox(
+  value = "Genomic Discordant Coverage Analysis: 75-mer discordant reads",
+  caption = "",
+  color = "darkblue",
+)
+```
+
+## Row 7 - Recombination events distribution profile {.tabset data-height="300"}
+
+**1. Inter-chromosomal Recombination Events - all strains analyzed**
+
+### **Inter-chromosomal Recombination Events - Non Selected Survivors (NSS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Inter_chromosomal_discordant_matrix_plot_.*_TSG_option1\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Inter-chromosomal Recombination Events - Selected Survivors (SS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Inter_chromosomal_discordant_matrix_plot_.*_TLG_option1\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Inter-chromosomal Recombination Events - Undamaged Cells (UD)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Inter_chromosomal_discordant_matrix_plot_.*_TLR_option1\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+## Row 8 - Recombination events distribution along categories {.tabset data-height="300"}
+
+**2. Inter-chromosomal Recombination Events Normalized Distribution - all strains analyzed**
+<div style="float:right;font-size:12px;">
+<span style="color:#252159;">■</span> NSS &nbsp;
+<span style="color:#469CD7;">■</span> SS &nbsp;
+<span style="color:#8BE0FC;">■</span> UD
+</div>
+
+### **Normalized Distribution**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Radar_plot.*_option1_50_TSG_TLG_TLR\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Normalized Distribution - Quantification**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Category_A_read_number_no_norm_plot_.*\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+## Row 9 - Recombination events distribution along categories BLAST options {.tabset data-height="300"}
+
+**3. Inter-chromosomal Recombination Events Normalized Distribution (All BLAST Validation Levels) - all strains analyzed**
+<div style="float:right;font-size:12px;">
+<span style="color:darkgreen;">■</span> NA &nbsp;
+<span style="color:#66CD00;">■</span> ≥3nt &nbsp;
+<span style="color:darkorange;">■</span> 2nt &nbsp;
+<span style="color:red;">■</span> 1nt &nbsp;
+<span style="color:darkred;">■</span> Unfiltered
+</div>
+
+### **Normalized Distribution - Non Selected Survivors (NSS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Radar_plot.*_TSG_blast_options_read_number\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Normalized Distribution - Selected Survivors (SS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Radar_plot.*_TLG_blast_options_read_number\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Normalized Distribution - Undamaged Cells (UD)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Radar_plot.*_TLR_blast_options_read_number\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+## Row 10 - Recombination events global distribution {.tabset data-height="300"}
+
+**4. Inter-chromosomal Recombination Events Global Distribution - all strains analyzed**
+
+### **Global Distribution - Non Selected Survivors (NSS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Inter_chromosomal_discordant_pairs_global_distribution_heatmap_.*_TSG_option1\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:160px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Global Distribution - Selected Survivors (SS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Inter_chromosomal_discordant_pairs_global_distribution_heatmap_.*_TLG_option1\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:160px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Global Distribution - Undamaged Cells (UD)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Inter_chromosomal_discordant_pairs_global_distribution_heatmap_.*_TLR_option1\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:160px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+## Row 11 - Recombination events category distribution {.tabset data-height="300"}
+
+**5. Inter-chromosomal Recombination Events Genomic Categories Distribution - all strains analyzed**
+
+### **Genomic Categories Distribution - Non Selected Survivors (NSS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Inter_chromosomal_discordant_pairs_category_distribution_heatmap_.*_TSG_option1\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:160px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Genomic Categories Distribution - Selected Survivors (SS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Inter_chromosomal_discordant_pairs_category_distribution_heatmap_.*_TLG_option1\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:160px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Genomic Categories Distribution - Undamaged Cells (UD)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Inter_chromosomal_discordant_pairs_category_distribution_heatmap_.*_TLR_option1\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:160px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+## Row 12 - Recombination hotspots {.tabset data-height="300"}
+
+**6. Inter-chromosomal Recombination Hotspots - all strains analyzed**
+
+### **Recombination Hotspots - Non Selected Survivors (NSS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Inter_chromosomal_discordant_hotspots_plot_.*_TSG_option1\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Recombination Hotspots - Selected Survivors (SS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Inter_chromosomal_discordant_hotspots_plot_.*_TLG_option1\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Recombination Hotspots - Undamaged Cells (UD)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = "^Inter_chromosomal_discordant_hotspots_plot_.*_TLR_option1\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+## Row 13 - Recombination hotspots data {.tabset data-height="600"}
+
+**7. Inter-chromosomal Recombination Hotspots Data - all strains analyzed**
+
+### **Recombination Hotspots Data - Non Selected Survivors (NSS)**
+
+```{r results="asis"}
+
+hotspots_tbl <- tibble()
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  tsv_file <- list.files(
+    path = mutant_dir,
+    pattern = ".*_TSG_hotspots_processed_df\\.tsv$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(tsv_file) == 0) next
+
+  tmp <- read_tsv(tsv_file[1], show_col_types = FALSE) %>%
+    mutate(mutant = mutant)
+
+  hotspots_tbl <- bind_rows(hotspots_tbl, tmp)
+
+}
+
+if (nrow(hotspots_tbl) == 0) {
+  cat("<p style='text-align:center; color:red; font-style:italic;'>No data available</p>")
+} else {
+  datatable(
+    hotspots_tbl,
+    options = list(
+      pageLength = 10,
+      scrollX = TRUE
+    ),
+    rownames = FALSE
+  )
+}
+```
+
+### **Recombination Hotspots Data - Selected Survivors (SS)**
+
+```{r results="asis"}
+
+hotspots_tbl <- tibble()
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  tsv_file <- list.files(
+    path = mutant_dir,
+    pattern = ".*_TLG_hotspots_processed_df\\.tsv$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(tsv_file) == 0) next
+
+  tmp <- read_tsv(tsv_file[1], show_col_types = FALSE) %>%
+    mutate(mutant = mutant)
+
+  hotspots_tbl <- bind_rows(hotspots_tbl, tmp)
+
+}
+
+if (nrow(hotspots_tbl) == 0) {
+  cat("<p style='text-align:center; color:red; font-style:italic;'>No data available</p>")
+} else {
+  datatable(
+    hotspots_tbl,
+    options = list(
+      pageLength = 10,
+      scrollX = TRUE
+    ),
+    rownames = FALSE
+  )
+}
+```
+
+### **Recombination Hotspots Data - Undamaged Cells (UD)**
+
+```{r results="asis"}
+
+hotspots_tbl <- tibble()
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  tsv_file <- list.files(
+    path = mutant_dir,
+    pattern = ".*_TLR_hotspots_processed_df\\.tsv$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(tsv_file) == 0) next
+
+  tmp <- read_tsv(tsv_file[1], show_col_types = FALSE) %>%
+    mutate(mutant = mutant)
+
+  hotspots_tbl <- bind_rows(hotspots_tbl, tmp)
+
+}
+
+if (nrow(hotspots_tbl) == 0) {
+  cat("<p style='text-align:center; color:red; font-style:italic;'>No data available</p>")
+} else {
+  datatable(
+    hotspots_tbl,
+    options = list(
+      pageLength = 10,
+      scrollX = TRUE
+    ),
+    rownames = FALSE
+  )
+}
+```
+
+## Row 14 - Recombination hotspots {.tabset data-height="300"}
+
+**8. Inter-chromosomal Interaction Network - all strains analyzed**
+
+### **Interaction Network - Non Selected Survivors (NSS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = ".*_TSG_Network_plot\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Interaction Network - Selected Survivors (SS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = ".*_TLG_Network_plot\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Interaction Network - Undamaged Cells (UD)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = ".*_TLR_Network_plot\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+## Row 15 - Recombination hotspots data {.tabset data-height="600"}
+
+**9. Inter-chromosomal Interaction Network Data - all strains analyzed**
+
+### **Interaction Network Data - Non Selected Survivors (NSS)**
+
+```{r results="asis"}
+
+hotspots_tbl <- tibble()
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  tsv_file <- list.files(
+    path = mutant_dir,
+    pattern = ".*_TSG_hotspots_matrix\\.tsv$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(tsv_file) == 0) next
+
+  tmp <- read_tsv(tsv_file[1], show_col_types = FALSE) %>%
+    mutate(mutant = mutant)
+
+  hotspots_tbl <- bind_rows(hotspots_tbl, tmp)
+
+}
+
+if (nrow(hotspots_tbl) == 0) {
+  cat("<p style='text-align:center; color:red; font-style:italic;'>No data available</p>")
+} else {
+  datatable(
+    hotspots_tbl,
+    options = list(
+      pageLength = 10,
+      scrollX = TRUE
+    ),
+    rownames = FALSE
+  )
+}
+```
+
+### **Interaction Network Data - Selected Survivors (SS)**
+
+```{r results="asis"}
+
+hotspots_tbl <- tibble()
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  tsv_file <- list.files(
+    path = mutant_dir,
+    pattern = ".*_TLG_hotspots_matrix\\.tsv$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(tsv_file) == 0) next
+
+  tmp <- read_tsv(tsv_file[1], show_col_types = FALSE) %>%
+    mutate(mutant = mutant)
+
+  hotspots_tbl <- bind_rows(hotspots_tbl, tmp)
+
+}
+
+if (nrow(hotspots_tbl) == 0) {
+  cat("<p style='text-align:center; color:red; font-style:italic;'>No data available</p>")
+} else {
+  datatable(
+    hotspots_tbl,
+    options = list(
+      pageLength = 10,
+      scrollX = TRUE
+    ),
+    rownames = FALSE
+  )
+}
+```
+
+### **Interaction Network Data - Undamaged Cells (UD)**
+
+```{r results="asis"}
+
+hotspots_tbl <- tibble()
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  tsv_file <- list.files(
+    path = mutant_dir,
+    pattern = ".*_TLR_hotspots_matrix\\.tsv$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(tsv_file) == 0) next
+
+  tmp <- read_tsv(tsv_file[1], show_col_types = FALSE) %>%
+    mutate(mutant = mutant)
+
+  hotspots_tbl <- bind_rows(hotspots_tbl, tmp)
+
+}
+
+if (nrow(hotspots_tbl) == 0) {
+  cat("<p style='text-align:center; color:red; font-style:italic;'>No data available</p>")
+} else {
+  datatable(
+    hotspots_tbl,
+    options = list(
+      pageLength = 10,
+      scrollX = TRUE
+    ),
+    rownames = FALSE
+  )
+}
+```
+
+## Row 16 - Recombination network quantification {.tabset data-height="300"}
+
+**10. Inter-chromosomal Interaction Network Quantification - all strains analyzed**
+
+### **Interaction Network Quantification - Non Selected Survivors (NSS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = ".*_TSG_Network_quantification_plot\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Interaction Network Quantification - Selected Survivors (SS)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = ".*_TLG_Network_quantification_plot\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
+
+### **Interaction Network Quantification - Undamaged Cells (UD)**
+
+```{r results="asis"}
+cat("<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:20px;'>")
+
+
+for (mutant in mutants) {
+
+  mutant_dir <- file.path(wd, mutant)
+
+  plot_file <- list.files(
+    path = mutant_dir,
+    pattern = ".*_TLR_Network_quantification_plot\\.svg$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  if (length(plot_file) > 0) {
+    plot_file <- plot_file[1]
+
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center;'>",
+        "<h4>", mutant, "</h4>",
+        "<img src='", plot_file,
+        "' style='width:100%; max-height:180px;'>",
+        "</div>"
+      )
+    )
+
+  } else {
+    cat(
+      paste0(
+        "<div style='flex:1 1 100%; text-align:center; color:red;'>",
+        "<h4>", mutant, "</h4>",
+        "<p>No plot found</p>",
+        "</div>"
+      )
+    )
+  }
+}
+
+cat("</div>")
+```
