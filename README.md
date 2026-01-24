@@ -1,1 +1,170 @@
-# Di_GRAPH
+# Di-GRAPH
+
+``` text
+██████╗               ██████╗ ██████╗  █████╗ ██████╗ ██╗  ██╗        
+██╔══██╗  ██╗        ██╔════╝ ██╔══██╗██╔══██╗██╔══██╗██║  ██║          ===========================================       
+██║  ██║  ╚═╝  ███╗  ██║  ███╗██████╔╝███████║██████╔╝███████║            DSB-induced Genome-wide Repair Analysis
+██║  ██║  ██╗  ╚══╝  ██║   ██║██╔╚██╗ ██╔══██║██╔═══╝ ██╔══██║           and Profiling of Homologous recombination
+██████╔╝  ██║        ╚██████╔╝██║ ╚██╗██║  ██║██║     ██║  ██║          =========================================== 
+╚═════╝   ╚═╝         ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝  ╚═╝
+```
+
+<br>
+
+**Di-GRAPH** (<ins>D</ins>SB-<ins>i</ins>nduced <ins>G</ins>enome-wide <ins>R</ins>epair <ins>A</ins>nalysis and <ins>P</ins>rofiling of <ins>H</ins>omologous recombination)
+
+A `bash/R/Python` pipeline to detect, classify and interpret recombination events at a defined break site and across the entire genome upon HO-induction of a single site-specific DSB in *S. cerevisiae*. 
+________________________________________________________________________________________________________________________________________________
+
+## Table of contents<a name="idindex"></a>
+
+1.  [Introduction](#idintro)
+2.  [Instructions](#idinstr)
+3.  [Example usage](#idexample)
+4.  [Expected output](#idoutput)
+5.  [Visual summary](#idsummary)
+
+<br>
+
+## 1. Introduction<a name="idintro"></a>
+
+**Di-GRAPH (**<ins>D</ins>SB-<ins>i</ins>nduced <ins>G</ins>enome-wide <ins>R</ins>epair <ins>A</ins>nalysis and <ins>P</ins>rofiling of <ins>H</ins>omologous recombination) integrates DSB mutational signature analysis, repair pathway choice, coverage profiling and discordant read mapping to quantitatively define the frequency, directionality, extent and mutagenic profile of gene conversion events during the repair of a single site-specific DSB.
+
+At a genomic scale, Di-GRAPH identifies and maps DNA damage-dependent genome-wide gross chromosomal rearrangements in defined genomic regions to evaluate how the genome is reshaped in response to a DSB.
+
+This pipeline is designed to analyze how stage-specific HR repair factors differentially control DSB repair fidelity and genome-wide stability in the *S. cerevisiae* PMV genetic background, which allows the induction of a DSB in the *MATa* locus on chromosome III in a galactose-dependent manner; and contains an engineered *MATa'* locus on chromosome V used as donor for recombination. 
+
+> Note: detailed information about the PMV genetic background is available in *Ramos et al.,2022 - Cell Reports*, <https://doi.org/10.1016/j.celrep.2021.110201>
+
+
+By comparing data prior to DSB induction, during its repair (non-selected survivors) and from survivor populations (selected survivors), Di-GRAPH enables the classification of lethal *vs* non-lethal rearrangements arising during the repair of the DSB. Additionally, Di-GRAPH incorporates the assessment of undamaged contitions (undamaged cells) to distinguish DNA damage-dependent from cell-cycle-dependent genomic alterations.
+
+After providing paired-end genomic sequencing data from these 4 different timepoints, Di-GRAPH will:
+
+- i)  Perform *MATa/MATa'* loci coverage profiling to identify gene conversion patterns and polymporphisms incorporation.
+
+- ii) Characterize the frequency, directionality and extent of individual gene conversion events between *MATa/MATa'* loci by applying inter-chromosomal discordant read mapping.
+
+- iii) Assess HO associated mutagenic pattern and repair pathway choice upon DSB induction in the *MATa* locus.
+
+- iv) Evaluate global genome stability by characterizing how different genomic categories (e.g. ORFs, intergenic regions, LTR, TEG, Ty, tRNA, rRNA, ncRNA, snRNA, snoRNA, ARS, centromere and subtelomeric regions) behave in cells lacking defined HR factors, both after DSB induction and in the absence of DNA damage.
+
+- v) Apply inter-chromosomal discordant read mapping combined with BLAST cross-validation to identify and map genome-wide chromosomal rearrangements in both DNA-damaged and undamaged cells, characterizing how the genome is reshaped in the absence of defined HR factors.
+
+<br>
+
+You can find a **visual summary** of the different steps conducted by Di-GRAPH [here](#idsummary).
+
+<br>
+
+[Back to index](#idindex)
+
+<br>
+
+## 2. Instructions<a name="idinstr"></a>
+
+Di-GRAPH is designed to be run as a single bash script `Di-GRAPH.sh`. As noted in the [Introduction](#idintro), Di-GRAPH requires paired-end genomic data (FASTQ files) from 4 different timepoints to work. To ensure HO associated mutagenic pattern is performed, paired-end reads should be of a minimum length of 150bp. In addition, Di-GRAPH requires three independent replicates of each timepoint to perform the analysis.
+
+Di-GRAPH also requires the PMV reference genome (FASTA file), the PMV genomic features annotation files (.tsv files), a fasta genomic database for BLAST cross-validation (FASTA files) and a folder containing the template for the HTML output report to be used for the analysis. All these files are available in the `Di_GRAPH/files` folder. 
+
+Di-GRAPH requires the following folder/subfolder structure to perform the complete analysis:
+
+    ------- Folder generated by the user -------
+    Working directory folder (MYWD)
+    ├── Strain_1 subfolder
+    │   ├── .fastq.gz files
+    ├── Strain_2 subfolder
+    │   ├── .fastq.gz files
+    └── Strain_n subfolder
+        ├── .fastq.gz files
+
+    ------- Folders available in the Di_GRAPH/files folder from this repository -------
+    Reference genome folder (MYREF)
+    ├── RG_PMV_v9.fasta
+    ├── ...
+
+    Genomic categories folder (CATEGORY_PATH)
+    ├── PMV_categories.tsv
+    ├── 1.PMV.ORF.tsv     
+    └── ...
+
+    BLAST folder (MYBLAST)
+    ├── features_extraction
+        ├── YLL039C_seq.fasta
+        ├── YORWTy1_2_seq.fasta
+        ├── ...
+
+    Report folder (MYREPORT)
+    ├── Di-GRAPH_report.Rmd
+    ├── ...
+ 
+
+For each strain to be analyzed, a subfolder inside the working directory folder should be created. Paired-end genomic data (.fastq.gz files) should be placed inside this subfolder and named as follows: `timepoint_replicate_R1.fastq.gz` and `timepoint_replicate_R2.fastq.gz`.
+
+> Note: timepoint names should be defined as **T0** (Timepoint 0, data prior to DSB induction), **TSG** (Timepoint Short Galactose, data from non-selected survivors), **TLG** (Timepoint Long Galactose, data from selected survivors) and **TLR** (Timepoint Long Raffinose, data from undamaged cells). Replicate names should be defined as **E1** (Experiment 1), **E2** (Experiment 2) and **E3** (Experiment 3).
+
+Before running Di-GRAPH, the user needs to define the following variables in the `Di-GRAPH.sh` script:
+
+    MYREF=/path/to/folder/RG
+    MYWD=/path/to/folder/WD/
+    CATEGORY_PATH=/path/to/folder/Categories 
+    MYBLAST=/path/to/folder/BLAST/features_extraction
+    MYREPORT=/path/to/folder/Report_files
+
+<br>
+
+Before running Di-GRAPH, the user needs to create the `digraph conda environment` containing all packages required for the analysis (listed in the `digraph.yml` file located at `Di_GRAPH/environment`). This can be done by typing `conda env create -f digraph.yml -n digraph` after downloading the `digraph.yml` file. The conda source path should also be set in the `Di-GRAPH.sh` script:
+
+    source /path/to/folder/miniconda3/etc/profile.d/conda.sh
+    
+<br>
+
+You can see an example of Di-GRAPH usage in [this section](#idexample)
+
+<br>
+
+[Back to index](#idindex)
+
+<br>
+
+## 3. Example usage<a name="idexample"></a>
+
+You can test Di-GRAPH with paired-end genomic data from wild-type, *exo1∆*, *sgs1∆*, *srs2∆* and *rad51∆* PMV cells included in the `test_dataset` directory. After defining the previously mentioned variables in the `Di-GRAPH.sh` script, the user can run Di-GRAPH by typing:
+
+<br>
+
+``` bash
+## Running Di-GRAPH
+bash Di-GRAPH.sh 
+
+```
+
+<br>
+
+[Back to index](#idindex)
+
+<br>
+
+## 4. Expected output<a name="idoutput"></a>
+
+For each strain defined in the working directory, Di-GRAPH will perform `bowtie/bowtie2/bwa` genomic alignments, characterize gene conversion products between *MATa/MATa'* loci, define HO associated mutagenic pattern, analyze coverage data regarding all genomic categories and identify global genomic rearrangements. The output files and plots will be stored in the `Working_directory/Strain_n` subfolder.
+
+To facilitate the interpretation of the results, Di-GRAPH will generate a `Di-GRAPH_report.html` file in the `Working_directory` folder. This report is a summary of the results obtained by Di-GRAPH for each strain and includes the following sections:
+- **Overview:** contains the alignment statistics and the script log file.
+- **MAT analysis:** contains coverage analysis and gene conversion analysis for the *MATa/MATa'* loci. It also contains the polymorphisms incorporation analysis.
+- **Mutagenic profiling at HO sites:** contains the HO associated mutagenic pattern and repair pathway choice analysis.
+- **Genome-wide analysis** contains the coverage analysis for all genomic categories and the inter-chromosomal discordant read mapping analysis.
+
+<br>
+
+The Di-GRAPH report file generated after the analysis of paired-end genomic data from wild-type, *exo1∆*, *sgs1∆*, *srs2∆* and *rad51∆* PMV cells is included in the `test_dataset` directory. 
+
+<br>
+
+[Back to index](#idindex)
+
+<br>
+
+## 5. Visual summary<a name="idsummary"></a>
+
+[Back to index](#idindex)
