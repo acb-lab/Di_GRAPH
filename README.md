@@ -157,7 +157,7 @@ For each strain defined in the working directory, Di-GRAPH will perform `bowtie/
 To facilitate the interpretation of the results, Di-GRAPH will generate a `Di-GRAPH_report.html` file in the `Working_directory` folder. This report is a summary of the results obtained by Di-GRAPH for each strain and includes the following sections:
 - **Overview:** contains the alignment statistics and the script log file.
 - **MAT analysis:** contains coverage analysis and gene conversion analysis for the *MATa/MATa'* loci. It also contains the polymorphisms incorporation analysis.
-- **Mutagenic profiling at HO sites:** contains the HO associated mutagenic pattern and repair pathway choice analysis.
+- **Mutagenic profiling at HO site:** contains the HO associated mutagenic pattern and repair pathway choice analysis.
 - **Genome-wide analysis** contains the coverage analysis for all genomic categories and the inter-chromosomal discordant read mapping analysis.
 
 <br>
