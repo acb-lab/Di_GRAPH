@@ -50,17 +50,19 @@
 #################################
 
 # shellcheck source=/opt/anaconda3/etc/profile.d/conda.sh
-source /home/ibfg/miniconda3/etc/profile.d/conda.sh
+source /home/ibfg/miniconda3/etc/profile.d/conda.sh. # Replace with the path to source conda
 
 # Set conda environment
 conda activate digraph
 
-# Allocating directories
-MYREF=/home/ibfg/GWSL/RG
-MYWD=/home/ibfg/GWSL/WD/
-CATEGORY_PATH=/home/ibfg/GWSL/Categories 
-MYBLAST=/home/ibfg/GWSL/BLAST/features_extraction
-MYREPORT=/home/ibfg/GWSL/Report_files
+######## Replace the paths with the actual paths to the directories ########
+# Allocating directories: 
+MYREF=/home/ibfg/GWSL/RG # Replace with the path to your MYREF directory: path/to/RG
+MYWD=/home/ibfg/GWSL/WD/ # Replace with the path to your MYWD directory: path/to/WD
+CATEGORY_PATH=/home/ibfg/GWSL/Categories # Replace with the path to your CATEGORY_PATH directory: path/to/Categories
+MYBLAST=/home/ibfg/GWSL/BLAST/features_extraction # Replace with the path to your MYBLAST directory: path/to/BLAST/features_extraction
+MYREPORT=/home/ibfg/GWSL/Report_files # Replace with the path to your MYREPORT directory: path/to/Report_files
+################################################################################
 
 # Create a log and stat file
 current_time=$(date "+%d-%m-%Y %H:%M:%S")
