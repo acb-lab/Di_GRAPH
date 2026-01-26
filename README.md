@@ -205,7 +205,7 @@ The Di-GRAPH report file generated after the analysis of paired-end genomic data
 
 ## 6. Visual summary<a name="idsummary"></a>
 
-<img width="1026" height="897" alt="Di-GRAPH" src="https://github.com/user-attachments/assets/7d5916c2-d34d-472b-9431-344e80e35d1e" />
+<img width="1026" height="897" alt="Di-GRAPH" src="https://github.com/acb-lab/Di_GRAPH/blob/b5fc94f42fa9bbaba9324734c433b23ee4b31c6c/images/Di-GRAPH_visual_summary.png" />
 
 
 [Back to index](#idindex)
