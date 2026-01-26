@@ -18,7 +18,7 @@
 
 **Di-GRAPH** (<ins>D</ins>SB-<ins>i</ins>nduced <ins>G</ins>enome-wide <ins>R</ins>epair <ins>A</ins>nalysis and <ins>P</ins>rofiling of <ins>H</ins>omologous recombination)
 
-A `bash/R/Python` pipeline to detect, classify and interpret recombination events at a defined break site and across the entire genome upon HO-induction of a single site-specific DSB in *S. cerevisiae*. 
+A pipeline to detect, classify and interpret recombination events at a defined break site and across the entire genome upon HO-induction of a single site-specific DSB in *S. cerevisiae*. 
 ________________________________________________________________________________________________________________________________________________
 
 ## Table of contents<a name="idindex"></a>
@@ -78,7 +78,7 @@ conda install git
 git clone https://github.com/acb-lab/Di_GRAPH.git
 ```
 
-Then you can run the following command, which will create a conda environment called `digraph` and will install automatically all the required dependencies:
+You can then run the following command, which will create a conda environment called `digraph` and will install automatically all the required dependencies:
 
 ```
 conda env create -f Di_GRAPH/environment/digraph.yml -n digraph
@@ -140,11 +140,11 @@ For each strain to be analyzed, a subfolder inside the working directory folder 
 
 Before running Di-GRAPH, the user needs to define the following variables in the `Di-GRAPH.sh` script:
 
-    MYREF=/path/to/folder/RG
-    MYWD=/path/to/folder/WD/
-    CATEGORY_PATH=/path/to/folder/Categories 
-    MYBLAST=/path/to/folder/BLAST/features_extraction
-    MYREPORT=/path/to/folder/Report_files
+    MYREF=/PATH/TO/RG
+    MYWD=/PATH/TO/WD/
+    CATEGORY_PATH=/PATH/TO/Categories 
+    MYBLAST=/PATH/TO/BLAST/features_extraction
+    MYREPORT=/PATH/TO/Report_files
   
 <br>
 
@@ -159,14 +159,14 @@ You can see an example of Di-GRAPH usage in [this section](#idexample)
 ## 4. Example usage<a name="idexample"></a>
 
 You can test Di-GRAPH with paired-end genomic data from wild-type, *exo1∆*, *sgs1∆*, *srs2∆* and *rad51∆* PMV cells included in the `test_dataset` directory.  
-Note that for running the current version of Di-GRAPH (we are working to ease this process), you need to maintain the files instrastructure as in [Instructions](#idinstr) and to define the variables in lines 58-65 of `Di-GRAPH.sh`:  
+Note that for running the current version of Di-GRAPH (we are working to ease this process), you need to maintain the files infrastructure as in [Instructions](#idinstr) and to define the variables in lines 58-65 of `Di-GRAPH.sh`:  
 
 ```
-    MYREF=/path/to/folder/RG
-    MYWD=/path/to/folder/WD/
-    CATEGORY_PATH=/path/to/folder/Categories 
-    MYBLAST=/path/to/folder/BLAST/features_extraction
-    MYREPORT=/path/to/folder/Report_files
+    MYREF=/PATH/TO/RG
+    MYWD=/PATH/TO/WD/
+    CATEGORY_PATH=/PATH/TO/Categories 
+    MYBLAST=/PATH/TO/BLAST/features_extraction
+    MYREPORT=/PATH/TO/Report_files
 ```
 
 <br>
