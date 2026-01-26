@@ -24,10 +24,11 @@ ________________________________________________________________________________
 ## Table of contents<a name="idindex"></a>
 
 1.  [Introduction](#idintro)
-2.  [Instructions](#idinstr)
-3.  [Example usage](#idexample)
-4.  [Expected output](#idoutput)
-5.  [Visual summary](#idsummary)
+2.  [Installation](#idinstakk)
+3.  [Instructions](#idinstr)
+4.  [Example usage](#idexample)
+5.  [Expected output](#idoutput)
+6.  [Visual summary](#idsummary)
 
 <br>
 
@@ -66,7 +67,15 @@ You can find a **visual summary** of the different steps conducted by Di-GRAPH [
 
 <br>
 
-## 2. Instructions<a name="idinstr"></a>
+## 3. Installation<a name="idinstall"></a>
+
+<br>
+
+[Back to index](#idindex)
+
+<br>
+
+## 3. Instructions<a name="idinstr"></a>
 
 Di-GRAPH is designed to be run as a single bash script `Di-GRAPH.sh`. As noted in the [Introduction](#idintro), Di-GRAPH requires paired-end genomic data (FASTQ files) from 4 different timepoints to work. To ensure HO associated mutagenic pattern is performed, paired-end reads should be of a minimum length of 150bp. In addition, Di-GRAPH requires three independent replicates of each timepoint to perform the analysis.
 
@@ -136,7 +145,7 @@ You can see an example of Di-GRAPH usage in [this section](#idexample)
 
 <br>
 
-## 3. Example usage<a name="idexample"></a>
+## 4. Example usage<a name="idexample"></a>
 
 You can test Di-GRAPH with paired-end genomic data from wild-type, *exo1∆*, *sgs1∆*, *srs2∆* and *rad51∆* PMV cells included in the `test_dataset` directory. After defining the previously mentioned variables in the `Di-GRAPH.sh` script, the user can run Di-GRAPH by typing:
 
@@ -154,7 +163,7 @@ bash Di-GRAPH.sh
 
 <br>
 
-## 4. Expected output<a name="idoutput"></a>
+## 5. Expected output<a name="idoutput"></a>
 
 For each strain defined in the working directory, Di-GRAPH will perform `bowtie/bowtie2/bwa` genomic alignments, characterize gene conversion products between *MATa/MATa'* loci, define HO associated mutagenic pattern, analyze coverage data regarding all genomic categories and identify global genomic rearrangements. The output files and plots will be stored in the `Working_directory/Strain_n` subfolder(s).
 
@@ -174,7 +183,7 @@ The Di-GRAPH report file generated after the analysis of paired-end genomic data
 
 <br>
 
-## 5. Visual summary<a name="idsummary"></a>
+## 6. Visual summary<a name="idsummary"></a>
 
 <img width="1026" height="897" alt="Di-GRAPH" src="https://github.com/user-attachments/assets/7d5916c2-d34d-472b-9431-344e80e35d1e" />
 
