@@ -24,7 +24,7 @@ ________________________________________________________________________________
 ## Table of contents<a name="idindex"></a>
 
 1.  [Introduction](#idintro)
-2.  [Installation](#idinstakk)
+2.  [Installation](#idinstall)
 3.  [Instructions](#idinstr)
 4.  [Example usage](#idexample)
 5.  [Expected output](#idoutput)
@@ -67,7 +67,24 @@ You can find a **visual summary** of the different steps conducted by Di-GRAPH [
 
 <br>
 
-## 3. Installation<a name="idinstall"></a>
+## 2. Installation<a name="idinstall"></a>
+
+Di-GRAPH is intended to be run by using conda, which you can install by following [this instructions](https://www.anaconda.com/docs/getting-started/miniconda/install).  
+
+Once you have conda installed, you can downlad Di-GRAPH repository:
+
+```
+conda install git
+git clone https://github.com/acb-lab/Di_GRAPH.git
+```
+
+Then you can run the following command, which will create a conda environment called `digraph` and will install automatically all the required dependencies:
+
+```
+conda env create -f Di_GRAPH/environment/digraph.yml -n digraph
+```
+
+After activating `digraph` environment (`conda activate digraph`) you are ready to use Di-GRAPH!
 
 <br>
 
@@ -128,13 +145,7 @@ Before running Di-GRAPH, the user needs to define the following variables in the
     CATEGORY_PATH=/path/to/folder/Categories 
     MYBLAST=/path/to/folder/BLAST/features_extraction
     MYREPORT=/path/to/folder/Report_files
-
-<br>
-
-Before running Di-GRAPH, the user needs to create the `digraph conda environment` containing all packages required for the analysis (listed in the `digraph.yml` file located at `Di_GRAPH/environment`). This can be done by typing `conda env create -f digraph.yml -n digraph` after downloading the `digraph.yml` file. The conda source path should also be set in the `Di-GRAPH.sh` script:
-
-    source /path/to/folder/miniconda3/etc/profile.d/conda.sh
-    
+  
 <br>
 
 You can see an example of Di-GRAPH usage in [this section](#idexample)
