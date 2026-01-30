@@ -110,6 +110,7 @@ OBLIGATORY OPTIONS:
 
 OTHER OPTIONS:
     -t/--threads        Number of threads to use (default=${N_CPU})
+    -v/--version        Show version
 ```
 
 <br> 
