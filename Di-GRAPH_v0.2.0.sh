@@ -61,8 +61,11 @@ cat << EOF
 =============================================================
 
 Description:
-This tool performs genome-wide analysis of DNA repair following an HO-induced break, 
-integrating MAT repair profiling, genome instability evaluation based on coverage and a recombination analysis based on inter-chromosomal discordant reads.
+This tool performs genome-wide analysis of DNA repair following an HO-induced break. 
+Di-GRAPH integrates:
+  - MAT repair profiling
+  - Genome instability evaluation based on coverage 
+  - Recombination analysis based on inter-chromosomal discordant reads
 Input files are gzipped paired-end fastq files.
 
 OBLIGATORY OPTIONS:
