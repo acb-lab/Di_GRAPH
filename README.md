@@ -175,7 +175,7 @@ Then, you can run Di-GRAPH by simply typing:
 
 ```bash
 ## Running Di-GRAPH
-/PATH/TO/Di-GRAPH.sh -b /test_files/BLAST/features_extraction -c /test_files/Categories -g /test_files/RG -i /test_working_directory/ -r /test_files/Report_files -t 10
+/PATH/TO/Di-GRAPH.sh -b /test_files/BLAST/features_extraction -c /test_files/Categories -g /test_files/RG -i /test_working_directory/ -r /test_files/Report_files
 ```
 
 <br>
