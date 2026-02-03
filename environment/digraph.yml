@@ -5,100 +5,91 @@ channels:
   - r
 dependencies:
   - bcftools=1.22
-  - bedtools=2.31.1
-  - blast=2.16.0
+  - bedtools=2.31
+  - blast=2.16
   - bowtie=1.3.1
-  - bowtie2=2.5.4
-  - bwa=0.7.19
-  - bzip2=1.0.8
-  - cairo=1.18.4
-  - curl=8.14.0
-  - cutadapt=5.1=py39hbcbf7aa_0
-  - deeptools=3.5.6
-  - deeptoolsintervals=0.1.9
-  - dnaio=1.2.2
-  - docutils=0.21.2
+  - bowtie2=2.5
+  - bwa=0.7
+  - cairo
+  - cutadapt=5.1
+  - deeptools=3.5
+  - dnaio=1.2
+  - docutils
   - entrez-direct=22.4
-  - fastp=0.25.0
-  - fastx_toolkit=0.0.14
-  - gawk=5.3.1
-  - igvtools=2.17.3
-  - perl=5.32.1
-  - plotly=6.1.2
-  - pysam=0.23.1
-  - python=3.9.22
-  - r-base=4.4.3
+  - fastp=0.25
+  - fastx_toolkit
+  - gawk
+  - igvtools=2.17
+  - perl=5.32
+  - plotly=6
+  - pysam=0.23
+  - python=3.9
+  - r-base=4.4
   - r-broom=1.0.8
   - r-cellranger=1.1.0
   - r-curl=6.2.2
-  - r-data.table=1.17.4
-  - r-digest=0.6.37
-  - r-dplyr=1.1.4
-  - r-dt=0.34.0
-  - r-dtplyr=1.3.1
-  - r-evaluate=1.0.3
-  - r-extrafont=0.19
-  - r-extrafontdb=1.0
-  - r-flexdashboard=0.6.2
-  - r-fmsb=0.7.6
-  - r-fontawesome=0.5.3
-  - r-forcats=1.0.0
-  - r-fs=1.6.6
-  - r-ggbreak=0.1.6
-  - r-ggdensity=1.0.0
-  - r-ggforce=0.5.0
-  - r-ggfun=0.2.0
-  - r-ggplot2=3.5.2
-  - r-ggplotify=0.1.3
-  - r-ggraph=2.2.2
-  - r-ggrepel=0.9.6
+  - r-data.table=1.17
+  - r-digest=0.6
+  - r-dplyr
+  - r-dt
+  - r-dtplyr
+  - r-evaluate
+  - r-extrafont
+  - r-extrafontdb
+  - r-flexdashboard=0.6
+  - r-fmsb=0.7
+  - r-fontawesome=0.5
+  - r-forcats=1.0
+  - r-fs=1.6
+  - r-ggbreak=0.1
+  - r-ggdensity=1.0
+  - r-ggforce=0.5
+  - r-ggfun=0.2
+  - r-ggplot2=3.5
+  - r-ggplotify
+  - r-ggraph=2.2
+  - r-ggrepel
   - r-ggseqlogo=0.2
-  - r-glue=1.8.0
-  - r-graphlayouts=1.2.2
-  - r-gridextra=2.3
-  - r-gridgraphics=0.5_1
+  - r-glue
+  - r-graphlayouts
+  - r-gridextra
+  - r-gridgraphics
   - r-gtable=0.3.6
-  - r-htmltools=0.5.8.1
-  - r-htmlwidgets=1.6.4
-  - r-igraph=2.1.4
-  - r-knitr=1.50
-  - r-lattice=0.22_7
-  - r-lazyeval=0.2.2
-  - r-lubridate=1.9.4
-  - r-markdown=2.0
-  - r-mass=7.3_64
-  - r-matrix=1.7_3
-  - r-openssl=2.3.3
-  - r-patchwork=1.3.2
-  - r-plotrix=3.8_4
-  - r-purrr=1.0.4
-  - r-rcolorbrewer=1.1_3
+  - r-htmltools
+  - r-htmlwidgets
+  - r-igraph=2.1
+  - r-knitr
+  - r-lattice
+  - r-lazyeval=0.2
+  - r-lubridate=1.9
+  - r-markdown=2
+  - r-mass=7
+  - r-matrix=1
+  - r-openssl=2
+  - r-patchwork=1.3
+  - r-plotrix=3
+  - r-purrr=1
+  - r-rcolorbrewer=1
   - r-readr=2.1.5
-  - r-readxl=1.4.5
-  - r-reprex=2.1.1
+  - r-readxl=1.4
+  - r-reprex=2
   - r-rlang=1.1.7
   - r-rmarkdown=2.29
-  - r-scales=1.4.0
-  - r-selectr=0.4_2
-  - r-shiny=1.12.1
-  - r-sourcetools=0.1.7_1
-  - r-stringr=1.6.0
-  - r-svglite=2.1.3
-  - r-sys=3.4.3
-  - r-tibble=3.2.1
-  - r-tidygraph=1.3.0
-  - r-tidyr=1.3.1
-  - r-tidyselect=1.2.1
-  - r-tidyverse=2.0.0
-  - r-timechange=0.3.0
-  - r-tinytex=0.57
-  - r-vroom=1.6.5
+  - r-scales=1
+  - r-selectr
+  - r-shiny=1.12
+  - r-sourcetools
+  - r-stringr=1.6
+  - r-svglite=2.1
+  - r-sys=3.4
+  - r-tibble=3.2
+  - r-tidygraph=1.3
+  - r-tidyr=1.3
+  - r-tidyselect=1.2
+  - r-tidyverse=2
   - r-withr=3.0.2
   - r-xfun=0.52
-  - r-xtable=1.8_4
-  - r-yaml=2.3.10
+  - r-yaml=2
   - readline=8.2
   - samtools=1.22
   - scipy=1.13.1
-  - sed=4.9
-  - wget=1.25.0
