@@ -171,20 +171,15 @@ You can see an example of Di-GRAPH usage in [this section](#idexample)
 You can test Di-GRAPH with paired-end genomic data from wild-type, *exo1∆*, *sgs1∆*, *srs2∆* and *rad51∆* PMV cells included in the `test_dataset` directory.  
 Note that for running the current version of Di-GRAPH (we are working to ease this process), you need to maintain the files infrastructure as in [Instructions](#idinstr).  
 
-```bash
-## Running Di-GRAPH
-Di-GRAPH.sh -b /test_files/BLAST/features_extraction -c /test_files/Categories -g /test_files/RG -i /test_working_directory/ -r /test_files/Report_files -t 10
-```
-
-<br>
-
 Then, you can run Di-GRAPH by simply typing:
 
-``` bash
-/PATH/TO/Di-GRAPH.sh 
+```bash
+## Running Di-GRAPH
+/PATH/TO/Di-GRAPH.sh -b /test_files/BLAST/features_extraction -c /test_files/Categories -g /test_files/RG -i /test_working_directory/ -r /test_files/Report_files -t 10
 ```
 
 <br>
+
 
 [Back to index](#idindex)
 
