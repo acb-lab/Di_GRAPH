@@ -25,9 +25,9 @@ dependencies:
   - pysam=0.23
   - python=3.9
   - r-base=4.4
-  - r-broom=1.0.8
-  - r-cellranger=1.1.0
-  - r-curl=6.2.2
+  - r-broom
+  - r-cellranger
+  - r-curl=6
   - r-data.table=1.17
   - r-digest=0.6
   - r-dplyr
