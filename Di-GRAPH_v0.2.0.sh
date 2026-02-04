@@ -1,6 +1,6 @@
 #!/bin/bash
 
-AUTHORS=
+AUTHORS="Lydia Iglesias, Narciso M. Quijada, Andrés Clemente-Blanco"
 LASTMODIF="2026-01-31"
 VERSION="0.2.0"
 
