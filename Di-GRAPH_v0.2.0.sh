@@ -3016,7 +3016,6 @@ for strain in "${MYWD}"*/; do
             bg = "transparent"
             )
 
-            p
         })
 
         
