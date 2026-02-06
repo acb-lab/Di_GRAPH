@@ -191,7 +191,7 @@ Then, you can run Di-GRAPH by simply typing:
 
 ```bash
 ## Running Di-GRAPH
-/PATH/TO/Di-GRAPH.sh -b /Di_GRAPH/files/BLAST -c /Di_GRAPH/files/Categories -g /Di_GRAPH/files/RG -i /working_directory/ -r /Di_GRAPH/files/Report_files
+/PATH/TO/Di-GRAPH.sh -b /PATH/TO/Di_GRAPH/files/BLAST -c /PATH/TO/Di_GRAPH/files/Categories -g /PATH/TO/Di_GRAPH/files/RG -i /PATH/TO/working_directory/ -r /PATH/TO/Di_GRAPH/files/Report_files
 ```
 
 <br>
