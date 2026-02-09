@@ -190,7 +190,7 @@ cd working_directory
 
 ## Download wild-type dataset from Zenodo
 wget -O working_directory/1_Wt.tgz "https://zenodo.org/records/18470248/files/1_Wt.tgz"
-tar xvzf working_directory/1_Wt.tgz
+tar xvzf working_directory/1_Wt.tgz -C working_directory/
 rm working_directory/1_Wt.tgz
 ```
 
