@@ -122,7 +122,7 @@ OBLIGATORY OPTIONS:
     -r/--report         Path to report directory (provided in GitHub)
 
 OTHER OPTIONS:
-    -t/--threads        Number of threads to use (default=${N_CPU})
+    -t/--threads        Number of threads to use (default=1)
     -v/--version        Show version
 ```
 
