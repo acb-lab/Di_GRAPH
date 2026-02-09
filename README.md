@@ -74,20 +74,30 @@ Di-GRAPH is intended to be run by using conda, which you can install by followin
 Once you have conda installed, you can download Di-GRAPH repository:
 
 ```
-# Download repository
 conda install git
 git clone https://github.com/acb-lab/Di_GRAPH.git
-chmod 700 Di_GRAPH/Di-GRAPH.sh
 ```
 
-You can then run the following command, which will create a conda environment called `digraph` and will automatically install all the required dependencies:
+An install a conda environment (`digraph`) with all the required software and dependencies:
 
 ```
-# Install dependencies
 conda env create -f Di_GRAPH/environment/digraph.yml -n digraph
 ```
 
-After activating `digraph` environment (`conda activate digraph`) you are ready to use Di-GRAPH!
+Activate `digraph` environment and install Di-GRAPH executable 
+
+```
+conda activate digraph
+
+# Make Di-GRAPH.sh executable
+chmod 700 Di_GRAPH/Di-GRAPH.sh # 770 for group permissions, 777 for all permissions
+
+# Add Di-GRAPH.sh and required files to PATH
+cp Di_GRAPH/Di-GRAPH.sh $CONDA_PREFIX/bin/Di-GRAPH.sh
+cp -r Di_GRAPH/files $CONDA_PREFIX/files
+```
+
+\* *We are working to integrate everything as a single conda package*
 
 <br>
 
@@ -190,8 +200,8 @@ Note that for running the current version of Di-GRAPH (we are working to ease th
 Then, you can run Di-GRAPH by simply typing:
 
 ```bash
-## Running Di-GRAPH
-/PATH/TO/Di-GRAPH.sh -b /PATH/TO/Di_GRAPH/files/BLAST -c /PATH/TO/Di_GRAPH/files/Categories -g /PATH/TO/Di_GRAPH/files/RG -i /PATH/TO/working_directory/ -r /PATH/TO/Di_GRAPH/files/Report_files
+conda activate digraph
+Di-GRAPH.sh -b $CONDA_PREFIX/files/BLAST -c $CONDA_PREFIX/files/Categories -g $CONDA_PREFIX/files/RG -i working_directory/ -r $CONDA_PREFIX/files/Report_files
 ```
 
 <br>
