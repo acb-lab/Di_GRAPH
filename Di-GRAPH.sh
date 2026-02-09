@@ -19,7 +19,7 @@ MYBLAST=
 MYREF=
 MYREPORT=
 MYWD=
-N_CPU=$(nproc)
+N_CPU=1
 
 current_time=
 log_file=
