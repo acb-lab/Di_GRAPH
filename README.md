@@ -181,7 +181,7 @@ You can see an example of Di-GRAPH usage in [this section](#idexample)
 
 ## 4. Example usage<a name="idexample"></a>
 
-You can test Di-GRAPH with paired-end genomic data from wild-type PMV cells available in the `Di-GRAPH wild-type dataset` Zenodo repository (https://doi.org/10.5281/zenodo.18470248).  
+You can test Di-GRAPH with paired-end genomic data from wild-type PMV cells available in the `Di-GRAPH wild-type dataset` Zenodo repository (https://doi.org/10.5281/zenodo.18470248; size 26 GB, uncompressed).  
 
 ```bash
 ## Generate working directory
@@ -189,13 +189,12 @@ mkdir working_directory
 cd working_directory
 
 ## Download wild-type dataset from Zenodo
-wget https://zenodo.org/records/18470248/files/1_Wt.tgz
-tar xvzf 1_Wt.tgz
-rm 1_Wt.tgz
-
+wget -O working_directory/1_Wt.tgz "https://zenodo.org/records/18470248/files/1_Wt.tgz"
+tar xvzf working_directory/1_Wt.tgz
+rm working_directory/1_Wt.tgz
 ```
 
-Note that for running the current version of Di-GRAPH (we are working to ease this process), you need to maintain the files infrastructure as in [Instructions](#idinstr).  
+Note that for running the current version of Di-GRAPH, you need to maintain the files infrastructure as in [Instructions](#idinstr) (*we are working to ease this process*).  
 
 Then, you can run Di-GRAPH by simply typing:
 
