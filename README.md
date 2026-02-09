@@ -181,6 +181,8 @@ You can see an example of Di-GRAPH usage in [this section](#idexample)
 
 ## 4. Example usage<a name="idexample"></a>
 
+Di-GRAPH has been tested on different Linux OS (Ubuntu distribution v24.04 and Debian distribution v11).
+
 You can test Di-GRAPH with paired-end genomic data from wild-type PMV cells available in the `Di-GRAPH wild-type dataset` Zenodo repository (https://doi.org/10.5281/zenodo.18470248; size 26 GB, uncompressed).  
 
 ```bash
