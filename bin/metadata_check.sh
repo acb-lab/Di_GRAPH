@@ -33,7 +33,7 @@ duplicate_check() {
 
 detect_times() {
     awk -F'\t'  -v allowed="$expected_times" ' BEGIN {
-        n = split(allowed, a, " ")   # divide la cadena en palabras
+        n = split(allowed, a, " ") 
         for (i=1; i<=n; i++) {
             permitted[a[i]] = 1
         }
