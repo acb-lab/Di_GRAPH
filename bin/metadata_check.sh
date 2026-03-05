@@ -60,10 +60,6 @@ detect_times() {
     ' $1
 }
 
-get_input_format () {
-    seqkit stats ${1} 2>>/dev/null | tail -n+2 | sed -E 's/[[:space:]]+/\t/g' | cut -f 3
-}
-
 # Check header
 read -r header < "$metadata" # read first line
 if [[ "$header" != "$expected_header" ]]; then
