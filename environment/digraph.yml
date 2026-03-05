@@ -93,3 +93,5 @@ dependencies:
   - readline=8.2
   - samtools=1.22
   - scipy=1.13.1
+  - seqkit=2.13
+  
