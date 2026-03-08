@@ -313,7 +313,7 @@ if [[ "$NUMBER_EXP" != 3 ]]; then
     echo -e "\n${COL_blue}NUMBER OF EXPERIMENTS: $NUMBER_EXP experiments will be analyzed${COL_RESET} \n"
 fi
 
-read -rp "\n${COL_blue}Please, enter experiment names (comma-separated, e.g. E1,E3,E4): ${COL_RESET}" NAME_EXP
+read -rp "${COL_blue}Please, enter experiment names (comma-separated, e.g. E1,E3,E4): ${COL_RESET}" NAME_EXP
 
 IFS=',' read -ra EXP_LIST <<< "$NAME_EXP"
 
@@ -551,157 +551,187 @@ for subdir in "$MYWD"*/; do
         echo "" >> "$log_file"
         fi
       done
+    done
+done
 
+
+for subdir in "$MYWD"*/; do
+  echo "Processing directory: $subdir to calculate average coverage" >> "$log_file"
+  echo "" >> "$log_file"  # Adds a blank line
+
+  # Loop through sample prefixes (T0, T1, T2, etc.)
+    for sample in T0 TSG TLG TLR; do
+      for experiment in "${EXP_LIST[@]}"; do
 ########
       # === AFTER all experiments are processed === 
-      for chr in CHRIII CHRV; do
-        R_SCRIPT="SR_process_cov_III_V.R"
-        numeric_sample="${sample#T}"
+        for chr in CHRIII CHRV; do
+          R_SCRIPT="SR_process_cov_III_V.R"
+          numeric_sample="${sample#T}"
+          
+          collect_files() {
+          suffix=$1
+          files=()
+          missing=0
+          for exp in "${EXP_LIST[@]}"; do
+              f="${subdir}/${sample}_${exp}_${suffix}"
+              files+=("$f")
+              if [[ ! -f "$f" ]]; then
+                  missing=1
+              fi
+          done
 
-        # 75nt general
-        suffix="75nt_${chr}.tsv"
-        mapfile -t files < <(collect_files "$suffix")
-        if [[ ${#files[@]} -gt 0 ]]; then
-          Rscript "${MYRSCRIPTS}/${R_SCRIPT}" "$numeric_sample" "${subdir}/${sample}_75nt_${chr}_avg_ordered.tsv" "${files[@]}"
-        else
-          echo "Missing 75nt ${chr} files for $sample" >> "$log_file"
+          if [[ $missing -eq 1 ]]; then
+              return 1
+          else
+              printf "%s\n" "${files[@]}"
+          fi
+        }
+
+          # 75nt general
+          suffix="75nt_${chr}.tsv"
+          mapfile -t files < <(collect_files "$suffix")
+          if [[ ${#files[@]} -gt 0 ]]; then
+            Rscript "${MYRSCRIPTS}/${R_SCRIPT}" "$numeric_sample" "${subdir}/${sample}_75nt_${chr}_avg_ordered.tsv" "${files[@]}"
+          else
+            echo "Missing 75nt ${chr} files for $sample" >> "$log_file"
+          fi
+
+          # 75nt MATa
+          suffix="75nt_${chr}_MATa.tsv"
+          mapfile -t files < <(collect_files "$suffix")
+          if [[ ${#files[@]} -gt 0 ]]; then
+            Rscript "${MYRSCRIPTS}/${R_SCRIPT}" "$numeric_sample" "${subdir}/${sample}_75nt_${chr}_MATa_avg_ordered.tsv" "${files[@]}"
+          else
+            echo "Missing 75nt MATa ${chr} files for $sample" >> "$log_file"
+          fi
+
+          # 18nt MATa
+          suffix="${chr}_18nt_ordered.tsv"
+          mapfile -t files < <(collect_files "$suffix")
+          if [[ ${#files[@]} -gt 0 ]]; then
+            Rscript "${MYRSCRIPTS}/${R_SCRIPT}" "$numeric_sample" "${subdir}/${sample}_${chr}_18nt_ordered_avg_ordered.tsv" "${files[@]}"
+          else
+            echo "Missing 18nt MATa ${chr} files for $sample" >> "$log_file"
+          fi
+        
+          #################
+
+          # Bin into 1000bp
+          if [[ -f "${subdir}/${sample}_75nt_${chr}_avg_ordered.tsv" ]]; then
+            input="${subdir}/${sample}_75nt_${chr}_avg_ordered.tsv"
+            output="${subdir}/${sample}_75nt_${chr}_binned.tsv"
+            bin_size=100
+
+              gawk -v bin="$bin_size" '
+              {
+                  # force floating point by adding 0.0
+                  cov_sum += ($3 + 0.0)
+                  last_coord = $1
+                  time = $2
+                  count++
+
+                  if (count == bin) {
+                      avg_cov = cov_sum / bin
+                      printf "%d\t%s\t%.5f\n", last_coord, time, avg_cov
+                      cov_sum = 0
+                      count = 0
+                  }
+              }
+              ' "$input" > "$output"
+          else
+            echo "Warning: ${subdir}/${sample}_75nt_${chr}_avg_ordered.tsv not found! Chr Binning cannot be created" >> "$log_file"
+            echo "" >> "$log_file"
+          fi
+
+
+        #   # Average MATa coverage (75nt reads)
+        #   if [[ -f "${subdir}/${sample}_E1_75nt_${chr}_MATa.tsv" && -f "${subdir}/${sample}_E2_75nt_${chr}_MATa.tsv" && -f "${subdir}/${sample}_E3_75nt_${chr}_MATa.tsv" ]]; then
+        #     LC_NUMERIC=C awk -F'\t' '
+        #       FILENAME == ARGV[1] {
+        #         a[FNR] = $2 + 0
+        #         chr[FNR] = $1
+        #         coord[FNR] = $3
+        #         next
+        #       }
+        #       FILENAME == ARGV[2] {
+        #         b[FNR] = $2 + 0
+        #         next
+        #       }
+        #       FILENAME == ARGV[3] {
+        #         c[FNR] = $2 + 0
+        #         next
+        #       }
+        #       END {
+        #         for (i = 1; i <= FNR; i++) {
+        #           avg = (a[i] + b[i] + c[i]) / 3
+        #           printf "%s\t%.5f\t%s\n", chr[i], avg, coord[i]
+        #         }
+        #       }
+        #     ' "${subdir}/${sample}_E1_75nt_${chr}_MATa.tsv" \
+        #       "${subdir}/${sample}_E2_75nt_${chr}_MATa.tsv" \
+        #       "${subdir}/${sample}_E3_75nt_${chr}_MATa.tsv" \
+        #     > "${subdir}/${sample}_75nt_${chr}_MATa_avg.tsv"
+        #   else
+        #     echo "Warning: One or more ChrIII/V MATa 75nt files for sample $sample are missing in $subdir!. Averaged MATa can not be calculated!" >> "$log_file"
+        #     echo "" >> "$log_file"
+        #   fi
+
+        #   # Add a column with the sample name (75nt reads)
+        #   if [[ -f "${subdir}/${sample}_75nt_${chr}_MATa_avg.tsv" ]]; then
+        #     awk -F'\t' -v sample="$numeric_sample" 'BEGIN{OFS="\t"} {print sample, $0}' "${subdir}/${sample}_75nt_${chr}_MATa_avg.tsv" > "${subdir}/${sample}_75nt_${chr}_MATa_avg_ordered.tsv"
+        #   fi
+
+        #   # Reorder columns to coordinate, time and coverage (75nt reads)
+        #   if [[ -f "${subdir}/${sample}_75nt_${chr}_MATa_avg_ordered.tsv" ]]; then
+        #     awk -F'\t' 'BEGIN{OFS="\t"} {print $4, $1, $3}' "${subdir}/${sample}_75nt_${chr}_MATa_avg_ordered.tsv" > "${subdir}/${sample}_75nt_${chr}_MATa_avg_ordered.tsv.tmp" && mv "${subdir}/${sample}_75nt_${chr}_MATa_avg_ordered.tsv.tmp" "${subdir}/${sample}_75nt_${chr}_MATa_avg_ordered.tsv"
+        #   fi
+
+        # # Average MATa coverage (18nt reads)
+        # if [[ -f "${subdir}/${sample}_E1_${chr}_18nt_ordered.tsv" && -f "${subdir}/${sample}_E2_${chr}_18nt_ordered.tsv" && -f "${subdir}/${sample}_E3_${chr}_18nt_ordered.tsv" ]]; then
+        #   LC_NUMERIC=C awk -F'\t' '
+        #       FILENAME == ARGV[1] {
+        #         a[FNR] = $2 + 0
+        #         chr[FNR] = $1
+        #         coord[FNR] = $3
+        #         next
+        #       }
+        #       FILENAME == ARGV[2] {
+        #         b[FNR] = $2 + 0
+        #         next
+        #       }
+        #       FILENAME == ARGV[3] {
+        #         c[FNR] = $2 + 0
+        #         next
+        #       }
+        #       END {
+        #         for (i = 1; i <= FNR; i++) {
+        #           avg = (a[i] + b[i] + c[i]) / 3
+        #           printf "%s\t%.5f\t%s\n", chr[i], avg, coord[i]
+        #         }
+        #       }
+        #   ' "${subdir}/${sample}_E1_${chr}_18nt_ordered.tsv" \
+        #     "${subdir}/${sample}_E2_${chr}_18nt_ordered.tsv" \
+        #     "${subdir}/${sample}_E3_${chr}_18nt_ordered.tsv" \
+        #   > "${subdir}/${sample}_${chr}_18nt_ordered_avg.tsv"
+        # else
+        #   echo "Warning: One or more MATa $chr 18nt files for sample $sample are missing in $subdir!. Averaged MATa ${chr} 18nt can not be calculated!" >> "$log_file"
+        #   echo "" >> "$log_file"
+        # fi
+        
+        # # Add a column with the sample name (18nt reads)
+        # if [[ -f "${subdir}/${sample}_${chr}_18nt_ordered_avg.tsv" ]]; then
+        #   awk -F'\t' -v sample="$numeric_sample" 'BEGIN{OFS="\t"} {print sample, $0}' "${subdir}/${sample}_${chr}_18nt_ordered_avg.tsv" > "${subdir}/${sample}_${chr}_18nt_ordered_avg_ordered.tsv"
+        # fi
+
+        # Reorder columns to coordinate, timepoint, coverage and chromosome (18nt reads)
+        if [[ -f "${subdir}/${sample}_${chr}_18nt_ordered_avg_ordered.tsv" ]]; then
+          awk -F'\t' 'BEGIN{OFS="\t"} {print $4, $1, $3}' "${subdir}/${sample}_${chr}_18nt_ordered_avg_ordered.tsv" > "${subdir}/${chr}_MATa_${sample}_18nt_Coverage_nonHO.tsv"
+          awk -v start=-800 '{printf "%d\t%s\t%s\n", start+(NR-1), $2, $3}' "${subdir}/${chr}_MATa_${sample}_18nt_Coverage_nonHO.tsv" > "${subdir}/${chr}_MATa_${sample}_18nt_Coverage_nonCHR.tsv"
+          awk -v chr="$chr" 'BEGIN {OFS="\t"} {print $0, chr}' "${subdir}/${chr}_MATa_${sample}_18nt_Coverage_nonCHR.tsv" > "${subdir}/${chr}_MATa_${sample}_18nt_Coverage.tsv"
         fi
-
-        # 75nt MATa
-        suffix="75nt_${chr}_MATa.tsv"
-        mapfile -t files < <(collect_files "$suffix")
-        if [[ ${#files[@]} -gt 0 ]]; then
-          Rscript "${MYRSCRIPTS}/${R_SCRIPT}" "$numeric_sample" "${subdir}/${sample}_75nt_${chr}_MATa_avg_ordered.tsv" "${files[@]}"
-        else
-          echo "Missing 75nt MATa ${chr} files for $sample" >> "$log_file"
-        fi
-
-        # 18nt MATa
-        suffix="${chr}_18nt_ordered.tsv"
-        mapfile -t files < <(collect_files "$suffix")
-        if [[ ${#files[@]} -gt 0 ]]; then
-          Rscript "${MYRSCRIPTS}/${R_SCRIPT}" "$numeric_sample" "${subdir}/${sample}_${chr}_18nt_ordered_avg_ordered.tsv" "${files[@]}"
-        else
-          echo "Missing 18nt MATa ${chr} files for $sample" >> "$log_file"
-        fi
-      
-        #################
-
-        # Bin into 1000bp
-        if [[ -f "${subdir}/${sample}_75nt_${chr}_avg_ordered.tsv" ]]; then
-          input="${subdir}/${sample}_75nt_${chr}_avg_ordered.tsv"
-          output="${subdir}/${sample}_75nt_${chr}_binned.tsv"
-          bin_size=100
-
-            gawk -v bin="$bin_size" '
-            {
-                # force floating point by adding 0.0
-                cov_sum += ($3 + 0.0)
-                last_coord = $1
-                time = $2
-                count++
-
-                if (count == bin) {
-                    avg_cov = cov_sum / bin
-                    printf "%d\t%s\t%.5f\n", last_coord, time, avg_cov
-                    cov_sum = 0
-                    count = 0
-                }
-            }
-            ' "$input" > "$output"
-        else
-          echo "Warning: ${subdir}/${sample}_75nt_${chr}_avg_ordered.tsv not found! Chr Binning cannot be created" >> "$log_file"
-          echo "" >> "$log_file"
-        fi
-
-
-      #   # Average MATa coverage (75nt reads)
-      #   if [[ -f "${subdir}/${sample}_E1_75nt_${chr}_MATa.tsv" && -f "${subdir}/${sample}_E2_75nt_${chr}_MATa.tsv" && -f "${subdir}/${sample}_E3_75nt_${chr}_MATa.tsv" ]]; then
-      #     LC_NUMERIC=C awk -F'\t' '
-      #       FILENAME == ARGV[1] {
-      #         a[FNR] = $2 + 0
-      #         chr[FNR] = $1
-      #         coord[FNR] = $3
-      #         next
-      #       }
-      #       FILENAME == ARGV[2] {
-      #         b[FNR] = $2 + 0
-      #         next
-      #       }
-      #       FILENAME == ARGV[3] {
-      #         c[FNR] = $2 + 0
-      #         next
-      #       }
-      #       END {
-      #         for (i = 1; i <= FNR; i++) {
-      #           avg = (a[i] + b[i] + c[i]) / 3
-      #           printf "%s\t%.5f\t%s\n", chr[i], avg, coord[i]
-      #         }
-      #       }
-      #     ' "${subdir}/${sample}_E1_75nt_${chr}_MATa.tsv" \
-      #       "${subdir}/${sample}_E2_75nt_${chr}_MATa.tsv" \
-      #       "${subdir}/${sample}_E3_75nt_${chr}_MATa.tsv" \
-      #     > "${subdir}/${sample}_75nt_${chr}_MATa_avg.tsv"
-      #   else
-      #     echo "Warning: One or more ChrIII/V MATa 75nt files for sample $sample are missing in $subdir!. Averaged MATa can not be calculated!" >> "$log_file"
-      #     echo "" >> "$log_file"
-      #   fi
-
-      #   # Add a column with the sample name (75nt reads)
-      #   if [[ -f "${subdir}/${sample}_75nt_${chr}_MATa_avg.tsv" ]]; then
-      #     awk -F'\t' -v sample="$numeric_sample" 'BEGIN{OFS="\t"} {print sample, $0}' "${subdir}/${sample}_75nt_${chr}_MATa_avg.tsv" > "${subdir}/${sample}_75nt_${chr}_MATa_avg_ordered.tsv"
-      #   fi
-
-      #   # Reorder columns to coordinate, time and coverage (75nt reads)
-      #   if [[ -f "${subdir}/${sample}_75nt_${chr}_MATa_avg_ordered.tsv" ]]; then
-      #     awk -F'\t' 'BEGIN{OFS="\t"} {print $4, $1, $3}' "${subdir}/${sample}_75nt_${chr}_MATa_avg_ordered.tsv" > "${subdir}/${sample}_75nt_${chr}_MATa_avg_ordered.tsv.tmp" && mv "${subdir}/${sample}_75nt_${chr}_MATa_avg_ordered.tsv.tmp" "${subdir}/${sample}_75nt_${chr}_MATa_avg_ordered.tsv"
-      #   fi
-
-      # # Average MATa coverage (18nt reads)
-      # if [[ -f "${subdir}/${sample}_E1_${chr}_18nt_ordered.tsv" && -f "${subdir}/${sample}_E2_${chr}_18nt_ordered.tsv" && -f "${subdir}/${sample}_E3_${chr}_18nt_ordered.tsv" ]]; then
-      #   LC_NUMERIC=C awk -F'\t' '
-      #       FILENAME == ARGV[1] {
-      #         a[FNR] = $2 + 0
-      #         chr[FNR] = $1
-      #         coord[FNR] = $3
-      #         next
-      #       }
-      #       FILENAME == ARGV[2] {
-      #         b[FNR] = $2 + 0
-      #         next
-      #       }
-      #       FILENAME == ARGV[3] {
-      #         c[FNR] = $2 + 0
-      #         next
-      #       }
-      #       END {
-      #         for (i = 1; i <= FNR; i++) {
-      #           avg = (a[i] + b[i] + c[i]) / 3
-      #           printf "%s\t%.5f\t%s\n", chr[i], avg, coord[i]
-      #         }
-      #       }
-      #   ' "${subdir}/${sample}_E1_${chr}_18nt_ordered.tsv" \
-      #     "${subdir}/${sample}_E2_${chr}_18nt_ordered.tsv" \
-      #     "${subdir}/${sample}_E3_${chr}_18nt_ordered.tsv" \
-      #   > "${subdir}/${sample}_${chr}_18nt_ordered_avg.tsv"
-      # else
-      #   echo "Warning: One or more MATa $chr 18nt files for sample $sample are missing in $subdir!. Averaged MATa ${chr} 18nt can not be calculated!" >> "$log_file"
-      #   echo "" >> "$log_file"
-      # fi
-      
-      # # Add a column with the sample name (18nt reads)
-      # if [[ -f "${subdir}/${sample}_${chr}_18nt_ordered_avg.tsv" ]]; then
-      #   awk -F'\t' -v sample="$numeric_sample" 'BEGIN{OFS="\t"} {print sample, $0}' "${subdir}/${sample}_${chr}_18nt_ordered_avg.tsv" > "${subdir}/${sample}_${chr}_18nt_ordered_avg_ordered.tsv"
-      # fi
-
-      # Reorder columns to coordinate, timepoint, coverage and chromosome (18nt reads)
-      if [[ -f "${subdir}/${sample}_${chr}_18nt_ordered_avg_ordered.tsv" ]]; then
-        awk -F'\t' 'BEGIN{OFS="\t"} {print $4, $1, $3}' "${subdir}/${sample}_${chr}_18nt_ordered_avg_ordered.tsv" > "${subdir}/${chr}_MATa_${sample}_18nt_Coverage_nonHO.tsv"
-        awk -v start=-800 '{printf "%d\t%s\t%s\n", start+(NR-1), $2, $3}' "${subdir}/${chr}_MATa_${sample}_18nt_Coverage_nonHO.tsv" > "${subdir}/${chr}_MATa_${sample}_18nt_Coverage_nonCHR.tsv"
-        awk -v chr="$chr" 'BEGIN {OFS="\t"} {print $0, chr}' "${subdir}/${chr}_MATa_${sample}_18nt_Coverage_nonCHR.tsv" > "${subdir}/${chr}_MATa_${sample}_18nt_Coverage.tsv"
-      fi
       done
     done
+  done
 done
 
 # Concatenate all average ordered TSVs (75nt)
@@ -824,10 +854,10 @@ find "$MYREF" -name "*.ebwt" -exec rm {} +
 find "$MYREF" -name "*.fai" -exec rm {} +
 find "$MYREF" -name "*.txt" -exec rm {} +
 
-# Delete all TSV files in subdir, excluding those in Alignment_data
-for subdir in "${MYWD}"*; do
-    find "${subdir}" -maxdepth 1 -type f -name "*.tsv" ! -name "*_75nt.tsv" -exec rm {} \;
-done
+# # Delete all TSV files in subdir, excluding those in Alignment_data
+# for subdir in "${MYWD}"*; do
+#     find "${subdir}" -maxdepth 1 -type f -name "*.tsv" ! -name "*_75nt.tsv" -exec rm {} \;
+# done
 
 
 # ##########
