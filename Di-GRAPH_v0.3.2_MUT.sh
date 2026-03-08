@@ -653,7 +653,7 @@ EOF
 done
 
 ### Calculate repair pathway frequency
-R_SCRIPT="NHEJ_calc_rep_path_freq.R"
+R_SCRIPT="MUT_calc_rep_path_freq.R"
 
 for strain in "${MYWD}"*/; do
 
@@ -676,7 +676,7 @@ done
 
 
 ### Plot repair pathway comparison
-R_SCRIPT="NHEJ_plot_rep_path_comparison.R"
+R_SCRIPT="MUT_plot_rep_path_comparison.R"
 
 echo "Processing directory: ${MYWD}" >> "$log_file"
 root_dir="${MYWD}"
