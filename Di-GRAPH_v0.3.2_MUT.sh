@@ -666,7 +666,7 @@ for strain in "${MYWD}"*/; do
     echo "" >> "$log_file"
     echo "Plotting repair_pathway for ${strain}" >> "$log_file"
 
-    if ! Rscript "${MYRSCRIPTS}/${R_SCRIPT}" "$root_dir" "$strain" "$wd_dir" >> "$log_file" 2>&1; then
+    if ! Rscript "${MYRSCRIPTS}/${R_SCRIPT}" "$root_dir" "$strain" "$wd_dir" 2>> "$log_file"; then
         echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain}" >> "$log_file"
         echo "Skipping ${strain} and continuing..." >> "$log_file"
         continue
@@ -682,7 +682,7 @@ echo "Processing directory: ${MYWD}" >> "$log_file"
 root_dir="${MYWD}"
 echo "Plotting repair_pathway comparison" >> "$log_file"
 start_time=$SECONDS
-if ! Rscript "${MYRSCRIPTS}/${R_SCRIPT}" "$root_dir" >> "$log_file" 2>&1; then
+if ! Rscript "${MYRSCRIPTS}/${R_SCRIPT}" "$root_dir" 2>> "$log_file"; then
   echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain}" >> "$log_file"
   echo "Skipping ${root_dir} and continuing..." >> "$log_file"
 fi
