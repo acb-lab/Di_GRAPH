@@ -225,7 +225,7 @@ case $ARGS in
         exit 1
     fi
     ;;
-     -n|--number_exp)
+    -n|--number_exp)
     if [ "$2" ]; then
 		if [ "$2" -eq "$2"  ] 2>/dev/null ; then
             NUMBER_EXP=$2
@@ -278,7 +278,7 @@ done
 set -- "${POSITIONAL[@]}" #restore positional parameters
 
 
-REQUIRED_VARS=(MYBLAST CATEGORY_PATH MYWD MYREF MYREPORT)
+REQUIRED_VARS=(MYBLAST CATEGORY_PATH MYWD MYREF MYREPORT MYRSCRIPTS)
 REQUIRED_OPTS=(
   "-b/--blast"
   "-c/--categories"
@@ -311,6 +311,16 @@ fi
 
 if [[ "$NUMBER_EXP" != 3 ]]; then
     echo -e "\n${COL_blue}NUMBER OF EXPERIMENTS: $NUMBER_EXP experiments will be analyzed${COL_RESET} \n"
+fi
+
+read -rp "Please, enter experiment names (comma-separated, e.g. E1,E3,E4): " NAME_EXP
+
+IFS=',' read -ra EXP_LIST <<< "$NAME_EXP"
+
+
+if [ "${#EXP_LIST[@]}" -ne "$NUMBER_EXP" ]; then
+    echo "ERROR: You specified $NUMBER_EXP experiments but provided ${#EXP_LIST[@]} names."
+    exit 1
 fi
 
 #echo "Working"
@@ -351,8 +361,7 @@ bwa index "${MYREF}/RG_PMV_v9_CHRIII.fasta"
 for subdir in "$MYWD"*/; do
   echo "Processing directory: $subdir"
     for sample in T0 TLG TLR; do
-      for experiment_name in $(seq 1 "$NUMBER_EXP"); do
-          exp="E${experiment_name}"
+      for exp in "${EXP_LIST[@]}"; do
         file1_gz="${subdir}/${sample}_${exp}_R1.fastq.gz"
         file2_gz="${subdir}/${sample}_${exp}_R2.fastq.gz"
        
@@ -430,8 +439,7 @@ find "$MYWD" -type f \( -name "*.sam" -o -name "*.fastq" \) -exec rm {} + # inte
 
 for subdir in "$MYWD"*/; do
   for sample in T0 TLG TLR; do
-    for experiment_name in $(seq 1 "$NUMBER_EXP"); do
-        exp="E${experiment_name}"
+    for exp in "${EXP_LIST[@]}"; do
       bam_file="${subdir}/${sample}_${exp}_HOs.bam"
       output_bam_G="${subdir}/${sample}_${exp}_200689_G.bam"
       output_bam_A="${subdir}/${sample}_${exp}_200689_A.bam"
@@ -510,8 +518,7 @@ done
 
 for subdir in "$MYWD"*/; do
   for sample in T0 TLG TLR; do
-    for experiment_name in $(seq 1 "$NUMBER_EXP"); do
-        exp="E${experiment_name}"
+    for exp in "${EXP_LIST[@]}"; do
       bam_file="${subdir}/${sample}_${exp}_200689_A.bam"
       output_bam_T="${subdir}/${sample}_${exp}_200689_A_200753_T.bam"
       output_bam_C="${subdir}/${sample}_${exp}_200689_A_200753_C.bam"
