@@ -1,5 +1,5 @@
-#### R script to plot MATa-MATa' coverage (reads 75nt)
-### Loop for each strain in MYWD
+#### R script to process inter-chromosomal discordant pairs (reads 75nt)
+### Loop for each strain/sample/experiment in MYWD
 ### 11/04/2026 - Lydia
 
 log_step <- function(message) {
