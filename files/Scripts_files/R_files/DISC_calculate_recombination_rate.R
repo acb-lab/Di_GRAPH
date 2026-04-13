@@ -15,23 +15,18 @@ log_step <- function(message) {
 # -------------------------
 args <- commandArgs(trailingOnly = TRUE)
 
-if (length(args) != 3) {
+if (length(args) != 2) {
   log_step("ERROR: Incorrect number of arguments")
-  log_step("Usage: script.R <root_dir> <strain> <reference_strain>")
+  log_step("Usage: script.R <root_dir> <reference_strain>")
   log_step(paste("Received:", paste(args, collapse=" ")))
   quit(status = 1)
 }
 
 root_dir <- args[1]
-strain <- args[2]
-reference_strain   <- args[3]
 
-strain <- sub("/$", "", strain)
-strain_name <- basename(strain)
+reference_strain   <- args[2]
 
 
-
-log_step(paste("STRAIN:", strain))
 log_step(paste("REFERENCE STRAIN:", reference_strain))
 
 # load libraries
