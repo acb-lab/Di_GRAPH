@@ -1768,8 +1768,8 @@ start_time_total_script_2=$SECONDS
 #         # Export variables for R access
         
 #         if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$wd_dir"; then
-#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${root_dir} {$strain}" >> "$log_file"
-#             echo "Skipping ${root_dir} {$strain} and continuing..." >> "$log_file"
+#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${root_dir} ${strain}" >> "$log_file"
+#             echo "Skipping ${root_dir} ${strain} and continuing..." >> "$log_file"
 #           continue
 #         fi
 
@@ -1795,8 +1795,8 @@ start_time_total_script_2=$SECONDS
 #         echo "Calculating Category_A read number" >> "$log_file"
 #         start_time=$SECONDS
 #        if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$wd_dir"; then
-#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${root_dir} {$strain}" >> "$log_file"
-#             echo "Skipping ${root_dir} {$strain} and continuing..." >> "$log_file"
+#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${root_dir} ${strain}" >> "$log_file"
+#             echo "Skipping ${root_dir} ${strain} and continuing..." >> "$log_file"
 #           continue
 #         fi
         
@@ -1829,8 +1829,8 @@ start_time_total_script_2=$SECONDS
 #         echo "Finding all processed_valid_error_rate.tsv files..." >> "$log_file"
         
 #         if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$wd_dir"; then
-#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${root_dir} {$strain}" >> "$log_file"
-#             echo "Skipping ${root_dir} {$strain} and continuing..." >> "$log_file"
+#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${root_dir} ${strain}" >> "$log_file"
+#             echo "Skipping ${root_dir} ${strain} and continuing..." >> "$log_file"
 #           continue
 #         fi
     
@@ -1844,7 +1844,7 @@ start_time_total_script_2=$SECONDS
 # done
 
 
-## aquí
+
 # ### Added BLAST levels of validation
 # ############## R processing of 75bp VALID reads ############
 
@@ -1855,6 +1855,7 @@ start_time_total_script_2=$SECONDS
 # # Start timer for R processing
 
 # start_time_total_R_valid=$SECONDS
+# R_SCRIPT="DISC_validate_inter_discordant_pairs_levels_1feature.R"
 
 # echo "================================" >> "$log_file"
 # echo "" >> "$log_file"  # Adds a blank line
@@ -1866,7 +1867,7 @@ start_time_total_script_2=$SECONDS
 # # Loop inside each subdirectory of MYWD
 # for strain in "${MYWD}"*/; do
 #   for sample in TSG TLG TLR; do
-#     for experiment in E1 E2 E3; do
+#     for experiment in "${EXP_LIST[@]}"; do
 #       file1="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_processed_blast_center_combined_results.tsv"
 #       file2="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_processed_blast_prev_combined_results.tsv"
 #       file3="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_processed_blast_next_combined_results.tsv"
@@ -1877,251 +1878,16 @@ start_time_total_script_2=$SECONDS
 #         echo "" >> "$log_file"  # Adds a blank line
 #         echo "Processing inter-discordant tsv files for $file1 , $file2 , $file3 and $fileorig" >> "$log_file"
 #         start_time=$SECONDS
-#         Rscript - <<EOF
-#           # load libraries
+#         strain="${strain}"
+#         sample="${sample}"
+#         experiment="${experiment}"
+#         category_path="${CATEGORY_PATH}"
+#         if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$strain" "$sample" "$experiment" "$category_path" "$file1" "$file2" "$file3" "$fileorig" "$filecontrol"; then
+#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${sample} ${experiment}" >> "$log_file"
+#             echo "Skipping ${strain} ${sample} ${experiment} and continuing..." >> "$log_file"
+#           continue
+#         fi
 
-#           library(readr)
-#           library(extrafont)
-#           library(stringr)
-#           library(svglite)
-#           library(tidyverse, warn.conflicts = FALSE)
-#           library(tidyr, warn.conflicts = FALSE)
-#           library(dplyr, warn.conflicts = FALSE)
-#           # Suppress summarise info
-#           options(dplyr.summarise.inform = FALSE)
-
-#           # Variables from Bash
-#           category_path <- "${CATEGORY_PATH}"
-#           strain <- "${strain}"
-#           sample <- "${sample}"
-#           experiment <- "${experiment}" 
-#           strain <- sub("/\$", "", strain)  # Remove trailing slash
-#           strain_name <- basename(strain)  # Get the name of the strain directory
-#           path_to_file_1 <- "${file1}"
-#           path_to_file_2 <- "${file2}"
-#           path_to_file_3 <- "${file3}"
-#           path_to_file_original <- "${fileorig}"
-#           path_to_file_control <- "${filecontrol}"
-#           path_to_categories_pairs_file <- file.path(category_path, "PMV_categories_pairs.tsv")
-#           path_to_features_pairs_file <- file.path(category_path, "PMV_features_pairs.tsv")
-
-
-#           # Functions
-
-#           #path_to_file_1
-#           #path_to_file_2
-#           #path_to_file_3
-#           #path_to_file_original
-
-#           # Functions
-#           log_step <- function(message) {
-#             timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-#             message(sprintf("[%s] %s", timestamp, message))
-#           }
-
-#           # 0 hits: valid
-#           process_blast_filtered_files_option1 <- function (blast_filtered_file_path) {
-#             blast_filtered_df <- read.table(blast_filtered_file_path,
-#                                             header=FALSE, sep = "\t", 
-#                                             col.names = paste0("V",seq_len(5)), fill = TRUE) %>% 
-#               rename("pair_group" = !!names(.[1]), "Feature_name_B" = !!names(.[2]), "hits" = !!names(.[3]), 
-#                     "mismatch" = !!names(.[4]), "length" = !!names(.[5])) %>% 
-#               mutate(valid = ifelse(hits == 0, "yes", "no"))
-            
-#             return(blast_filtered_df)
-            
-#           }
-
-#           # Valid: >=1 hit & >= 3 mismatch & lenght = 75nt + 0hits
-#           process_blast_filtered_files_option2 <- function (blast_filtered_file_path) {
-#             blast_filtered_df <- read.table(blast_filtered_file_path,
-#                                             header=FALSE, sep = "\t", 
-#                                             col.names = paste0("V",seq_len(5)), fill = TRUE) %>% 
-#               rename("pair_group" = !!names(.[1]), "Feature_name_B" = !!names(.[2]), "hits" = !!names(.[3]), 
-#                     "mismatch" = !!names(.[4]), "length" = !!names(.[5])) %>% 
-#               mutate(valid = ifelse(hits == 0, "yes", ifelse(hits !=0 & mismatch >2 & length == 75, "yes", "no")))
-            
-#             return(blast_filtered_df)
-            
-#           }
-
-#           # Valid: >=1 hit & = 2 mismatch & lenght = 75nt + >=1 hit & >= 3 mismatch & lenght = 75nt + 0hits 
-#           process_blast_filtered_files_option3 <- function (blast_filtered_file_path) {
-#             blast_filtered_df <- read.table(blast_filtered_file_path,
-#                                             header=FALSE, sep = "\t", 
-#                                             col.names = paste0("V",seq_len(5)), fill = TRUE) %>% 
-#               rename("pair_group" = !!names(.[1]), "Feature_name_B" = !!names(.[2]), "hits" = !!names(.[3]), 
-#                     "mismatch" = !!names(.[4]), "length" = !!names(.[5])) %>% 
-#               mutate(valid = ifelse(hits == 0, "yes", 
-#                                     ifelse(hits !=0 & mismatch >2 & length == 75, "yes", 
-#                                           ifelse(hits !=0 & mismatch == 2 & length == 75, "yes", "no"))))
-            
-#             return(blast_filtered_df)
-            
-#           }
-
-#           # Valid: >=1 hit & = 1 mismatch & lenght = 75nt + >=1 hit & = 2 mismatch & lenght = 75nt + >=1 hit & >= 3 mismatch & lenght = 75nt + 0hits 
-#           process_blast_filtered_files_option4 <- function (blast_filtered_file_path) {
-#             blast_filtered_df <- read.table(blast_filtered_file_path,
-#                                             header=FALSE, sep = "\t", 
-#                                             col.names = paste0("V",seq_len(5)), fill = TRUE) %>% 
-#               rename("pair_group" = !!names(.[1]), "Feature_name_B" = !!names(.[2]), "hits" = !!names(.[3]), 
-#                     "mismatch" = !!names(.[4]), "length" = !!names(.[5])) %>% 
-#               mutate(valid = ifelse(hits == 0, "yes", 
-#                                     ifelse(hits !=0 & mismatch >2 & length == 75, "yes", 
-#                                           ifelse(hits !=0 & mismatch == 2 & length == 75, "yes", 
-#                                                   ifelse(hits != 0 & mismatch == 1 & length == 75, "yes", "no")))))
-            
-#             return(blast_filtered_df)
-            
-#           }
-
-#           # Valid: all + >=1 hit & = 1 mismatch & lenght = 75nt + >=1 hit & = 2 mismatch & lenght = 75nt + >=1 hit & >= 3 mismatch & lenght = 75nt + 0hits 
-#           process_blast_filtered_files_option5 <- function (blast_filtered_file_path) {
-#             blast_filtered_df <- read.table(blast_filtered_file_path,
-#                                             header=FALSE, sep = "\t", 
-#                                             col.names = paste0("V",seq_len(5)), fill = TRUE) %>% 
-#               rename("pair_group" = !!names(.[1]), "Feature_name_B" = !!names(.[2]), "hits" = !!names(.[3]), 
-#                     "mismatch" = !!names(.[4]), "length" = !!names(.[5])) %>% 
-#               mutate(valid = "yes")
-            
-#             return(blast_filtered_df)
-            
-#           }
-
-
-#           get_blast_validated_complete_df <- function (center_file, prev_file, next_file) {
-            
-#             complete_df <- left_join(prev_file, next_file, by = "pair_group") %>% 
-#               left_join(center_file, ., by = "pair_group") %>% 
-#               rename("valid_prev" = !!names(.[11]), "valid_next" = !!names(.[16])) %>% 
-#               separate(pair_group, c("pair_group_name", "number"), "-", remove = FALSE) %>% 
-#               mutate_at(vars(valid_prev, valid_next), ~replace_na(., "yes")) %>% 
-#               mutate(valid_all = ifelse(valid == "yes" & valid_prev == "yes" & valid_next == "yes", "yes", "no")) %>% 
-#               group_by(pair_group_name, pair_group) %>%
-#               mutate(all_yes_T_F = all(valid_all == "yes")) %>%
-#               group_by(pair_group_name) %>%
-#               mutate(group_all_yes_T_F = all(all_yes_T_F)) %>%
-#               ungroup() %>%
-#               mutate(valid_def = ifelse(group_all_yes_T_F, "yes", "no")) %>% 
-#               filter(valid_def == "yes") %>% select(pair_group) %>% 
-#               rename(Read_name_ID = pair_group) 
-            
-#             return(complete_df)
-            
-#           }
-
-
-#           center_df_option1 <- process_blast_filtered_files_option1(path_to_file_1)
-#           center_df_option2 <- process_blast_filtered_files_option2(path_to_file_1)
-#           center_df_option3 <- process_blast_filtered_files_option3(path_to_file_1)
-#           center_df_option4 <- process_blast_filtered_files_option4(path_to_file_1)
-#           center_df_option5 <- process_blast_filtered_files_option5(path_to_file_1)
-
-#           next_df_option1 <- process_blast_filtered_files_option1(path_to_file_1)
-#           next_df_option2 <- process_blast_filtered_files_option2(path_to_file_1)
-#           next_df_option3 <- process_blast_filtered_files_option3(path_to_file_1)
-#           next_df_option4 <- process_blast_filtered_files_option4(path_to_file_1)
-#           next_df_option5 <- process_blast_filtered_files_option5(path_to_file_1)
-
-#           prev_df_option1 <- process_blast_filtered_files_option1(path_to_file_1)
-#           prev_df_option2 <- process_blast_filtered_files_option2(path_to_file_1)
-#           prev_df_option3 <- process_blast_filtered_files_option3(path_to_file_1)
-#           prev_df_option4 <- process_blast_filtered_files_option4(path_to_file_1)
-#           prev_df_option5 <- process_blast_filtered_files_option5(path_to_file_1)
-
-
-          
-
-#           log_step("Finding valid reads...") 
-
-#           valid_read_name_option1 <- get_blast_validated_complete_df(center_df_option1, prev_df_option1, next_df_option1)
-#           valid_read_name_option2 <- get_blast_validated_complete_df(center_df_option2, prev_df_option2, next_df_option2)
-#           valid_read_name_option3 <- get_blast_validated_complete_df(center_df_option3, prev_df_option3, next_df_option3)
-#           valid_read_name_option4 <- get_blast_validated_complete_df(center_df_option4, prev_df_option4, next_df_option4)
-#           valid_read_name_option5 <- get_blast_validated_complete_df(center_df_option5, prev_df_option5, next_df_option5)
-#           #head(valid_read_name)
-
-
-#           original_df <- read_tsv(path_to_file_original,col_names = TRUE) %>% 
-#             mutate(Read_name_ID = with(., paste0(Read_name, "_", pair_group))) %>%
-#             filter(Category_A != "control_norm", Category_B != "control_norm", Category_A != "control", Category_B != "control")
-
-#           log_step("Comparing with original file...") 
-
-#           valid_pairs_df_option1 <- semi_join(original_df, valid_read_name_option1)
-#           valid_pairs_df_option2 <- semi_join(original_df, valid_read_name_option2)
-#           valid_pairs_df_option3 <- semi_join(original_df, valid_read_name_option3)
-#           valid_pairs_df_option4 <- semi_join(original_df, valid_read_name_option4)
-#           valid_pairs_df_option5 <- semi_join(original_df, valid_read_name_option5)
-
-#           n_valid_reads_option1 <- nrow(valid_pairs_df_option1)
-#           n_valid_reads_option2 <- nrow(valid_pairs_df_option2)
-#           n_valid_reads_option3 <- nrow(valid_pairs_df_option3)
-#           n_valid_reads_option4 <- nrow(valid_pairs_df_option4)
-#           n_valid_reads_option5 <- nrow(valid_pairs_df_option5)
-
-#           n_original_reads <- nrow(original_df)
-
-#           log_step("Calculating error rate...")
-
-#           error_rate_option1 <- tibble(strain = strain_name, 
-#                               sample = sample,
-#                               experiment = experiment,
-#                               original_reads = n_original_reads,
-#                               valid_reads = n_valid_reads_option1) %>% 
-#             mutate(valid_rate = (valid_reads/original_reads)*100)
-
-#           error_rate_option2 <- tibble(strain = strain_name, 
-#                               sample = sample,
-#                               experiment = experiment,
-#                               original_reads = n_original_reads,
-#                               valid_reads = n_valid_reads_option2) %>% 
-#             mutate(valid_rate = (valid_reads/original_reads)*100)
-
-#           error_rate_option3 <- tibble(strain = strain_name, 
-#                               sample = sample,
-#                               experiment = experiment,
-#                               original_reads = n_original_reads,
-#                               valid_reads = n_valid_reads_option3) %>% 
-#             mutate(valid_rate = (valid_reads/original_reads)*100)
-
-#           error_rate_option4 <- tibble(strain = strain_name, 
-#                               sample = sample,
-#                               experiment = experiment,
-#                               original_reads = n_original_reads,
-#                               valid_reads = n_valid_reads_option4) %>% 
-#             mutate(valid_rate = (valid_reads/original_reads)*100)
-
-#           error_rate_option5 <- tibble(strain = strain_name, 
-#                               sample = sample,
-#                               experiment = experiment,
-#                               original_reads = n_original_reads,
-#                               valid_reads = n_valid_reads_option5) %>% 
-#             mutate(valid_rate = (valid_reads/original_reads)*100)
-
-
-          
-         
-#           # Write the new TSV
-#           log_step("Saving processed dataframe...") 
-#           log_step(paste0("Saving tsv files for: ", strain_name, " ",  sample, " ", experiment, "..."))
-
-#           write_tsv(valid_pairs_df_option1, file = paste0(strain, "/", sample, "_", experiment, "_option1","_inter_discordant_pairs_unique_processed_valid.tsv"))
-#           write_tsv(valid_pairs_df_option2, file = paste0(strain, "/", sample, "_", experiment, "_option2","_inter_discordant_pairs_unique_processed_valid.tsv"))
-#           write_tsv(valid_pairs_df_option3, file = paste0(strain, "/", sample, "_", experiment, "_option3","_inter_discordant_pairs_unique_processed_valid.tsv"))
-#           write_tsv(valid_pairs_df_option4, file = paste0(strain, "/", sample, "_", experiment, "_option4","_inter_discordant_pairs_unique_processed_valid.tsv"))
-#           write_tsv(valid_pairs_df_option5, file = paste0(strain, "/", sample, "_", experiment, "_option5","_inter_discordant_pairs_unique_processed_valid.tsv"))
-          
-          
-#           write_tsv(error_rate_option1, file = paste0(strain, "/", sample, "_", experiment, "_option1", "_inter_discordant_pairs_unique_processed_valid_error_rate.tsv"))
-#           write_tsv(error_rate_option2, file = paste0(strain, "/", sample, "_", experiment, "_option2", "_inter_discordant_pairs_unique_processed_valid_error_rate.tsv"))
-#           write_tsv(error_rate_option3, file = paste0(strain, "/", sample, "_", experiment, "_option3", "_inter_discordant_pairs_unique_processed_valid_error_rate.tsv"))
-#           write_tsv(error_rate_option4, file = paste0(strain, "/", sample, "_", experiment, "_option4", "_inter_discordant_pairs_unique_processed_valid_error_rate.tsv"))
-#           write_tsv(error_rate_option5, file = paste0(strain, "/", sample, "_", experiment, "_option5", "_inter_discordant_pairs_unique_processed_valid_error_rate.tsv"))
-          
-
-# EOF
 #       # Calculate elapsed time
 #         elapsed_time=$((( SECONDS - start_time )/60))
 #         echo "Total R processing for different blast options completed in ${elapsed_time} minutes" >> "$log_file"
@@ -2136,10 +1902,11 @@ start_time_total_script_2=$SECONDS
 
 
 # # R script to repeat discordant analysis with all blast options
+# R_SCRIPT="DISC_process_valid_inter_discordant_pairs_levels.R"
 # # Loop inside each subdirectory of MYWD
 # for strain in "${MYWD}"*/; do
 #   for sample in TSG TLG TLR; do
-#     for experiment in E1 E2 E3; do
+#     for experiment in "${EXP_LIST[@]}"; do
 #         for blast_option in option1 option2 option3 option4 option5 ; do
 #         file1="${strain}/${sample}_${experiment}_${blast_option}_inter_discordant_pairs_unique_processed_valid.tsv"
 #         file2="${strain}/${sample}_${experiment}_${blast_option}_inter_discordant_pairs_unique_processed_valid_error_rate.tsv"
@@ -2149,291 +1916,17 @@ start_time_total_script_2=$SECONDS
 #         echo "" >> "$log_file"  # Adds a blank line
 #         echo "Processing inter-discordant tsv files for $file1 , $file2" >> "$log_file"
 #         start_time=$SECONDS
-#         Rscript - <<EOF
-#           # load libraries
-
-#           library(readr)
-#           library(extrafont)
-#           library(stringr)
-#           library(svglite)
-#           library(tidyverse, warn.conflicts = FALSE)
-#           library(tidyr, warn.conflicts = FALSE)
-#           library(dplyr, warn.conflicts = FALSE)
-#           # Suppress summarise info
-#           options(dplyr.summarise.inform = FALSE)
-
-#           # Variables from Bash
-#           category_path <- "${CATEGORY_PATH}"
-#           strain <- "${strain}"
-#           sample <- "${sample}"
-#           experiment <- "${experiment}" 
-#           blast_option <- "${blast_option}"
-#           strain <- sub("/\$", "", strain)  # Remove trailing slash
-#           strain_name <- basename(strain)  # Get the name of the strain directory
-#           path_to_file_1 <- "${file1}"
-#           path_to_file_2 <- "${file2}"
-#           path_to_file_control <- "${filecontrol}"
-#           path_to_categories_pairs_file <- file.path(category_path, "PMV_categories_pairs.tsv")
-#           path_to_features_pairs_file <- file.path(category_path, "PMV_features_pairs.tsv")
-
-
-#           # Functions
-
-#           #path_to_file_1
-#           #path_to_file_2
-#           #path_to_file_3
-#           #path_to_file_original
-
-#           # Functions
-#           log_step <- function(message) {
-#             timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-#             message(sprintf("[%s] %s", timestamp, message))
-#           }
-
-
-#           # Calculate distribution of valid reads
-#           df_categories_pairs <- read_tsv(path_to_categories_pairs_file,col_names = FALSE, show_col_types = FALSE) %>%
-#             rename("Category_A" = !!names(.[1]), "Category_B" = !!names(.[2]))
-
-#           # Categories
-#           categories <- unique(df_categories_pairs\$Category_A)
-
-#           # Process_categories
-#           process_categories <- function(categories_i, valid_pairs_df_file, categories_df_file) {
-#             # Possible combinations
-#             combinations <- categories_df_file %>%
-#               filter(Category_A == categories_i) %>%
-#               distinct(Category_B) %>%
-#               pull()
-            
-#             # Filter discordant pairs for each Category_A
-#             valid_pairs_filtered <- filter(valid_pairs_df_file, Category_A == categories_i)
-            
-#             # Calculate number of reads 
-#             map_dfr(combinations, function(categoryB) {
-#               n <- valid_pairs_filtered %>% filter(Category_B == categoryB) %>% nrow()
-#               tibble(Category_A = categories_i, Category_B = categoryB, count = n)
-#             })
-#           }
-          
-#           # Write the new TSV
-#           log_step("Calculating discordant reads distribution along genomic categories...") 
-
-#           valid_pairs_df <- read_tsv(path_to_file_1,col_names = TRUE)
-#           #valid_pairs_df 
-          
-#           # Get counts
-#           count_df <- map_dfr(categories, process_categories, valid_pairs_df_file = valid_pairs_df, categories_df_file = df_categories_pairs) %>% 
-#             mutate(strain = strain_name,
-#                   sample = sample,
-#                   experiment = experiment)
-#           write_tsv(count_df, file = paste0(strain, "/", sample, "_", experiment,  "_", blast_option, "_inter_discordant_pairs_unique_processed_valid_counts.tsv"))
-
-
-#           # Set genomic categories order
-#           genomic_categories_order <- c(
-#             "ORF", "intergenic", "long_terminal_repeat", "transposable_element_gene",
-#             "LTR_retrotransposon", "tRNA_gene", "rRNA_gene", "ncRNA_gene",
-#             "snRNA_gene", "snoRNA_gene", "ARS", "centromere", "telomere"
-#           )
-
+#         strain="${strain}"
+#         sample="${sample}"
+#         experiment="${experiment}"
+#         category_path="${CATEGORY_PATH}"
+#         blast_option="${blast_option}"
+#         if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$strain" "$sample" "$experiment" "$blast_option" "$category_path" "$file1" "$file2" "$filecontrol"; then
+#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${sample} ${experiment} ${blast_option}" >> "$log_file"
+#             echo "Skipping ${strain} ${sample} ${experiment} ${blast_option} and continuing..." >> "$log_file"
+#           continue
+#         fi
         
-#           log_step("Calculating global inter-chromosomal discordant read pairs distribution...")
-#           # Calculate global inter-chromosomal discordant read pairs distribution 
-#           global_distribution <- count_df %>% 
-#             group_by(strain, sample, experiment) %>% 
-#             mutate(global_percentage = (count / sum(count))*100,
-#                   strain_sample_comb = paste0(strain, "_", sample)) %>% 
-#             replace(is.na(.), 0) %>% 
-#             group_by(strain, sample, experiment, strain_sample_comb,  Category_A, Category_B) %>%
-#             summarise(mean_global_percentage = mean(global_percentage, na.rm = TRUE),
-#                       sd_global_percentage = sd(global_percentage, na.rm = TRUE)) %>%
-#             # Apply genomic_categories_order
-#             mutate(Category_A = factor(Category_A, levels = genomic_categories_order),
-#                   Category_B = factor(Category_B, levels = genomic_categories_order)) %>%
-#             arrange(strain, sample, experiment, Category_A, Category_B)
-
-#           write_tsv(global_distribution, file = paste0(strain, "/", sample, "_", experiment, "_", blast_option, "_inter_discordant_pairs_unique_processed_valid_global_distribution.tsv"))
-
-#           log_step("Calculating category inter-chromosomal discordant read pairs distribution...")
-#           # Calculate average per_category inter-chromosomal discordant read pairs distribution 
-#           category_distribution <- count_df %>% 
-#             group_by(strain, sample, experiment, Category_A) %>% 
-#             mutate(category_percentage = (count / sum(count))*100,
-#                   strain_sample_comb = paste0(strain, "_", sample)) %>% 
-#             replace(is.na(.), 0) %>%
-#             group_by(strain, sample, experiment, strain_sample_comb, Category_A, Category_B) %>%
-#             summarise(mean_category_percentage = mean(category_percentage, na.rm = TRUE),
-#                       sd_category_percentage = sd(category_percentage, na.rm = TRUE)) %>%
-#             # Apply genomic_categories_order
-#             mutate(Category_A = factor(Category_A, levels = genomic_categories_order),
-#                   Category_B = factor(Category_B, levels = genomic_categories_order)) %>%
-#             arrange(strain, sample, experiment,Category_A, Category_B)
-          
-#           write_tsv(category_distribution, file = paste0(strain, "/", sample, "_", experiment, "_", blast_option, "_inter_discordant_pairs_unique_processed_valid_category_distribution.tsv"))
-
-
-#           # Inter-chromosomal discordant read pairs matrix
-#           df_features_pairs <- read_tsv(path_to_features_pairs_file, col_names = TRUE, show_col_types = FALSE)
-#           #all_pairs <- expand.grid(Feature_name_A = sort(unique(df_features_pairs\$Feature_name_A)), Feature_name_B = sort(unique(df_features_pairs\$Feature_name_B)))
-#           control_df <- read_tsv(path_to_file_control,col_names = TRUE) %>% filter(Category_A=="control_norm", Category_B=="control_norm")
-          
-#           #head(all_pairs)
-          
-#           get_discordant_matrix <- function(valid_pairs_df_file, all_pairs_df, control_df_file) {
-#             posA_info <- all_pairs_df %>%
-#               select(Feature_name_A, Position_A = Position, Essential_A = Essential) %>%
-#               distinct()
-            
-#             posB_info <- all_pairs_df %>%
-#               select(Feature_name_B, Position_B = Position, Essential_B = Essential) %>%
-#               distinct()
-            
-#             valid_pairs_df_posA <- valid_pairs_df_file %>%
-#               left_join(posA_info, by = "Feature_name_A")
-            
-#             valid_pairs_df_posAB <- valid_pairs_df_posA %>%
-#               left_join(posB_info, by = "Feature_name_B")
-            
-#             pair_counts <- valid_pairs_df_posAB %>%
-#               group_by(strain, sample, experiment, Feature_name_A, Feature_name_B) %>%
-#               summarise(count = n(), .groups = "drop")
-            
-#             complete_matrix <- left_join(valid_pairs_df_posAB, pair_counts,
-#                                         by = c("Feature_name_A", "Feature_name_B", "strain", "sample", "experiment")) %>%
-#               distinct()
-            
-#             count_total <- nrow(control_df_file)
-#             complete_matrix <- complete_matrix %>%
-#               mutate(count_norm = (count / count_total) * 100) %>% 
-#               select(!c(pair_group, pair_group_name, number, Feature_name_B_prev, Feature_name_B_next))
-            
-#             return(complete_matrix)
-#           }
-
-#           log_step("Generating discordant matrix...")
-#           complete_matrix <- get_discordant_matrix(valid_pairs_df, df_features_pairs, control_df)
-#           complete_matrix_noORF_nointergenic <- complete_matrix %>% filter(Category_A != "ORF", Category_B != "ORF", Category_A != "intergenic", Category_B != "intergenic")
-
-#           log_step("Saving discordant matrix...")
-#           write_tsv(complete_matrix, file = paste0(strain, "/", sample, "_", experiment, "_", blast_option, "_inter_discordant_pairs_unique_processed_valid_discordant_matrix.tsv"))
-#           write_tsv(complete_matrix_noORF_nointergenic, file = paste0(strain, "/", sample, "_", experiment, "_", blast_option, "_inter_discordant_pairs_unique_processed_valid_discordant_matrix_noORF_nointergenic.tsv"))
-          
-
-#           log_step("Plotting discordant matrix...")
-#           matrix_plot <-ggplot(complete_matrix, aes(y = Position_B, x = Position_A)) +
-#             #geom_hdr(xlim = c(0,14518), ylim = c(14518,0), method = "kde", fill = "brown4") + 
-#             geom_point(aes(colour = count_norm), alpha = 1, size = 0.8) +
-#             scale_colour_gradient2(low= "white", mid = "#4ae034", high = "#00641b",
-#                                   midpoint = 1,
-#                                   limits = c (0, 5),
-#                                   oob = scales::squish) + 
-#             theme_bw(base_family = "Arial") + 
-#             theme(panel.background = element_blank()) +
-#             theme(plot.background = element_rect(fill = "transparent", colour = NA))+
-#             theme(legend.position="right") +
-#             theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank()) +
-#             guides (colour = guide_colourbar(barwidth = 0.5, barheight = 5,
-#                                           frame.colour = "black", frame.linewidth = 0.25,
-#                                           ticks.colour = NA)) + 
-#             coord_cartesian(xlim = c(0,14518), ylim = c(14518, 0), expand=FALSE) +
-#             theme(aspect.ratio = 1) +
-#             scale_x_continuous(breaks = c(118, 574, 755, 1591, 1914, 2053, 2636, 2957, 3198, 3596, 3944, 4522, 5027, 5462, 6059,
-#                                           6570, 6683, 7134, 7337, 8161, 8493, 8638, 9245, 9562, 9798, 10201, 10568, 11128, 11648, 12080, 12685,
-#                                           13195, 13578, 13669, 13719, 13994, 14019, 14036, 14042, 14119, 14471, 14487), position = "top") +
-#             scale_y_continuous(breaks = c(118, 574, 755, 1591, 1914, 2053, 2636, 2957, 3198, 3596, 3944, 4522, 5027, 5462, 6059,
-#                                           6570, 6683, 7134, 7337, 8161, 8493, 8638, 9245, 9562, 9798, 10201, 10568, 11128, 11648, 12080, 12685,
-#                                           13195, 13578, 13669, 13719, 13994, 14019, 14036, 14042, 14119, 14471, 14487)) +
-#             geom_hline(yintercept=c(6570, 13195, 13578, 13669, 13719, 13994, 14019, 14036, 14042, 14119, 14471, 14487),
-#                       linetype="solid", color = "black", linewidth=0.05) +
-#             geom_hline(yintercept=c(118, 574, 755, 1591, 1914, 2053, 2636, 2957, 3198, 3596, 3944, 4522, 5027, 5462, 6059,
-#                                     6570, 6683, 7134, 7337, 8161, 8493, 8638, 9245, 9562, 9798, 10201, 10568, 11128, 11648, 12080, 12685,
-#                                     13195, 13578, 13669, 13719, 13994, 14019, 14036, 14042, 14119, 14471, 144877),
-#                       linetype="dashed", color = "black", linewidth=0.05) +
-#             geom_vline(xintercept=c(6570, 13195, 13578, 13669, 13719, 13994, 14019, 14036, 14042, 14119, 14471, 14487),
-#                       linetype="solid", color = "black", linewidth=0.05) +
-#             geom_vline(xintercept=c(118, 574, 755, 1591, 1914, 2053, 2636, 2957, 3198, 3596, 3944, 4522, 5027, 5462, 6059,
-#                                     6570, 6683, 7134, 7337, 8161, 8493, 8638, 9245, 9562, 9798, 10201, 10568, 11128, 11648, 12080, 12685,
-#                                     13195, 13578, 13669, 13719, 13994, 14019, 14036, 14042, 14119, 14471, 14487),
-#                       linetype="dashed", color = "black", linewidth=0.05) +
-#             theme(axis.text.y=element_text(size=0)) +
-#             theme(axis.text.x=element_text(size=0)) +
-#             theme(axis.title.x = element_text(size=0)) +
-#             theme(axis.title.y = element_text(size=0)) +
-#             theme(axis.ticks = element_blank()) +
-#             geom_abline(intercept = 0, slope = 1, color = "black", linetype = "solid", linewidth = 0.05) +
-#             labs(
-#               title = paste0("Inter_chromosomal discordant matrix - ", strain_name, " - ", sample, " - ", experiment, " - ", blast_option),
-#               colour = "Freq (%)")
-          
-#           #paste0(subdir, "/plot_", chr_name, "_75nt_", gsub("\\.tsv$", "", suffix), ".svg")
-#           ggsave(
-#             filename = paste0(strain,"/", "Inter_chromosomal_discordant_matrix_plot_", strain_name, "_", sample, "_", experiment, "_", blast_option, ".svg"),
-#             plot = matrix_plot,
-#             #width = 8,
-#             #height = 3.6,
-#             device = svglite,
-#             bg = "transparent"
-#           )
-
-#           log_step("Plotting discordant matrix - no ORF no intergenic...")
-#           matrix_plot <-ggplot(complete_matrix_noORF_nointergenic, aes(y = Position_B, x = Position_A)) +
-#             #geom_hdr(xlim = c(0,14518), ylim = c(14518,0), method = "kde", fill = "brown4") + 
-#             geom_point(aes(colour = count_norm), alpha = 1, size = 2) +
-#             scale_colour_gradient2(low= "white", mid = "#4ae034", high = "#00641b",
-#                                   midpoint = 1,
-#                                   limits = c (0, 5),
-#                                   oob = scales::squish) + 
-#             theme_bw(base_family = "Arial") + 
-#             theme(panel.background = element_blank()) +
-#             theme(plot.background = element_rect(fill = "transparent", colour = NA))+
-#             theme(legend.position="right") +
-#             theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank()) +
-#             guides (colour = guide_colourbar(barwidth = 0.5, barheight = 5,
-#                                           frame.colour = "black", frame.linewidth = 0.25,
-#                                           ticks.colour = NA)) + 
-#             coord_cartesian(xlim = c(13195,14518), ylim = c(14518, 13195), expand=FALSE) +
-#             theme(aspect.ratio = 1) +
-#             scale_x_continuous(breaks = c(118, 574, 755, 1591, 1914, 2053, 2636, 2957, 3198, 3596, 3944, 4522, 5027, 5462, 6059,
-#                                           6570, 6683, 7134, 7337, 8161, 8493, 8638, 9245, 9562, 9798, 10201, 10568, 11128, 11648, 12080, 12685,
-#                                           13195, 13578, 13669, 13719, 13994, 14019, 14036, 14042, 14119, 14471, 14487), position = "top") +
-#             scale_y_continuous(breaks = c(118, 574, 755, 1591, 1914, 2053, 2636, 2957, 3198, 3596, 3944, 4522, 5027, 5462, 6059,
-#                                           6570, 6683, 7134, 7337, 8161, 8493, 8638, 9245, 9562, 9798, 10201, 10568, 11128, 11648, 12080, 12685,
-#                                           13195, 13578, 13669, 13719, 13994, 14019, 14036, 14042, 14119, 14471, 14487)) +
-#             geom_hline(yintercept=c(6570, 13195, 13578, 13669, 13719, 13994, 14019, 14036, 14042, 14119, 14471, 14487),
-#                       linetype="solid", color = "black", linewidth=0.05) +
-#             geom_hline(yintercept=c(118, 574, 755, 1591, 1914, 2053, 2636, 2957, 3198, 3596, 3944, 4522, 5027, 5462, 6059,
-#                                     6570, 6683, 7134, 7337, 8161, 8493, 8638, 9245, 9562, 9798, 10201, 10568, 11128, 11648, 12080, 12685,
-#                                     13195, 13578, 13669, 13719, 13994, 14019, 14036, 14042, 14119, 14471, 144877),
-#                       linetype="dashed", color = "black", linewidth=0.05) +
-#             geom_vline(xintercept=c(6570, 13195, 13578, 13669, 13719, 13994, 14019, 14036, 14042, 14119, 14471, 14487),
-#                       linetype="solid", color = "black", linewidth=0.05) +
-#             geom_vline(xintercept=c(118, 574, 755, 1591, 1914, 2053, 2636, 2957, 3198, 3596, 3944, 4522, 5027, 5462, 6059,
-#                                     6570, 6683, 7134, 7337, 8161, 8493, 8638, 9245, 9562, 9798, 10201, 10568, 11128, 11648, 12080, 12685,
-#                                     13195, 13578, 13669, 13719, 13994, 14019, 14036, 14042, 14119, 14471, 14487),
-#                       linetype="dashed", color = "black", linewidth=0.05) +
-#             theme(axis.text.y=element_text(size=0)) +
-#             theme(axis.text.x=element_text(size=0)) +
-#             theme(axis.title.x = element_text(size=0)) +
-#             theme(axis.title.y = element_text(size=0)) +
-#             theme(axis.ticks = element_blank()) +
-#             geom_abline(intercept = 0, slope = 1, color = "black", linetype = "solid", linewidth = 0.05) +
-#             labs(
-#               title = paste0("Inter_chromosomal discordant matrix no ORF no intergenic - ", strain_name, " - ", sample, " - ", experiment, " - ", blast_option),
-#               colour = "Freq (%)")
-          
-#           #paste0(subdir, "/plot_", chr_name, "_75nt_", gsub("\\.tsv$", "", suffix), ".svg")
-#           ggsave(
-#             filename = paste0(strain,"/", "Inter_chromosomal_discordant_matrix_reduced_plot_", strain_name, "_", sample, "_", experiment, "_", blast_option, ".svg"),
-#             plot = matrix_plot,
-#             #width = 8,
-#             #height = 3.6,
-#             device = svglite,
-#             bg = "transparent"
-#           )
-
-
-# EOF
 #       # Calculate elapsed time
 #         elapsed_time=$((( SECONDS - start_time )/60))
 #         echo "Total R processing completed in ${elapsed_time} minutes" >> "$log_file"
@@ -2450,118 +1943,29 @@ start_time_total_script_2=$SECONDS
 
 # # R processing for inter-chromosomal discordant read pairs global distribution
 # # Start timer for R processing
-
+# R_SCRIPT="DISC_calculate_global_distribution_levels.R"
 # # Loop inside each subdirectory of MYWD
 # for strain in "${MYWD}"*/; do
 #   for sample in TSG TLG TLR; do
 #     for blast_option in option1 option2 option3 option4 option5 ; do
-#       file1="${strain}/${sample}_E1_${blast_option}_inter_discordant_pairs_unique_processed_valid_global_distribution.tsv"
-#       file2="${strain}/${sample}_E2_${blast_option}_inter_discordant_pairs_unique_processed_valid_global_distribution.tsv"
-#       file3="${strain}/${sample}_E3_${blast_option}_inter_discordant_pairs_unique_processed_valid_global_distribution.tsv"
-#       if [[ -f "$file1" && -f "$file2" && -f "$file3" ]]; then
+#       root_dir=${strain}
+#       strain=${strain}
+#       sample=${sample}
+#       blast_option=${blast_option}
 #         echo "$(basename "$strain") ${sample}" >> "$log_file"
 #         echo "" >> "$log_file"  # Adds a blank line
-#         echo "Processing inter-discordant global distribution tsv files for $file1 , $file2 and $file3" >> "$log_file"
+#         echo "Processing inter-discordant global distribution tsv files for $strain , $sample and $blast_option" >> "$log_file"
 #         start_time=$SECONDS
-#         Rscript - <<EOF
-#           # load libraries
-
-#           library(readr)
-#           library(extrafont)
-#           library(stringr)
-#           library(svglite)
-#           library(tidyverse, warn.conflicts = FALSE)
-#           library(tidyr, warn.conflicts = FALSE)
-#           library(dplyr, warn.conflicts = FALSE)
-#           # Suppress summarise info
-#           options(dplyr.summarise.inform = FALSE)
-
-#           # Variables from Bash
-#           strain <- "${strain}"
-#           sample <- "${sample}"
-#           blast_option <- "${blast_option}"
-#           strain <- sub("/\$", "", strain)  # Remove trailing slash
-#           strain_name <- basename(strain)  # Get the name of the strain directory
-#           path_to_file_1 <- "${file1}"
-#           path_to_file_2 <- "${file2}"
-#           path_to_file_3 <- "${file3}"
-
-
-#           # Functions
-#           log_step <- function(message) {
-#             timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-#             message(sprintf("[%s] %s", timestamp, message))
-#           }
-
-#           file1 <- read_tsv(path_to_file_1, col_names = TRUE)
-#           file2 <- read_tsv(path_to_file_2, col_names = TRUE)
-#           file3 <- read_tsv(path_to_file_3, col_names = TRUE)
-
-#           discordant_reads_count <- bind_rows(file1, file2, file3)
-
-#           # Set genomic categories order
-#           genomic_categories_order <- c(
-#             "ORF", "intergenic", "long_terminal_repeat", "transposable_element_gene",
-#             "LTR_retrotransposon", "tRNA_gene", "rRNA_gene", "ncRNA_gene",
-#             "snRNA_gene", "snoRNA_gene", "ARS", "centromere", "telomere"
-#           )
-
-
-#           # Calculate average global inter-chromosomal discordant read pairs distribution 
-#           global_distribution <- discordant_reads_count %>% 
-#             group_by(strain, sample, strain_sample_comb,  Category_A, Category_B) %>%
-#             summarise(all_mean_global_percentage = mean(mean_global_percentage, na.rm = TRUE),
-#                       all_sd_global_percentage = sd(mean_global_percentage, na.rm = TRUE)) %>%
-#             # Apply genomic_categories_order
-#             mutate(Category_A = factor(Category_A, levels = genomic_categories_order),
-#                   Category_B = factor(Category_B, levels = genomic_categories_order)) %>%
-#             arrange(strain, sample, Category_A, Category_B) %>% 
-#             ungroup()
-
-#           heatmap <- ggplot(global_distribution, aes(x = Category_B, y = Category_A, fill =all_mean_global_percentage)) +
-#             geom_tile(color = "black", linewidth = 0.2) +
-#             scale_fill_gradientn(
-#               colors = c("white", "#e31a1c", "#8b2500"),
-#               values = scales::rescale(c(0, 2, 100)),
-#               na.value = "gray90",
-#               limits = c(0, 100),
-#               oob = scales::squish) +
-#             guides (fill = guide_colourbar(barwidth = 0.5, barheight = 10,
-#                                           frame.colour = "black", frame.linewidth = 0.25,
-#                                           ticks.colour = NA)) + 
-#             labs(title = paste0("Inter_chromosomal discordant global distribution - ", strain_name, " - ", sample, " - ", blast_option),
-#                 fill = "%") +
-#             scale_x_discrete(labels = c("ORF","Intergenic", "LTR","TEG", "Ty", "tRNA", "rRNA", "ncRNA", "snRNA", "snoRNA", "ARS", "Centromere", "Telomere")) +
-#             scale_y_discrete(limits = rev, labels = c("Telomere", "Centromere", "ARS", "snoRNA", "snRNA", "ncRNA", "rRNA", 
-#                                                       "tRNA", "Ty", "TEG", "LTR", "Intergenic", "ORF")) +
-#             theme_minimal(base_family = "Arial") + theme(panel.grid = element_line(color = "black", linewidth = 0.1),
-#                                                             panel.background = element_blank(), 
-#                                                             plot.background = element_rect(fill = "transparent", colour = NA)) +
-#             theme(legend.position="right") + 
-#             theme(axis.text.y=element_text(size=8)) +
-#             theme(axis.text.x=element_text(size=8, angle = 90, hjust = 1)) +
-#             theme(axis.title.x = element_text(size=0)) +
-#             theme(axis.title.y = element_text(size=0)) + 
-#             theme(aspect.ratio = 1)
-          
-          
-#           ggsave(
-#             filename = paste0(strain,"/", "Inter_chromosomal_discordant_pairs_global_distribution_heatmap_", strain_name, "_", sample, "_", blast_option, ".svg"),
-#             plot = heatmap,
-#             #width = 8,
-#             #height = 3.6,
-#             device = svglite,
-#             bg = "transparent"
-#           )
-# EOF
+#         if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$sample" "$blast_option"; then
+#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${sample} ${blast_option}" >> "$log_file"
+#             echo "Skipping ${strain} ${sample} ${blast_option} and continuing..." >> "$log_file"
+#           continue
+#         fi
 #       # Calculate elapsed time
 #         elapsed_time=$((( SECONDS - start_time )/60))
 #         echo "Total R processing completed in ${elapsed_time} minutes" >> "$log_file"
 #         echo "" >> "$log_file"  # Adds a blank line 
-#       else
-#       echo "Missing files for $strain/$sample/$blast_option: $file1 or $file2 or $file3" >> "$log_file"
-#       echo "" >> "$log_file"
-#       fi
+      
 #     done
 #   done
 # done
@@ -2570,118 +1974,30 @@ start_time_total_script_2=$SECONDS
 
 # # R processing for inter-chromosomal discordant read pairs category distribution
 
-
+# R_SCRIPT="DISC_calculate_category_distribution_levels.R"
 # # Loop inside each subdirectory of MYWD
 # for strain in "${MYWD}"*/; do
 #   for sample in TSG TLG TLR; do
 #     for blast_option in option1 option2 option3 option4 option5 ; do
-#       file1="${strain}/${sample}_E1_${blast_option}_inter_discordant_pairs_unique_processed_valid_category_distribution.tsv"
-#       file2="${strain}/${sample}_E2_${blast_option}_inter_discordant_pairs_unique_processed_valid_category_distribution.tsv"
-#       file3="${strain}/${sample}_E3_${blast_option}_inter_discordant_pairs_unique_processed_valid_category_distribution.tsv"
-#       if [[ -f "$file1" && -f "$file2" && -f "$file3" ]]; then
+
+#       root_dir=${strain}
+#       strain=${strain}
+#       sample=${sample}
+#       blast_option=${blast_option}
 #         echo "$(basename "$strain") ${sample}" >> "$log_file"
 #         echo "" >> "$log_file"  # Adds a blank line
-#         echo "Processing inter-discordant category distribution tsv files for $file1 , $file2 and $file3" >> "$log_file"
+#         echo "Processing inter-discordant category distribution tsv files for $strain $sample $blast_option" >> "$log_file"
 #         start_time=$SECONDS
-#         Rscript - <<EOF
-#           # load libraries
-
-#           library(readr)
-#           library(extrafont)
-#           library(stringr)
-#           library(svglite)
-#           library(tidyverse, warn.conflicts = FALSE)
-#           library(tidyr, warn.conflicts = FALSE)
-#           library(dplyr, warn.conflicts = FALSE)
-#           # Suppress summarise info
-#           options(dplyr.summarise.inform = FALSE)
-
-#           # Variables from Bash
-#           strain <- "${strain}"
-#           sample <- "${sample}"
-#           blast_option <- "${blast_option}"
-#           strain <- sub("/\$", "", strain)  # Remove trailing slash
-#           strain_name <- basename(strain)  # Get the name of the strain directory
-#           path_to_file_1 <- "${file1}"
-#           path_to_file_2 <- "${file2}"
-#           path_to_file_3 <- "${file3}"
-
-
-#           # Functions
-#           log_step <- function(message) {
-#             timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-#             message(sprintf("[%s] %s", timestamp, message))
-#           }
-
-#           file1 <- read_tsv(path_to_file_1, col_names = TRUE)
-#           file2 <- read_tsv(path_to_file_2, col_names = TRUE)
-#           file3 <- read_tsv(path_to_file_3, col_names = TRUE)
-
-#           discordant_reads_count <- bind_rows(file1, file2, file3)
-
-#           # Set genomic categories order
-#           genomic_categories_order <- c(
-#             "ORF", "intergenic", "long_terminal_repeat", "transposable_element_gene",
-#             "LTR_retrotransposon", "tRNA_gene", "rRNA_gene", "ncRNA_gene",
-#             "snRNA_gene", "snoRNA_gene", "ARS", "centromere", "telomere"
-#           )
-
-
-#           # Calculate average category inter-chromosomal discordant read pairs distribution 
-#           category_distribution <- discordant_reads_count %>% 
-#             group_by(strain, sample, strain_sample_comb,  Category_A, Category_B) %>%
-#             summarise(all_mean_category_percentage = mean(mean_category_percentage, na.rm = TRUE),
-#                       all_sd_category_percentage = sd(mean_category_percentage, na.rm = TRUE)) %>%
-#             # Apply genomic_categories_order
-#             mutate(Category_A = factor(Category_A, levels = genomic_categories_order),
-#                   Category_B = factor(Category_B, levels = genomic_categories_order)) %>%
-#             arrange(strain, sample, Category_A, Category_B) %>% 
-#             ungroup()
-
-#           heatmap <- ggplot(category_distribution, aes(x = Category_B, y = Category_A, fill =all_mean_category_percentage)) +
-#             geom_tile(color = "black", linewidth = 0.2) +
-#             scale_fill_gradientn(
-#               colors = c("white", "#e31a1c", "#8b2500"),
-#               values = scales::rescale(c(0, 50, 100)),
-#               na.value = "gray90",
-#               limits = c(0, 100),
-#               oob = scales::squish) +
-#             guides (fill = guide_colourbar(barwidth = 0.5, barheight = 10,
-#                                           frame.colour = "black", frame.linewidth = 0.25,
-#                                           ticks.colour = NA)) + 
-#             labs(title = paste0("Inter_chromosomal discordant category distribution - ", strain_name, " - ", sample, " - ", blast_option),
-#                 fill = "%") +
-#             scale_x_discrete(labels = c("ORF","Intergenic", "LTR","TEG", "Ty", "tRNA", "rRNA", "ncRNA", "snRNA", "snoRNA", "ARS", "Centromere", "Telomere")) +
-#             scale_y_discrete(limits = rev, labels = c("Telomere", "Centromere", "ARS", "snoRNA", "snRNA", "ncRNA", "rRNA", 
-#                                                       "tRNA", "Ty", "TEG", "LTR", "Intergenic", "ORF")) +
-#             theme_minimal(base_family = "Arial") + theme(panel.grid = element_line(color = "black", linewidth = 0.1),
-#                                                             panel.background = element_blank(), 
-#                                                             plot.background = element_rect(fill = "transparent", colour = NA)) +
-#             theme(legend.position="right") + 
-#             theme(axis.text.y=element_text(size=8)) +
-#             theme(axis.text.x=element_text(size=8, angle = 90, hjust = 1)) +
-#             theme(axis.title.x = element_text(size=0)) +
-#             theme(axis.title.y = element_text(size=0)) + 
-#             theme(aspect.ratio = 1)
-          
-          
-#           ggsave(
-#             filename = paste0(strain,"/", "Inter_chromosomal_discordant_pairs_category_distribution_heatmap_", strain_name, "_", sample, "_", blast_option, ".svg"),
-#             plot = heatmap,
-#             #width = 8,
-#             #height = 3.6,
-#             device = svglite,
-#             bg = "transparent"
-#           )
-# EOF
+#         if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$sample" "$blast_option"; then
+#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${sample} ${blast_option}" >> "$log_file"
+#             echo "Skipping ${strain} ${sample} ${blast_option} and continuing..." >> "$log_file"
+#           continue
+#         fi
 #       # Calculate elapsed time
 #         elapsed_time=$((( SECONDS - start_time )/60))
 #         echo "Total R processing completed in ${elapsed_time} minutes" >> "$log_file"
 #         echo "" >> "$log_file"  # Adds a blank line 
-#       else
-#       echo "Missing files for $strain/$sample: $file1 or $file2 or $file3" >> "$log_file"
-#       echo "" >> "$log_file"
-#       fi
+   
 #     done
 #   done
 # done
@@ -2690,248 +2006,36 @@ start_time_total_script_2=$SECONDS
 
 # # R processing for inter-chromosomal discordant read pairs matrix (merge all experiments)
 
-
+# R_SCRIPT="DISC_calculate_matrix_all_exp_levels.R"
 # # Loop inside each subdirectory of MYWD
 # for strain in "${MYWD}"*/; do
 #   for sample in TSG TLG TLR; do
-#   for blast_option in option1 option2 option3 option4 option5 ; do
-#       file1="${strain}/${sample}_E1_${blast_option}_inter_discordant_pairs_unique_processed_valid.tsv"
-#       file2="${strain}/${sample}_E2_${blast_option}_inter_discordant_pairs_unique_processed_valid.tsv"
-#       file3="${strain}/${sample}_E3_${blast_option}_inter_discordant_pairs_unique_processed_valid.tsv"
-#       control1="${strain}/${sample}_E1_inter_discordant_pairs_unique_processed_control.tsv"
-#       control2="${strain}/${sample}_E2_inter_discordant_pairs_unique_processed_control.tsv"
-#       control3="${strain}/${sample}_E3_inter_discordant_pairs_unique_processed_control.tsv"
-#       if [[ -f "$file1" && -f "$file2" && -f "$file3" && -f "$control1" && -f "$control2" && -f "$control3" ]]; then
+#     for blast_option in option1 option2 option3 option4 option5 ; do
+#         root_dir=${strain}
+#         strain=${strain}
+#         sample=${sample}
+#         blast_option=${blast_option}
+#         category_path=${CATEGORY_PATH}
 #         echo "$(basename "$strain") ${sample}" >> "$log_file"
 #         echo "" >> "$log_file"  # Adds a blank line
-#         echo "Processing inter-discordant valid reads tsv files for $file1 , $file2 and $file3" >> "$log_file"
+#         echo "Processing inter-discordant valid reads tsv files for $strain , $sample and $blast_option" >> "$log_file"
 #         start_time=$SECONDS
-#         Rscript - <<EOF
-#           # load libraries
-
-#           library(readr)
-#           library(extrafont)
-#           library(stringr)
-#           library(svglite)
-#           library(tidyverse, warn.conflicts = FALSE)
-#           library(tidyr, warn.conflicts = FALSE)
-#           library(dplyr, warn.conflicts = FALSE)
-#           # Suppress summarise info
-#           options(dplyr.summarise.inform = FALSE)
-
-#           # Variables from Bash
-#           category_path <- "${CATEGORY_PATH}"
-#           strain <- "${strain}"
-#           sample <- "${sample}"
-#           blast_option <- "${blast_option}"
-#           strain <- sub("/\$", "", strain)  # Remove trailing slash
-#           strain_name <- basename(strain)  # Get the name of the strain directory
-#           path_to_file_1 <- "${file1}"
-#           path_to_file_2 <- "${file2}"
-#           path_to_file_3 <- "${file3}"
-#           path_to_control_1 <- "${control1}"
-#           path_to_control_2 <- "${control2}"
-#           path_to_control_3 <- "${control3}"
-#           path_to_features_pairs_file <- file.path(category_path, "PMV_features_pairs.tsv")
-
-
-#           # Functions
-#           log_step <- function(message) {
-#             timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-#             message(sprintf("[%s] %s", timestamp, message))
-#           }
-
-#           log_step("Finding possible pairs...")
-
-#           # Inter-chromosomal discordant read pairs matrix
-#           df_features_pairs <- read_tsv(path_to_features_pairs_file, col_names = TRUE, show_col_types = FALSE)
-
-#           log_step("Loading valid reads...")
-#           # Load valid reads
-#           file1 <- read_tsv(path_to_file_1, col_names = TRUE)
-#           file2 <- read_tsv(path_to_file_2, col_names = TRUE)
-#           file3 <- read_tsv(path_to_file_3, col_names = TRUE)
-
-#           valid_pairs_df <- bind_rows(file1, file2, file3)
-
-#           log_step("Loading control reads...")
-#           # Load control reads
-#           control1 <- read_tsv(path_to_control_1, col_names = TRUE)
-#           control2 <- read_tsv(path_to_control_2, col_names = TRUE)
-#           control3 <- read_tsv(path_to_control_3, col_names = TRUE)
-
-#           control_df <- bind_rows(control1, control2, control3) %>% 
-#             filter(Category_A=="control_norm", Category_B=="control_norm")
-
-#           get_discordant_matrix <- function(valid_pairs_df_file, all_pairs_df, control_df_file) {
-#             posA_info <- all_pairs_df %>%
-#               select(Feature_name_A, Position_A = Position, Essential_A = Essential) %>%
-#               distinct()
-            
-#             posB_info <- all_pairs_df %>%
-#               select(Feature_name_B, Position_B = Position, Essential_B = Essential) %>%
-#               distinct()
-            
-#             valid_pairs_df_posA <- valid_pairs_df_file %>%
-#               left_join(posA_info, by = "Feature_name_A")
-            
-#             valid_pairs_df_posAB <- valid_pairs_df_posA %>%
-#               left_join(posB_info, by = "Feature_name_B")
-            
-#             pair_counts <- valid_pairs_df_posAB %>%
-#               group_by(strain, sample, Feature_name_A, Feature_name_B) %>%
-#               summarise(count = n(), .groups = "drop")
-            
-#             complete_matrix <- left_join(valid_pairs_df_posAB, pair_counts,
-#                                         by = c("Feature_name_A", "Feature_name_B", "strain", "sample")) %>%
-#               distinct()
-            
-#             count_total <- nrow(control_df_file)
-#             complete_matrix <- complete_matrix %>%
-#               mutate(count_norm = (count / count_total) * 100) %>% 
-#               select(!c(pair_group, pair_group_name, number, Feature_name_B_prev, Feature_name_B_next))
-            
-#             return(complete_matrix)
-#           }
-
-#           log_step("Generating discordant matrix...")
-#           complete_matrix <- get_discordant_matrix(valid_pairs_df, df_features_pairs, control_df)
-#           complete_matrix_noORF_nointergenic <- complete_matrix %>% filter(Category_A != "ORF", Category_B != "ORF", Category_A != "intergenic", Category_B != "intergenic")
-
-#           log_step("Saving discordant matrix...")
-#           write_tsv(complete_matrix, file = paste0(strain, "/", sample, "_", blast_option, "_inter_discordant_pairs_unique_processed_valid_discordant_matrix_allexperiments.tsv"))
-#           write_tsv(complete_matrix_noORF_nointergenic, file = paste0(strain, "/", sample, "_", blast_option, "_inter_discordant_pairs_unique_processed_valid_discordant_matrix_noORF_nointergenic_allexperiments.tsv"))
-
-#           log_step("Plotting discordant matrix...")
-#           matrix_plot <-ggplot(complete_matrix, aes(y = Position_B, x = Position_A)) +
-#             #geom_hdr(xlim = c(0,14518), ylim = c(14518,0), method = "kde", fill = "brown4") + 
-#             geom_point(aes(colour = count_norm), alpha = 1, size = 0.8) +
-#             scale_colour_gradient2(low= "white", mid = "#4ae034", high = "#00641b",
-#                                   midpoint = 1,
-#                                   limits = c (0, 5),
-#                                   oob = scales::squish) + 
-#             theme_bw(base_family = "Arial") + 
-#             theme(panel.background = element_blank()) +
-#             theme(plot.background = element_rect(fill = "transparent", colour = NA))+
-#             theme(legend.position="right") +
-#             theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank()) +
-#             guides (colour = guide_colourbar(barwidth = 0.5, barheight = 5,
-#                                             frame.colour = "black", frame.linewidth = 0.25,
-#                                             ticks.colour = NA)) + 
-#             coord_cartesian(xlim = c(0,14518), ylim = c(14518, 0), expand=FALSE) +
-#             theme(aspect.ratio = 1) +
-#             scale_x_continuous(breaks = c(118, 574, 755, 1591, 1914, 2053, 2636, 2957, 3198, 3596, 3944, 4522, 5027, 5462, 6059,
-#                                           6570, 6683, 7134, 7337, 8161, 8493, 8638, 9245, 9562, 9798, 10201, 10568, 11128, 11648, 12080, 12685,
-#                                           13195, 13578, 13669, 13719, 13994, 14019, 14036, 14042, 14119, 14471, 14487), position = "top") +
-#             scale_y_continuous(breaks = c(118, 574, 755, 1591, 1914, 2053, 2636, 2957, 3198, 3596, 3944, 4522, 5027, 5462, 6059,
-#                                           6570, 6683, 7134, 7337, 8161, 8493, 8638, 9245, 9562, 9798, 10201, 10568, 11128, 11648, 12080, 12685,
-#                                           13195, 13578, 13669, 13719, 13994, 14019, 14036, 14042, 14119, 14471, 14487)) +
-#             geom_hline(yintercept=c(6570, 13195, 13578, 13669, 13719, 13994, 14019, 14036, 14042, 14119, 14471, 14487),
-#                       linetype="solid", color = "black", linewidth=0.05) +
-#             geom_hline(yintercept=c(118, 574, 755, 1591, 1914, 2053, 2636, 2957, 3198, 3596, 3944, 4522, 5027, 5462, 6059,
-#                                     6570, 6683, 7134, 7337, 8161, 8493, 8638, 9245, 9562, 9798, 10201, 10568, 11128, 11648, 12080, 12685,
-#                                     13195, 13578, 13669, 13719, 13994, 14019, 14036, 14042, 14119, 14471, 144877),
-#                       linetype="dashed", color = "black", linewidth=0.05) +
-#             geom_vline(xintercept=c(6570, 13195, 13578, 13669, 13719, 13994, 14019, 14036, 14042, 14119, 14471, 14487),
-#                       linetype="solid", color = "black", linewidth=0.05) +
-#             geom_vline(xintercept=c(118, 574, 755, 1591, 1914, 2053, 2636, 2957, 3198, 3596, 3944, 4522, 5027, 5462, 6059,
-#                                     6570, 6683, 7134, 7337, 8161, 8493, 8638, 9245, 9562, 9798, 10201, 10568, 11128, 11648, 12080, 12685,
-#                                     13195, 13578, 13669, 13719, 13994, 14019, 14036, 14042, 14119, 14471, 14487),
-#                       linetype="dashed", color = "black", linewidth=0.05) +
-#             theme(axis.text.y=element_text(size=0)) +
-#             theme(axis.text.x=element_text(size=0)) +
-#             theme(axis.title.x = element_text(size=0)) +
-#             theme(axis.title.y = element_text(size=0)) +
-#             theme(axis.ticks = element_blank()) +
-#             geom_abline(intercept = 0, slope = 1, color = "black", linetype = "solid", linewidth = 0.05) +
-#             labs(
-#               title = paste0("Inter_chromosomal discordant matrix - ", strain_name, " - ", sample, "-", blast_option),
-#               colour = "Freq (%)")
-
-          
-#           ggsave(
-#             filename = paste0(strain,"/", "Inter_chromosomal_discordant_matrix_plot_", strain_name, "_", sample, "_", blast_option, ".svg"),
-#             plot = matrix_plot,
-#             #width = 8,
-#             #height = 3.6,
-#             device = svglite,
-#             bg = "transparent"
-#           )
-
-#           log_step("Plotting discordant matrix - no ORF no intergenic...")
-#           matrix_plot <-ggplot(complete_matrix_noORF_nointergenic, aes(y = Position_B, x = Position_A)) +
-#             #geom_hdr(xlim = c(0,14518), ylim = c(14518,0), method = "kde", fill = "brown4") + 
-#             geom_point(aes(colour = count_norm), alpha = 1, size = 2) +
-#             scale_colour_gradient2(low= "white", mid = "#4ae034", high = "#00641b",
-#                                   midpoint = 1,
-#                                   limits = c (0, 5),
-#                                   oob = scales::squish) + 
-#             theme_bw(base_family = "Arial") + 
-#             theme(panel.background = element_blank()) +
-#             theme(plot.background = element_rect(fill = "transparent", colour = NA))+
-#             theme(legend.position="right") +
-#             theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank()) +
-#             guides (colour = guide_colourbar(barwidth = 0.5, barheight = 5,
-#                                           frame.colour = "black", frame.linewidth = 0.25,
-#                                           ticks.colour = NA)) + 
-#             coord_cartesian(xlim = c(13195,14518), ylim = c(14518, 13195), expand=FALSE) +
-#             theme(aspect.ratio = 1) +
-#             scale_x_continuous(breaks = c(118, 574, 755, 1591, 1914, 2053, 2636, 2957, 3198, 3596, 3944, 4522, 5027, 5462, 6059,
-#                                           6570, 6683, 7134, 7337, 8161, 8493, 8638, 9245, 9562, 9798, 10201, 10568, 11128, 11648, 12080, 12685,
-#                                           13195, 13578, 13669, 13719, 13994, 14019, 14036, 14042, 14119, 14471, 14487), position = "top") +
-#             scale_y_continuous(breaks = c(118, 574, 755, 1591, 1914, 2053, 2636, 2957, 3198, 3596, 3944, 4522, 5027, 5462, 6059,
-#                                           6570, 6683, 7134, 7337, 8161, 8493, 8638, 9245, 9562, 9798, 10201, 10568, 11128, 11648, 12080, 12685,
-#                                           13195, 13578, 13669, 13719, 13994, 14019, 14036, 14042, 14119, 14471, 14487)) +
-#             geom_hline(yintercept=c(6570, 13195, 13578, 13669, 13719, 13994, 14019, 14036, 14042, 14119, 14471, 14487),
-#                       linetype="solid", color = "black", linewidth=0.05) +
-#             geom_hline(yintercept=c(118, 574, 755, 1591, 1914, 2053, 2636, 2957, 3198, 3596, 3944, 4522, 5027, 5462, 6059,
-#                                     6570, 6683, 7134, 7337, 8161, 8493, 8638, 9245, 9562, 9798, 10201, 10568, 11128, 11648, 12080, 12685,
-#                                     13195, 13578, 13669, 13719, 13994, 14019, 14036, 14042, 14119, 14471, 144877),
-#                       linetype="dashed", color = "black", linewidth=0.05) +
-#             geom_vline(xintercept=c(6570, 13195, 13578, 13669, 13719, 13994, 14019, 14036, 14042, 14119, 14471, 14487),
-#                       linetype="solid", color = "black", linewidth=0.05) +
-#             geom_vline(xintercept=c(118, 574, 755, 1591, 1914, 2053, 2636, 2957, 3198, 3596, 3944, 4522, 5027, 5462, 6059,
-#                                     6570, 6683, 7134, 7337, 8161, 8493, 8638, 9245, 9562, 9798, 10201, 10568, 11128, 11648, 12080, 12685,
-#                                     13195, 13578, 13669, 13719, 13994, 14019, 14036, 14042, 14119, 14471, 14487),
-#                       linetype="dashed", color = "black", linewidth=0.05) +
-#             theme(axis.text.y=element_text(size=0)) +
-#             theme(axis.text.x=element_text(size=0)) +
-#             theme(axis.title.x = element_text(size=0)) +
-#             theme(axis.title.y = element_text(size=0)) +
-#             theme(axis.ticks = element_blank()) +
-#             geom_abline(intercept = 0, slope = 1, color = "black", linetype = "solid", linewidth = 0.05) +
-#             labs(
-#               title = paste0("Inter_chromosomal discordant matrix no ORF no intergenic - ", strain_name, " - ", sample, "-", blast_option),
-#               colour = "Freq (%)")
-          
-#           #paste0(subdir, "/plot_", chr_name, "_75nt_", gsub("\\.tsv$", "", suffix), ".svg")
-#           ggsave(
-#             filename = paste0(strain,"/", "Inter_chromosomal_discordant_matrix_reduced_plot_", strain_name, "_", sample, "_", blast_option, ".svg"),
-#             plot = matrix_plot,
-#             #width = 8,
-#             #height = 3.6,
-#             device = svglite,
-#             bg = "transparent"
-#           )
-          
-          
-
-
-# EOF
-#       # Calculate elapsed time
+#         if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$sample" "$blast_option" "$category_path"; then
+#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${sample} ${blast_option}" >> "$log_file"
+#             echo "Skipping ${strain} ${sample} ${blast_option} and continuing..." >> "$log_file"
+#           continue
+#         fi    
+#         # Calculate elapsed time
 #         elapsed_time=$((( SECONDS - start_time )))
 #         echo "Total R processing completed in ${elapsed_time} seconds" >> "$log_file"
 #         echo "" >> "$log_file"  # Adds a blank line 
-#       else
-#       echo "Missing files for $strain/$sample: $file1 or $file2 or $file3" >> "$log_file"
-#       echo "" >> "$log_file"
-#       fi
+        
 #     done
 #   done
 # done
 
 
-
+## aquí
 # ##### Calculate % of discordant reads in each Category_A and plot bar plot with SD
 # # Loop inside each subdirectory of MYWD
 # for strain in "${MYWD}"*/; do
