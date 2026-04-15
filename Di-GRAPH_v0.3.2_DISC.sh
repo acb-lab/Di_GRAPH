@@ -1,7 +1,7 @@
 #!/bin/bash
 
 AUTHORS="Lydia Iglesias, Narciso M. Quijada, Andrés Clemente-Blanco"
-LASTMODIF="2026-04-11"
+LASTMODIF="2026-04-15"
 VERSION="0.3.2"
 MODIFICATIONS="experiment name dynamically set, MUT"
 
