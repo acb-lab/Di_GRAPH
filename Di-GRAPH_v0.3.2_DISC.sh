@@ -218,7 +218,7 @@ case $ARGS in
             exit 1
         fi
         if [[ -d "${MYWD}/$STRAIN_REF" ]]; then 
-            echo -e "\n${COL_green}REFERENCE STRAIN: ${STRAIN_REF} will be used as reference strain!${COL_RESET} \n"
+            echo -e "\n${COL_cyan}REFERENCE STRAIN: ${STRAIN_REF} will be used as reference strain!${COL_RESET} \n"
         fi
     else
         echo -e '\nERROR: "-r/--report" requires an argument\n'
@@ -342,3338 +342,1909 @@ echo "" >> "$log_file"  # Adds a blank line
 #start_time_total_script=$SECONDS
 start_time_total_script_2=$SECONDS
 
-# ########### MODULE CORE - START ###########
-# # ############## Alignment and processing of 75bp reads ############
+########### MODULE CORE - START ###########
+# ############## Alignment and processing of 75bp reads ############
 
-# # Start timer for the alignment and processing section
-# start_time_total_alignment=$SECONDS
+# Start timer for the alignment and processing section
+start_time_total_alignment=$SECONDS
 
-# # Index RG for bowtie alignment
-# bowtie-build "${MYREF}/RG_PMV_v9.fasta" "${MYREF}/S_cerevisiae_indexed"
+# Index RG for bowtie alignment
+bowtie-build "${MYREF}/RG_PMV_v9.fasta" "${MYREF}/S_cerevisiae_indexed"
 
-# # Index RG for bowtie2 alignment
-# bowtie2-build "${MYREF}/RG_PMV_v9.fasta" "${MYREF}/S_cerevisiae_indexed"
+# Index RG for bowtie2 alignment
+bowtie2-build "${MYREF}/RG_PMV_v9.fasta" "${MYREF}/S_cerevisiae_indexed"
 
-# # Loop through each directory inside MYWD
+# Loop through each directory inside MYWD
 
-# echo "================================" >> "$log_file"
-# echo "### 75bp analysis ###" >> "$log_file"
-# echo "" >> "$log_file"  # Adds a blank line
-# echo "### Alignments and SAM processing ###" >> "$log_file"
-# current_time=$(date "+%d-%m-%Y %H:%M:%S")
-# echo "Initiated at ${current_time}" >> "$log_file" 
-# echo "" >> "$log_file"  # Adds a blank line
+echo "================================" >> "$log_file"
+echo "### 75bp analysis ###" >> "$log_file"
+echo "" >> "$log_file"  # Adds a blank line
+echo "### Alignments and SAM processing ###" >> "$log_file"
+current_time=$(date "+%d-%m-%Y %H:%M:%S")
+echo "Initiated at ${current_time}" >> "$log_file" 
+echo "" >> "$log_file"  # Adds a blank line
 
-# for strain in "$MYWD"*/; do
-#   echo "Processing directory: $strain" >> "$log_file"
+for strain in "$MYWD"*/; do
+  echo "Processing directory: $strain" >> "$log_file"
 
-#   # Loop through sample prefixes (T0, TSG, TLG, TLR.)
-#     for sample in T0 TSG TLG TLR; do
-#       for experiment in "${EXP_LIST[@]}"; do
-#         file1_gz="${strain}/${sample}_${experiment}_R1.fastq.gz"
-#         file2_gz="${strain}/${sample}_${experiment}_R2.fastq.gz"
+  # Loop through sample prefixes (T0, TSG, TLG, TLR.)
+    for sample in T0 TSG TLG TLR; do
+      for experiment in "${EXP_LIST[@]}"; do
+        file1_gz="${strain}/${sample}_${experiment}_R1.fastq.gz"
+        file2_gz="${strain}/${sample}_${experiment}_R2.fastq.gz"
        
-#         # Check if both compressed files exist
-#         if [[ -f "$file1_gz" && -f "$file2_gz" ]]; then
-#           echo "Processing files: $file1_gz, $file2_gz" >> "$log_file"
-#           echo "" >> "$log_file"  # Adds a blank line
+        # Check if both compressed files exist
+        if [[ -f "$file1_gz" && -f "$file2_gz" ]]; then
+          echo "Processing files: $file1_gz, $file2_gz" >> "$log_file"
+          echo "" >> "$log_file"  # Adds a blank line
 
-#           # Keep the current pair compressed for 18bp alignment
-#           gunzip -k "$file1_gz" "$file2_gz" # keep compressed
+          # Keep the current pair compressed for 18bp alignment
+          gunzip -k "$file1_gz" "$file2_gz" # keep compressed
           
 
-#           if [[ -f "${strain}/${sample}_${experiment}_R1.fastq" && -f "${strain}/${sample}_${experiment}_R2.fastq" ]]; then
-#             # Determine the number of cores available
-#             N_CPU=$(nproc)
+          if [[ -f "${strain}/${sample}_${experiment}_R1.fastq" && -f "${strain}/${sample}_${experiment}_R2.fastq" ]]; then
+            # Determine the number of cores available
+            N_CPU=$(nproc)
 
-#             # Start timers for total processing of a strain/sample/experiment
-#             start_time_total=$SECONDS
+            # Start timers for total processing of a strain/sample/experiment
+            start_time_total=$SECONDS
         
-#             # Trim reads using cutadapt
-#             echo "### $(basename "$strain")/${sample} ${experiment} ###" >> "$log_file"
-#             echo "" >> "$log_file"  # Adds a blank line
-#             start_time=$SECONDS
-#             # trim R1 reads
-#             cutadapt -j "$N_CPU" --cut -75 -o "${strain}/${sample}_${experiment}_R1_1.fastq" "${strain}/${sample}_${experiment}_R1.fastq"
-#             cutadapt -j "$N_CPU" --cut 75 -o "${strain}/${sample}_${experiment}_R1_2.fastq" "${strain}/${sample}_${experiment}_R1.fastq"
-#             # trim R2 reads
-#             cutadapt -j "$N_CPU" --cut -75 -o "${strain}/${sample}_${experiment}_R2_1.fastq" "${strain}/${sample}_${experiment}_R2.fastq"
-#             cutadapt -j "$N_CPU" --cut 75 -o "${strain}/${sample}_${experiment}_R2_2.fastq" "${strain}/${sample}_${experiment}_R2.fastq"
+            # Trim reads using cutadapt
+            echo "### $(basename "$strain")/${sample} ${experiment} ###" >> "$log_file"
+            echo "" >> "$log_file"  # Adds a blank line
+            start_time=$SECONDS
+            # trim R1 reads
+            cutadapt -j "$N_CPU" --cut -75 -o "${strain}/${sample}_${experiment}_R1_1.fastq" "${strain}/${sample}_${experiment}_R1.fastq"
+            cutadapt -j "$N_CPU" --cut 75 -o "${strain}/${sample}_${experiment}_R1_2.fastq" "${strain}/${sample}_${experiment}_R1.fastq"
+            # trim R2 reads
+            cutadapt -j "$N_CPU" --cut -75 -o "${strain}/${sample}_${experiment}_R2_1.fastq" "${strain}/${sample}_${experiment}_R2.fastq"
+            cutadapt -j "$N_CPU" --cut 75 -o "${strain}/${sample}_${experiment}_R2_2.fastq" "${strain}/${sample}_${experiment}_R2.fastq"
 
-#             # Remove intermediate 75nt fastq files
-#             rm "${strain}/${sample}_${experiment}_R1.fastq" "${strain}/${sample}_${experiment}_R2.fastq"
+            # Remove intermediate 75nt fastq files
+            rm "${strain}/${sample}_${experiment}_R1.fastq" "${strain}/${sample}_${experiment}_R2.fastq"
 
-#             # Rename them as _rA or _rB # Needs sed -E to rename reads matching V35 or E25
-#             # sed -E '/^@(V35|E25)[a-zA-Z0-9].*\/1/s/\/1/rA\/1/' "${strain}/${sample}_${experiment}_R1_1.fastq" > "${strain}/${sample}_${experiment}_R1_1_A.fastq"
-#             # sed -E '/^@(V35|E25)[a-zA-Z0-9].*\/2/s/\/2/rA\/2/' "${strain}/${sample}_${experiment}_R2_1.fastq" > "${strain}/${sample}_${experiment}_R2_1_A.fastq"
-#             # sed -E '/^@(V35|E25)[a-zA-Z0-9].*\/1/s/\/1/rB\/1/' "${strain}/${sample}_${experiment}_R1_2.fastq" > "${strain}/${sample}_${experiment}_R1_2_B.fastq"
-#             # sed -E '/^@(V35|E25)[a-zA-Z0-9].*\/2/s/\/2/rB\/2/' "${strain}/${sample}_${experiment}_R2_2.fastq" > "${strain}/${sample}_${experiment}_R2_2_B.fastq"
+            # Rename them as _rA or _rB # Needs sed -E to rename reads matching V35 or E25
+            # sed -E '/^@(V35|E25)[a-zA-Z0-9].*\/1/s/\/1/rA\/1/' "${strain}/${sample}_${experiment}_R1_1.fastq" > "${strain}/${sample}_${experiment}_R1_1_A.fastq"
+            # sed -E '/^@(V35|E25)[a-zA-Z0-9].*\/2/s/\/2/rA\/2/' "${strain}/${sample}_${experiment}_R2_1.fastq" > "${strain}/${sample}_${experiment}_R2_1_A.fastq"
+            # sed -E '/^@(V35|E25)[a-zA-Z0-9].*\/1/s/\/1/rB\/1/' "${strain}/${sample}_${experiment}_R1_2.fastq" > "${strain}/${sample}_${experiment}_R1_2_B.fastq"
+            # sed -E '/^@(V35|E25)[a-zA-Z0-9].*\/2/s/\/2/rB\/2/' "${strain}/${sample}_${experiment}_R2_2.fastq" > "${strain}/${sample}_${experiment}_R2_2_B.fastq"
 
-#             # Modified version 11/04/2026: to analyze also Novogene reads and deal with possible problems when splitting reads and getting @ as first quality character
-#             sed -E '1~4 s/^@(V35|E25|LH)[a-zA-Z0-9].*\/1/&/; 1~4 s/\/1/rA\/1/' "${strain}/${sample}_${experiment}_R1_1.fastq" > "${strain}/${sample}_${experiment}_R1_1_A.fastq"
-#             sed -E '1~4 s/^@(V35|E25|LH)[a-zA-Z0-9].*\/2/&/; 1~4 s/\/2/rA\/2/' "${strain}/${sample}_${experiment}_R2_1.fastq" > "${strain}/${sample}_${experiment}_R2_1_A.fastq"
-#             sed -E '1~4 s/^@(V35|E25|LH)[a-zA-Z0-9].*\/1/&/; 1~4 s/\/1/rB\/1/' "${strain}/${sample}_${experiment}_R1_2.fastq" > "${strain}/${sample}_${experiment}_R1_2_B.fastq"
-#             sed -E '1~4 s/^@(V35|E25|LH)[A-Za-z0-9].*\/2/&/; 1~4 s/\/2/rB\/2/' "${strain}/${sample}_${experiment}_R2_2.fastq" > "${strain}/${sample}_${experiment}_R2_2_B.fastq"
+            # Modified version 11/04/2026: to analyze also Novogene reads and deal with possible problems when splitting reads and getting @ as first quality character
+            sed -E '1~4 s/^@(V35|E25|LH)[a-zA-Z0-9].*\/1/&/; 1~4 s/\/1/rA\/1/' "${strain}/${sample}_${experiment}_R1_1.fastq" > "${strain}/${sample}_${experiment}_R1_1_A.fastq"
+            sed -E '1~4 s/^@(V35|E25|LH)[a-zA-Z0-9].*\/2/&/; 1~4 s/\/2/rA\/2/' "${strain}/${sample}_${experiment}_R2_1.fastq" > "${strain}/${sample}_${experiment}_R2_1_A.fastq"
+            sed -E '1~4 s/^@(V35|E25|LH)[a-zA-Z0-9].*\/1/&/; 1~4 s/\/1/rB\/1/' "${strain}/${sample}_${experiment}_R1_2.fastq" > "${strain}/${sample}_${experiment}_R1_2_B.fastq"
+            sed -E '1~4 s/^@(V35|E25|LH)[A-Za-z0-9].*\/2/&/; 1~4 s/\/2/rB\/2/' "${strain}/${sample}_${experiment}_R2_2.fastq" > "${strain}/${sample}_${experiment}_R2_2_B.fastq"
 
 
-#             # Cat _rA and _rB R1 files; and _rA and _rB R2 files
-#             cat "${strain}/${sample}_${experiment}_R1_1_A.fastq" "${strain}/${sample}_${experiment}_R1_2_B.fastq" > "${strain}/${sample}_${experiment}_r_R1.fastq"
-#             cat "${strain}/${sample}_${experiment}_R2_1_A.fastq" "${strain}/${sample}_${experiment}_R2_2_B.fastq" > "${strain}/${sample}_${experiment}_r_R2.fastq"
+            # Cat _rA and _rB R1 files; and _rA and _rB R2 files
+            cat "${strain}/${sample}_${experiment}_R1_1_A.fastq" "${strain}/${sample}_${experiment}_R1_2_B.fastq" > "${strain}/${sample}_${experiment}_r_R1.fastq"
+            cat "${strain}/${sample}_${experiment}_R2_1_A.fastq" "${strain}/${sample}_${experiment}_R2_2_B.fastq" > "${strain}/${sample}_${experiment}_r_R2.fastq"
 
-#             # Remove intermediate files
-#             rm "${strain}/${sample}_${experiment}_R1_1.fastq" "${strain}/${sample}_${experiment}_R1_2.fastq" "${strain}/${sample}_${experiment}_R2_1.fastq" "${strain}/${sample}_${experiment}_R2_2.fastq"
-#             rm "${strain}/${sample}_${experiment}_R1_1_A.fastq" "${strain}/${sample}_${experiment}_R2_1_A.fastq" "${strain}/${sample}_${experiment}_R1_2_B.fastq" "${strain}/${sample}_${experiment}_R2_2_B.fastq"
+            # Remove intermediate files
+            rm "${strain}/${sample}_${experiment}_R1_1.fastq" "${strain}/${sample}_${experiment}_R1_2.fastq" "${strain}/${sample}_${experiment}_R2_1.fastq" "${strain}/${sample}_${experiment}_R2_2.fastq"
+            rm "${strain}/${sample}_${experiment}_R1_1_A.fastq" "${strain}/${sample}_${experiment}_R2_1_A.fastq" "${strain}/${sample}_${experiment}_R1_2_B.fastq" "${strain}/${sample}_${experiment}_R2_2_B.fastq"
                     
-#             # Filter 75nt reads Q30
-#             fastp \
-#               -i "${strain}/${sample}_${experiment}_r_R1.fastq" \
-#               -o "${strain}/${sample}_${experiment}_r_R1_filtered.fastq" \
-#               -I "${strain}/${sample}_${experiment}_r_R2.fastq" \
-#               -O "${strain}/${sample}_${experiment}_r_R2_filtered.fastq" \
-#               -q 30 -u 0 -e 30 \
-#               --thread "$N_CPU" \
-#               --html "${strain}/${sample}_${experiment}_75nt.fastq.html" \
-#               --json "${strain}/${sample}_${experiment}_75nt.fastq.json"
+            # Filter 75nt reads Q30
+            fastp \
+              -i "${strain}/${sample}_${experiment}_r_R1.fastq" \
+              -o "${strain}/${sample}_${experiment}_r_R1_filtered.fastq" \
+              -I "${strain}/${sample}_${experiment}_r_R2.fastq" \
+              -O "${strain}/${sample}_${experiment}_r_R2_filtered.fastq" \
+              -q 30 -u 0 -e 30 \
+              --thread "$N_CPU" \
+              --html "${strain}/${sample}_${experiment}_75nt.fastq.html" \
+              --json "${strain}/${sample}_${experiment}_75nt.fastq.json"
             
-#             # Remove intermediate 75nt fastq files
-#             rm "${strain}/${sample}_${experiment}_r_R1.fastq" "${strain}/${sample}_${experiment}_r_R2.fastq"
+            # Remove intermediate 75nt fastq files
+            rm "${strain}/${sample}_${experiment}_r_R1.fastq" "${strain}/${sample}_${experiment}_r_R2.fastq"
             
-#             elapsed_time=$(( SECONDS - start_time ))
-#             echo "Cutting and Filtering Reads completed in ${elapsed_time} seconds" >> "$log_file"
+            elapsed_time=$(( SECONDS - start_time ))
+            echo "Cutting and Filtering Reads completed in ${elapsed_time} seconds" >> "$log_file"
           
-#             # Bowtie mapping (SR -m1 -v0) for R1 filtered reads
-#             start_time=$SECONDS
-#             echo "### $(basename "$strain")/${sample} 75nt R1 ###" >> "$stats"
-#             echo "${experiment}" >> "$stats"
-#             bowtie -p "$N_CPU" -m 1 -v 0 -S "${MYREF}/S_cerevisiae_indexed" "${strain}/${sample}_${experiment}_r_R1_filtered.fastq" > "${strain}/${sample}_${experiment}_r_R1_filtered.sam" 2>> "$stats"
-#             echo "" >> "$stats"  # Adds a blank line
-#             elapsed_time=$(( SECONDS - start_time ))
-#             echo "Bowtie SR alignment 75nt for R1 reads completed in ${elapsed_time} seconds" >> "$log_file"
+            # Bowtie mapping (SR -m1 -v0) for R1 filtered reads
+            start_time=$SECONDS
+            echo "### $(basename "$strain")/${sample} 75nt R1 ###" >> "$stats"
+            echo "${experiment}" >> "$stats"
+            bowtie -p "$N_CPU" -m 1 -v 0 -S "${MYREF}/S_cerevisiae_indexed" "${strain}/${sample}_${experiment}_r_R1_filtered.fastq" > "${strain}/${sample}_${experiment}_r_R1_filtered.sam" 2>> "$stats"
+            echo "" >> "$stats"  # Adds a blank line
+            elapsed_time=$(( SECONDS - start_time ))
+            echo "Bowtie SR alignment 75nt for R1 reads completed in ${elapsed_time} seconds" >> "$log_file"
 
-#             # Bowtie mapping (SR -m1 -v0) for R2 filtered reads
-#             start_time=$SECONDS
-#             echo "### $(basename "$strain")/${sample} 75nt R2 ###" >> "$stats"
-#             echo "${experiment}" >> "$stats"
-#             bowtie -p "$N_CPU" -m 1 -v 0 -S "${MYREF}/S_cerevisiae_indexed" "${strain}/${sample}_${experiment}_r_R2_filtered.fastq" > "${strain}/${sample}_${experiment}_r_R2_filtered.sam" 2>> "$stats"
-#             echo "" >> "$stats"  # Adds a blank line
-#             elapsed_time=$(( SECONDS - start_time ))
-#             echo "Bowtie SR alignment 75nt for R2 reads completed in ${elapsed_time} seconds" >> "$log_file"
+            # Bowtie mapping (SR -m1 -v0) for R2 filtered reads
+            start_time=$SECONDS
+            echo "### $(basename "$strain")/${sample} 75nt R2 ###" >> "$stats"
+            echo "${experiment}" >> "$stats"
+            bowtie -p "$N_CPU" -m 1 -v 0 -S "${MYREF}/S_cerevisiae_indexed" "${strain}/${sample}_${experiment}_r_R2_filtered.fastq" > "${strain}/${sample}_${experiment}_r_R2_filtered.sam" 2>> "$stats"
+            echo "" >> "$stats"  # Adds a blank line
+            elapsed_time=$(( SECONDS - start_time ))
+            echo "Bowtie SR alignment 75nt for R2 reads completed in ${elapsed_time} seconds" >> "$log_file"
                     
-#             # Select reads aligning for both R1 and R2
-#             samtools view -F 4 "${strain}/${sample}_${experiment}_r_R1_filtered.sam" > "${strain}/${sample}_${experiment}_r_R1_mapped.sam"
-#             samtools view -F 4 "${strain}/${sample}_${experiment}_r_R2_filtered.sam" > "${strain}/${sample}_${experiment}_r_R2_mapped.sam"
+            # Select reads aligning for both R1 and R2
+            samtools view -F 4 "${strain}/${sample}_${experiment}_r_R1_filtered.sam" > "${strain}/${sample}_${experiment}_r_R1_mapped.sam"
+            samtools view -F 4 "${strain}/${sample}_${experiment}_r_R2_filtered.sam" > "${strain}/${sample}_${experiment}_r_R2_mapped.sam"
 
-#             # Extract read names, sort and find common reads
-#             cut -f1 "${strain}/${sample}_${experiment}_r_R1_mapped.sam" | sed 's/\/1//' > "${strain}/${sample}_${experiment}_r_R1_mapped.txt"
-#             cut -f1 "${strain}/${sample}_${experiment}_r_R2_mapped.sam" | sed 's/\/2//' > "${strain}/${sample}_${experiment}_r_R2_mapped.txt"
-#             sort "${strain}/${sample}_${experiment}_r_R1_mapped.txt" -o "${strain}/${sample}_${experiment}_r_R1_mapped_sorted.txt"
-#             sort "${strain}/${sample}_${experiment}_r_R2_mapped.txt" -o "${strain}/${sample}_${experiment}_r_R2_mapped_sorted.txt"
+            # Extract read names, sort and find common reads
+            cut -f1 "${strain}/${sample}_${experiment}_r_R1_mapped.sam" | sed 's/\/1//' > "${strain}/${sample}_${experiment}_r_R1_mapped.txt"
+            cut -f1 "${strain}/${sample}_${experiment}_r_R2_mapped.sam" | sed 's/\/2//' > "${strain}/${sample}_${experiment}_r_R2_mapped.txt"
+            sort "${strain}/${sample}_${experiment}_r_R1_mapped.txt" -o "${strain}/${sample}_${experiment}_r_R1_mapped_sorted.txt"
+            sort "${strain}/${sample}_${experiment}_r_R2_mapped.txt" -o "${strain}/${sample}_${experiment}_r_R2_mapped_sorted.txt"
 
-#             comm -12 "${strain}/${sample}_${experiment}_r_R1_mapped_sorted.txt" "${strain}/${sample}_${experiment}_r_R2_mapped_sorted.txt" > "${strain}/${sample}_${experiment}_r_R12_mapped.txt"
+            comm -12 "${strain}/${sample}_${experiment}_r_R1_mapped_sorted.txt" "${strain}/${sample}_${experiment}_r_R2_mapped_sorted.txt" > "${strain}/${sample}_${experiment}_r_R12_mapped.txt"
             
-#             # Remove intermediate files
-#             rm "${strain}/${sample}_${experiment}_r_R1_filtered.sam" "${strain}/${sample}_${experiment}_r_R2_filtered.sam"
-#             rm  "${strain}/${sample}_${experiment}_r_R1_mapped.sam" "${strain}/${sample}_${experiment}_r_R2_mapped.sam"
-#             rm "${strain}/${sample}_${experiment}_r_R1_mapped.txt" "${strain}/${sample}_${experiment}_r_R2_mapped.txt"
-#             rm "${strain}/${sample}_${experiment}_r_R1_mapped_sorted.txt" "${strain}/${sample}_${experiment}_r_R2_mapped_sorted.txt"
-            
-
-#             # Bowtie2 mapping (in a forced -m1 -v0 mode)
-#             start_time=$SECONDS
-#             echo "### $(basename "$strain")/${sample} 75nt paired-end Bowtie2 alignment ###" >> "$stats"
-#             echo "${experiment}" >> "$stats"
-#             bowtie2 \
-#               -p "$N_CPU" \
-#               --no-1mm-upfront \
-#               --score-min C,0,0 \
-#               -N 0 \
-#               --end-to-end \
-#               --fr \
-#               -x "${MYREF}/S_cerevisiae_indexed" \
-#               -1 "${strain}/${sample}_${experiment}_r_R1_filtered.fastq" \
-#               -2 "${strain}/${sample}_${experiment}_r_R2_filtered.fastq" \
-#               -S "${strain}/${sample}_${experiment}.sam" 2>> "$stats" 
-
-#             echo "" >> "$stats"  # Adds a blank line
-#             elapsed_time=$(( SECONDS - start_time ))
-#             echo "Bowtie2 alignment 75nt for paired-end reads completed in ${elapsed_time} seconds" >> "$log_file"
-#             echo "" >> "$log_file"
-
-#             # Remove intermediate files
-#             rm "${strain}/${sample}_${experiment}_r_R1_filtered.fastq"
-#             rm "${strain}/${sample}_${experiment}_r_R2_filtered.fastq"
-
-#             #########
-#             # Bowtie2 SAM processing (concordant read-pairs for % recombination)
-#             start_time=$SECONDS
-#             echo "### $(basename "$strain")/${sample} Bowtie2 SAM processing - concordant read pairs ###" >> "$log_file"
-#             echo "${experiment}" >> "$log_file"
-
-#             # Remove header for processing
-#             sed -n -e '1,19p' "${strain}/${sample}_${experiment}.sam" > "${strain}/${sample}_${experiment}_header.sam"
-#             tail -n +20 "${strain}/${sample}_${experiment}.sam" > "${strain}/${sample}_${experiment}_alignment.sam"
-
-#             # Processing (set pairs in the same row, extract only those aligning both R1 and R2 completely)
-#             # Consider for further processing only reads pair aligning uniquely
-#             awk -vOFS='\t' '{$11="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"; print}' "${strain}/${sample}_${experiment}_alignment.sam" | \
-#             cut -f1-19 | \
-#             sed '$!N;s/\n/ /' | \
-#             awk '($3 != $7 && $7 == "=")' | \
-#             awk '($7 != "*")' | \
-#             awk '$6 == "75M"' | \
-#             awk '$25 == "75M"' | \
-#             awk '$13 == "XN:i:0"' | \
-#             awk '$32 == "XN:i:0"' | \
-#             sed 's/ /\t/g' | \
-#             awk '($19 != "YT:Z:UP")' | \
-#             awk '($38 != "YT:Z:UP")' > "${strain}/${sample}_${experiment}_alignment_processed.sam"
-
-#             # Remove intermediate files
-#             #rm "${strain}/${sample}_${experiment}_alignment.sam"
-
-#             # Place read pairs in SAM standard output format
-#             cut -f1-19 "${strain}/${sample}_${experiment}_alignment_processed.sam" > "${strain}/${sample}_${experiment}_alignment_processed_R1.sam"
-#             cut -f20-38 "${strain}/${sample}_${experiment}_alignment_processed.sam" > "${strain}/${sample}_${experiment}_alignment_processed_R2.sam"
-#             cat "${strain}/${sample}_${experiment}_alignment_processed_R1.sam" "${strain}/${sample}_${experiment}_alignment_processed_R2.sam" > "${strain}/${sample}_${experiment}_alignment_processed_R12.sam"
-
-#             # Remove intermediate files
-#             rm "${strain}/${sample}_${experiment}_alignment_processed_R1.sam" "${strain}/${sample}_${experiment}_alignment_processed_R2.sam"
-
-#             # Add header back
-#             cat "${strain}/${sample}_${experiment}_header.sam" "${strain}/${sample}_${experiment}_alignment_processed_R12.sam" > "${strain}/${sample}_${experiment}_alignment_processed_R12_header.sam"
-
-#             # Remove intermediate files
-#             rm "${strain}/${sample}_${experiment}_alignment_processed_R12.sam"
-
-#             # Extract R1 reads that aligned in -m1 -v0 in SR bowtie mapping
-#             samtools view -N "${strain}/${sample}_${experiment}_r_R12_mapped.txt" -o "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R1.sam" "${strain}/${sample}_${experiment}_alignment_processed_R12_header.sam"
-
-#             # Extract R2 reads that aligned in -m1 -v0 in SR bowtie mapping
-#             samtools view -N "${strain}/${sample}_${experiment}_r_R12_mapped.txt" -o "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R2.sam" "${strain}/${sample}_${experiment}_alignment_processed_R12_header.sam"
-
-#             # Cat mapping reads
-#             cat "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R1.sam" "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R2.sam" > "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R12.sam"
-            
-#             # Add header back
-#             cat "${strain}/${sample}_${experiment}_header.sam" "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R12.sam" > "${strain}/${sample}_${experiment}_concordant_pairs.sam"
-            
-#             # Remove intermediate files
-#             rm "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R12.sam"
-#             rm "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R1.sam" "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R2.sam"
-
-#             # Concordant read pairs - unique reads
-#             awk '!seen[$0]++' "${strain}/${sample}_${experiment}_concordant_pairs.sam" > "${strain}/${sample}_${experiment}_concordant_pairs_unique.sam"
-
-#             # Get row count
-#             tail -n +20 "${strain}/${sample}_${experiment}_concordant_pairs_unique.sam" | wc -l | awk '{print $1}' > "${strain}/${sample}_${experiment}_concordant_pairs_unique_row_count.tsv"
-
-#             # Remove intermediate files
-#             rm "${strain}/${sample}_${experiment}_concordant_pairs.sam"
-#             rm "${strain}/${sample}_${experiment}_alignment_processed_R12_header.sam"
-#             rm "${strain}/${sample}_${experiment}_alignment_processed.sam"
-#             rm "${strain}/${sample}_${experiment}_concordant_pairs_unique.sam"
-#             #rm "${strain}/${sample}_${experiment}_r_R12_mapped.txt"
-
-#             echo "" >> "$log_file"  # Adds a blank line
-#             elapsed_time=$(( SECONDS - start_time ))
-#             echo "Concordant read pairs processing completed in ${elapsed_time} seconds" >> "$log_file"
-#             echo "" >> "$log_file"  # Adds a blank line 
+            # Remove intermediate files
+            rm "${strain}/${sample}_${experiment}_r_R1_filtered.sam" "${strain}/${sample}_${experiment}_r_R2_filtered.sam"
+            rm  "${strain}/${sample}_${experiment}_r_R1_mapped.sam" "${strain}/${sample}_${experiment}_r_R2_mapped.sam"
+            rm "${strain}/${sample}_${experiment}_r_R1_mapped.txt" "${strain}/${sample}_${experiment}_r_R2_mapped.txt"
+            rm "${strain}/${sample}_${experiment}_r_R1_mapped_sorted.txt" "${strain}/${sample}_${experiment}_r_R2_mapped_sorted.txt"
             
 
-#             ########
+            # Bowtie2 mapping (in a forced -m1 -v0 mode)
+            start_time=$SECONDS
+            echo "### $(basename "$strain")/${sample} 75nt paired-end Bowtie2 alignment ###" >> "$stats"
+            echo "${experiment}" >> "$stats"
+            bowtie2 \
+              -p "$N_CPU" \
+              --no-1mm-upfront \
+              --score-min C,0,0 \
+              -N 0 \
+              --end-to-end \
+              --fr \
+              -x "${MYREF}/S_cerevisiae_indexed" \
+              -1 "${strain}/${sample}_${experiment}_r_R1_filtered.fastq" \
+              -2 "${strain}/${sample}_${experiment}_r_R2_filtered.fastq" \
+              -S "${strain}/${sample}_${experiment}.sam" 2>> "$stats" 
 
-#             # Bowtie2 SAM processing (inter-chromosomal discordant read-pairs)
-#             start_time=$SECONDS
-#             echo "### $(basename "$strain")/${sample} Bowtie2 SAM processing - inter-chromosomal discordant read pairs ###" >> "$log_file"
-#             echo "${experiment}" >> "$log_file"
+            echo "" >> "$stats"  # Adds a blank line
+            elapsed_time=$(( SECONDS - start_time ))
+            echo "Bowtie2 alignment 75nt for paired-end reads completed in ${elapsed_time} seconds" >> "$log_file"
+            echo "" >> "$log_file"
 
-#             # Remove header for processing
-#             #sed -n -e '1,19p' "${strain}/${sample}_${experiment}.sam" > "${strain}/${sample}_${experiment}_header.sam"
-#             #tail -n +20 "${strain}/${sample}_${experiment}.sam" > "${strain}/${sample}_${experiment}_alignment.sam"
+            # Remove intermediate files
+            rm "${strain}/${sample}_${experiment}_r_R1_filtered.fastq"
+            rm "${strain}/${sample}_${experiment}_r_R2_filtered.fastq"
 
-#             # Processing (set pairs in the same row, extract only those aligning both R1 and R2 completely)
-#             # Consider for further processing only reads pair aligning uniquely
-#             awk -vOFS='\t' '{$11="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"; print}' "${strain}/${sample}_${experiment}_alignment.sam" | \
-#             cut -f1-19 | \
-#             sed '$!N;s/\n/ /' | \
-#             awk '($3 != $7 && $7 != "=")' | \
-#             awk '($7 != "*")' | \
-#             awk '$6 == "75M"' | \
-#             awk '$25 == "75M"' | \
-#             awk '$13 == "XN:i:0"' | \
-#             awk '$32 == "XN:i:0"' | \
-#             sed 's/ /\t/g' | \
-#             awk '($19 != "YT:Z:UP")' | \
-#             awk '($38 != "YT:Z:UP")' > "${strain}/${sample}_${experiment}_alignment_processed.sam"
+            #########
+            # Bowtie2 SAM processing (concordant read-pairs for % recombination)
+            start_time=$SECONDS
+            echo "### $(basename "$strain")/${sample} Bowtie2 SAM processing - concordant read pairs ###" >> "$log_file"
+            echo "${experiment}" >> "$log_file"
 
-#             # Remove intermediate files
-#             rm "${strain}/${sample}_${experiment}_alignment.sam"
+            # Remove header for processing
+            sed -n -e '1,19p' "${strain}/${sample}_${experiment}.sam" > "${strain}/${sample}_${experiment}_header.sam"
+            tail -n +20 "${strain}/${sample}_${experiment}.sam" > "${strain}/${sample}_${experiment}_alignment.sam"
 
-#             # Place read pairs in SAM standard output format
-#             cut -f1-19 "${strain}/${sample}_${experiment}_alignment_processed.sam" > "${strain}/${sample}_${experiment}_alignment_processed_R1.sam"
-#             cut -f20-38 "${strain}/${sample}_${experiment}_alignment_processed.sam" > "${strain}/${sample}_${experiment}_alignment_processed_R2.sam"
-#             cat "${strain}/${sample}_${experiment}_alignment_processed_R1.sam" "${strain}/${sample}_${experiment}_alignment_processed_R2.sam" > "${strain}/${sample}_${experiment}_alignment_processed_R12.sam"
+            # Processing (set pairs in the same row, extract only those aligning both R1 and R2 completely)
+            # Consider for further processing only reads pair aligning uniquely
+            awk -vOFS='\t' '{$11="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"; print}' "${strain}/${sample}_${experiment}_alignment.sam" | \
+            cut -f1-19 | \
+            sed '$!N;s/\n/ /' | \
+            awk '($3 != $7 && $7 == "=")' | \
+            awk '($7 != "*")' | \
+            awk '$6 == "75M"' | \
+            awk '$25 == "75M"' | \
+            awk '$13 == "XN:i:0"' | \
+            awk '$32 == "XN:i:0"' | \
+            sed 's/ /\t/g' | \
+            awk '($19 != "YT:Z:UP")' | \
+            awk '($38 != "YT:Z:UP")' > "${strain}/${sample}_${experiment}_alignment_processed.sam"
 
-#             # Remove intermediate files
-#             rm "${strain}/${sample}_${experiment}_alignment_processed_R1.sam" "${strain}/${sample}_${experiment}_alignment_processed_R2.sam"
+            # Remove intermediate files
+            #rm "${strain}/${sample}_${experiment}_alignment.sam"
 
-#             # Add header back
-#             cat "${strain}/${sample}_${experiment}_header.sam" "${strain}/${sample}_${experiment}_alignment_processed_R12.sam" > "${strain}/${sample}_${experiment}_alignment_processed_R12_header.sam"
+            # Place read pairs in SAM standard output format
+            cut -f1-19 "${strain}/${sample}_${experiment}_alignment_processed.sam" > "${strain}/${sample}_${experiment}_alignment_processed_R1.sam"
+            cut -f20-38 "${strain}/${sample}_${experiment}_alignment_processed.sam" > "${strain}/${sample}_${experiment}_alignment_processed_R2.sam"
+            cat "${strain}/${sample}_${experiment}_alignment_processed_R1.sam" "${strain}/${sample}_${experiment}_alignment_processed_R2.sam" > "${strain}/${sample}_${experiment}_alignment_processed_R12.sam"
 
-#             # Remove intermediate files
-#             rm "${strain}/${sample}_${experiment}_alignment_processed_R12.sam"
+            # Remove intermediate files
+            rm "${strain}/${sample}_${experiment}_alignment_processed_R1.sam" "${strain}/${sample}_${experiment}_alignment_processed_R2.sam"
 
-#             # Extract R1 reads that aligned in -m1 -v0 in SR bowtie mapping
-#             samtools view -N "${strain}/${sample}_${experiment}_r_R12_mapped.txt" -o "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R1.sam" "${strain}/${sample}_${experiment}_alignment_processed_R12_header.sam"
+            # Add header back
+            cat "${strain}/${sample}_${experiment}_header.sam" "${strain}/${sample}_${experiment}_alignment_processed_R12.sam" > "${strain}/${sample}_${experiment}_alignment_processed_R12_header.sam"
 
-#             # Extract R2 reads that aligned in -m1 -v0 in SR bowtie mapping
-#             samtools view -N "${strain}/${sample}_${experiment}_r_R12_mapped.txt" -o "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R2.sam" "${strain}/${sample}_${experiment}_alignment_processed_R12_header.sam"
+            # Remove intermediate files
+            rm "${strain}/${sample}_${experiment}_alignment_processed_R12.sam"
 
-#             # Cat mapping reads
-#             cat "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R1.sam" "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R2.sam" > "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R12.sam"
+            # Extract R1 reads that aligned in -m1 -v0 in SR bowtie mapping
+            samtools view -N "${strain}/${sample}_${experiment}_r_R12_mapped.txt" -o "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R1.sam" "${strain}/${sample}_${experiment}_alignment_processed_R12_header.sam"
+
+            # Extract R2 reads that aligned in -m1 -v0 in SR bowtie mapping
+            samtools view -N "${strain}/${sample}_${experiment}_r_R12_mapped.txt" -o "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R2.sam" "${strain}/${sample}_${experiment}_alignment_processed_R12_header.sam"
+
+            # Cat mapping reads
+            cat "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R1.sam" "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R2.sam" > "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R12.sam"
             
-#             # Add header back
-#             cat "${strain}/${sample}_${experiment}_header.sam" "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R12.sam" > "${strain}/${sample}_${experiment}_inter_discordant_pairs.sam"
+            # Add header back
+            cat "${strain}/${sample}_${experiment}_header.sam" "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R12.sam" > "${strain}/${sample}_${experiment}_concordant_pairs.sam"
             
-#             # Remove intermediate files
-#             rm "${strain}/${sample}_${experiment}_header.sam" "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R12.sam"
-#             rm "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R1.sam" "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R2.sam"
+            # Remove intermediate files
+            rm "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R12.sam"
+            rm "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R1.sam" "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R2.sam"
 
-#             # Inter-chromosomal discordant read pairs - unique reads
-#             awk '!seen[$0]++' "${strain}/${sample}_${experiment}_inter_discordant_pairs.sam" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique.sam"
+            # Concordant read pairs - unique reads
+            awk '!seen[$0]++' "${strain}/${sample}_${experiment}_concordant_pairs.sam" > "${strain}/${sample}_${experiment}_concordant_pairs_unique.sam"
 
-#             # Remove intermediate files
-#             rm "${strain}/${sample}_${experiment}_inter_discordant_pairs.sam"
-#             rm "${strain}/${sample}_${experiment}_alignment_processed_R12_header.sam"
-#             rm "${strain}/${sample}_${experiment}_alignment_processed.sam"
-#             rm "${strain}/${sample}_${experiment}_r_R12_mapped.txt"
-#             rm "${strain}/${sample}_${experiment}.sam"
-#             rm "${strain}/${sample}_${experiment}_header.sam"
+            # Get row count
+            tail -n +20 "${strain}/${sample}_${experiment}_concordant_pairs_unique.sam" | wc -l | awk '{print $1}' > "${strain}/${sample}_${experiment}_concordant_pairs_unique_row_count.tsv"
 
-#             # Prepare tsv file for R processing
-#             tail -n +20 "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique.sam" | \
-#             # Extract relevant columns (1, 3, 4, 7, 8, 10) and convert to tsv format
-#             # Note: $1 is read name, $3 is reference sequence name, $4 is position, $7 is mate reference sequence name, $8 is mate position, $10 is sequence
-#             awk 'BEGIN{OFS="\t"} {print $1, $3, $4, $7, $8, $10}' > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique.tsv"
+            # Remove intermediate files
+            rm "${strain}/${sample}_${experiment}_concordant_pairs.sam"
+            rm "${strain}/${sample}_${experiment}_alignment_processed_R12_header.sam"
+            rm "${strain}/${sample}_${experiment}_alignment_processed.sam"
+            rm "${strain}/${sample}_${experiment}_concordant_pairs_unique.sam"
+            #rm "${strain}/${sample}_${experiment}_r_R12_mapped.txt"
+
+            echo "" >> "$log_file"  # Adds a blank line
+            elapsed_time=$(( SECONDS - start_time ))
+            echo "Concordant read pairs processing completed in ${elapsed_time} seconds" >> "$log_file"
+            echo "" >> "$log_file"  # Adds a blank line 
             
-#             echo "" >> "$log_file"  # Adds a blank line
-#             elapsed_time=$(( SECONDS - start_time ))
-#             echo "Inter-chromosomal discordant read pairs processing completed in ${elapsed_time} seconds" >> "$log_file"
-#             echo "" >> "$log_file"  # Adds a blank line 
 
-#             # Calculate total elapsed time
-#             elapsed_time_total=$((( SECONDS - start_time_total )/60))
-#             echo "Total processing completed in ${elapsed_time_total} minutes" >> "$log_file"
-#             echo "" >> "$log_file"  # Adds a blank line 
+            ########
 
-#           else
-#           echo "Warning: Decompressed files missing for sample $sample in $strain!" >> "$log_file"
-#           echo "" >> "$log_file"
-#           fi
-#         else
-#         echo "Warning: One or both compressed files for sample $sample are missing in $strain!" >> "$log_file"
-#         echo "" >> "$log_file"
-#         fi
-#       done
-#     done
-# done
+            # Bowtie2 SAM processing (inter-chromosomal discordant read-pairs)
+            start_time=$SECONDS
+            echo "### $(basename "$strain")/${sample} Bowtie2 SAM processing - inter-chromosomal discordant read pairs ###" >> "$log_file"
+            echo "${experiment}" >> "$log_file"
 
-# # Calculate alignment and processing total elapsed time
-# elapsed_time_total_alignment=$((( SECONDS - start_time_total_alignment )/60))
-# echo "================================" >> "$log_file"
-# echo "" >> "$log_file"
-# echo "ALIGNMENT AND SAM PROCESSING COMPLETED IN ${elapsed_time_total_alignment} MINUTES" >> "$log_file"
-# echo "" >> "$log_file"  # Adds a blank line
+            # Remove header for processing
+            #sed -n -e '1,19p' "${strain}/${sample}_${experiment}.sam" > "${strain}/${sample}_${experiment}_header.sam"
+            #tail -n +20 "${strain}/${sample}_${experiment}.sam" > "${strain}/${sample}_${experiment}_alignment.sam"
+
+            # Processing (set pairs in the same row, extract only those aligning both R1 and R2 completely)
+            # Consider for further processing only reads pair aligning uniquely
+            awk -vOFS='\t' '{$11="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"; print}' "${strain}/${sample}_${experiment}_alignment.sam" | \
+            cut -f1-19 | \
+            sed '$!N;s/\n/ /' | \
+            awk '($3 != $7 && $7 != "=")' | \
+            awk '($7 != "*")' | \
+            awk '$6 == "75M"' | \
+            awk '$25 == "75M"' | \
+            awk '$13 == "XN:i:0"' | \
+            awk '$32 == "XN:i:0"' | \
+            sed 's/ /\t/g' | \
+            awk '($19 != "YT:Z:UP")' | \
+            awk '($38 != "YT:Z:UP")' > "${strain}/${sample}_${experiment}_alignment_processed.sam"
+
+            # Remove intermediate files
+            rm "${strain}/${sample}_${experiment}_alignment.sam"
+
+            # Place read pairs in SAM standard output format
+            cut -f1-19 "${strain}/${sample}_${experiment}_alignment_processed.sam" > "${strain}/${sample}_${experiment}_alignment_processed_R1.sam"
+            cut -f20-38 "${strain}/${sample}_${experiment}_alignment_processed.sam" > "${strain}/${sample}_${experiment}_alignment_processed_R2.sam"
+            cat "${strain}/${sample}_${experiment}_alignment_processed_R1.sam" "${strain}/${sample}_${experiment}_alignment_processed_R2.sam" > "${strain}/${sample}_${experiment}_alignment_processed_R12.sam"
+
+            # Remove intermediate files
+            rm "${strain}/${sample}_${experiment}_alignment_processed_R1.sam" "${strain}/${sample}_${experiment}_alignment_processed_R2.sam"
+
+            # Add header back
+            cat "${strain}/${sample}_${experiment}_header.sam" "${strain}/${sample}_${experiment}_alignment_processed_R12.sam" > "${strain}/${sample}_${experiment}_alignment_processed_R12_header.sam"
+
+            # Remove intermediate files
+            rm "${strain}/${sample}_${experiment}_alignment_processed_R12.sam"
+
+            # Extract R1 reads that aligned in -m1 -v0 in SR bowtie mapping
+            samtools view -N "${strain}/${sample}_${experiment}_r_R12_mapped.txt" -o "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R1.sam" "${strain}/${sample}_${experiment}_alignment_processed_R12_header.sam"
+
+            # Extract R2 reads that aligned in -m1 -v0 in SR bowtie mapping
+            samtools view -N "${strain}/${sample}_${experiment}_r_R12_mapped.txt" -o "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R2.sam" "${strain}/${sample}_${experiment}_alignment_processed_R12_header.sam"
+
+            # Cat mapping reads
+            cat "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R1.sam" "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R2.sam" > "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R12.sam"
+            
+            # Add header back
+            cat "${strain}/${sample}_${experiment}_header.sam" "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R12.sam" > "${strain}/${sample}_${experiment}_inter_discordant_pairs.sam"
+            
+            # Remove intermediate files
+            rm "${strain}/${sample}_${experiment}_header.sam" "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R12.sam"
+            rm "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R1.sam" "${strain}/${sample}_${experiment}_alignment_processed_R12_header_R2.sam"
+
+            # Inter-chromosomal discordant read pairs - unique reads
+            awk '!seen[$0]++' "${strain}/${sample}_${experiment}_inter_discordant_pairs.sam" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique.sam"
+
+            # Remove intermediate files
+            rm "${strain}/${sample}_${experiment}_inter_discordant_pairs.sam"
+            rm "${strain}/${sample}_${experiment}_alignment_processed_R12_header.sam"
+            rm "${strain}/${sample}_${experiment}_alignment_processed.sam"
+            rm "${strain}/${sample}_${experiment}_r_R12_mapped.txt"
+            rm "${strain}/${sample}_${experiment}.sam"
+            rm "${strain}/${sample}_${experiment}_header.sam"
+
+            # Prepare tsv file for R processing
+            tail -n +20 "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique.sam" | \
+            # Extract relevant columns (1, 3, 4, 7, 8, 10) and convert to tsv format
+            # Note: $1 is read name, $3 is reference sequence name, $4 is position, $7 is mate reference sequence name, $8 is mate position, $10 is sequence
+            awk 'BEGIN{OFS="\t"} {print $1, $3, $4, $7, $8, $10}' > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique.tsv"
+            
+            echo "" >> "$log_file"  # Adds a blank line
+            elapsed_time=$(( SECONDS - start_time ))
+            echo "Inter-chromosomal discordant read pairs processing completed in ${elapsed_time} seconds" >> "$log_file"
+            echo "" >> "$log_file"  # Adds a blank line 
+
+            # Calculate total elapsed time
+            elapsed_time_total=$((( SECONDS - start_time_total )/60))
+            echo "Total processing completed in ${elapsed_time_total} minutes" >> "$log_file"
+            echo "" >> "$log_file"  # Adds a blank line 
+
+          else
+          echo "Warning: Decompressed files missing for sample $sample in $strain!" >> "$log_file"
+          echo "" >> "$log_file"
+          fi
+        else
+        echo "Warning: One or both compressed files for sample $sample are missing in $strain!" >> "$log_file"
+        echo "" >> "$log_file"
+        fi
+      done
+    done
+done
+
+# Calculate alignment and processing total elapsed time
+elapsed_time_total_alignment=$((( SECONDS - start_time_total_alignment )/60))
+echo "================================" >> "$log_file"
+echo "" >> "$log_file"
+echo "ALIGNMENT AND SAM PROCESSING COMPLETED IN ${elapsed_time_total_alignment} MINUTES" >> "$log_file"
+echo "" >> "$log_file"  # Adds a blank line
 
 
-# ########### MODULE CORE - END ###########
+########### MODULE CORE - END ###########
 
 
-# ##### MODULE MATs - START #####
-# ############## MATa-MATa' analysis of 75bp reads ############
+##### MODULE MATs - START #####
+############## MATa-MATa' analysis of 75bp reads ############
 
-# # MATa-MATa' analysis
+# MATa-MATa' analysis
 
-# echo "================================" >> "$log_file"
-# echo "" >> "$log_file"  # Adds a blank line
-# echo "### MATa-MATa' analysis, 75bp analysis ###" >> "$log_file"
-# current_time=$(date "+%d-%m-%Y %H:%M:%S")
-# echo "Initiated at ${current_time}" >> "$log_file"
-# echo "" >> "$log_file"  # Adds a blank line 
-# start_time_total_MATs=$SECONDS
+echo "================================" >> "$log_file"
+echo "" >> "$log_file"  # Adds a blank line
+echo "### MATa-MATa' analysis, 75bp analysis ###" >> "$log_file"
+current_time=$(date "+%d-%m-%Y %H:%M:%S")
+echo "Initiated at ${current_time}" >> "$log_file"
+echo "" >> "$log_file"  # Adds a blank line 
+start_time_total_MATs=$SECONDS
 
-# # Loop inside each subdirectory of MYWD
-# for strain in "${MYWD}"*/; do
-#   for sample in T0 TSG TLG TLR; do
-#     for experiment in "${EXP_LIST[@]}"; do
-#       file_alignment="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique.sam"
-#       if [[ -f "$file_alignment"  ]]; then
-#         echo "$(basename "$strain") ${sample} ${experiment}" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line
-#         echo "Processing MATs for $file_alignment" >> "$log_file" 
-#         start_time_MATs=$SECONDS
+# Loop inside each subdirectory of MYWD
+for strain in "${MYWD}"*/; do
+  for sample in T0 TSG TLG TLR; do
+    for experiment in "${EXP_LIST[@]}"; do
+      file_alignment="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique.sam"
+      if [[ -f "$file_alignment"  ]]; then
+        echo "$(basename "$strain") ${sample} ${experiment}" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line
+        echo "Processing MATs for $file_alignment" >> "$log_file" 
+        start_time_MATs=$SECONDS
         
-#         # Determine the number of cores available
-#         N_CPU=$(nproc)
+        # Determine the number of cores available
+        N_CPU=$(nproc)
         
-#         # Extract inter-chromosomal discordant read pairs for MATa-MATa' analysis
-#         # Remove header for processing
-#         sed -n -e '1,19p' "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique.sam" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_header.sam"
+        # Extract inter-chromosomal discordant read pairs for MATa-MATa' analysis
+        # Remove header for processing
+        sed -n -e '1,19p' "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique.sam" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_header.sam"
 
-#         # Extract reads and cat them to a new file
-#         awk ' ($3=="CHRIII" && $7=="CHRV" && $8>289178 && $8<290483) ' "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique.sam" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R1.sam"
-#         awk ' ($3=="CHRV" && $7=="CHRIII" && $4>289178 && $4<290483) ' "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique.sam" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R2.sam"
-#         cat "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_header.sam" "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R1.sam" "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R2.sam" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.sam"
-#         #cat "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_header.sam" "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R1.sam" "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R2.sam" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.tsv"
-#         #rm  "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_header.sam"
-#         #rm "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R1.sam"
-#         #rm "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R2.sam"
+        # Extract reads and cat them to a new file
+        awk ' ($3=="CHRIII" && $7=="CHRV" && $8>289178 && $8<290483) ' "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique.sam" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R1.sam"
+        awk ' ($3=="CHRV" && $7=="CHRIII" && $4>289178 && $4<290483) ' "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique.sam" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R2.sam"
+        cat "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_header.sam" "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R1.sam" "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R2.sam" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.sam"
+        #cat "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_header.sam" "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R1.sam" "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R2.sam" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.tsv"
+        #rm  "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_header.sam"
+        #rm "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R1.sam"
+        #rm "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R2.sam"
 
-#         # convert SAM to sorted BAM (75nt)
-#         start_time=$SECONDS
-#         samtools sort -@ "$N_CPU" -o "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.bam" "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.sam"
-#         samtools index "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.bam" "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.bai"
-#         elapsed_time=$(( SECONDS - start_time ))
-#         echo "Bam and Bai 75nt MAT reads completed in ${elapsed_time} seconds" >> "$log_file"
+        # convert SAM to sorted BAM (75nt)
+        start_time=$SECONDS
+        samtools sort -@ "$N_CPU" -o "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.bam" "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.sam"
+        samtools index "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.bam" "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.bai"
+        elapsed_time=$(( SECONDS - start_time ))
+        echo "Bam and Bai 75nt MAT reads completed in ${elapsed_time} seconds" >> "$log_file"
 
-#         # Generate BedGraphs coverage files (75nt)
-#         start_time=$SECONDS
-#         bamCoverage -b "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.bam" -o "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.bedgraph" -of bedgraph -p "$N_CPU"  -bs 1 --smoothLength 1
-#         elapsed_time=$(( SECONDS - start_time ))
-#         echo "Bedgraphs 75nt reads completed in ${elapsed_time} seconds" >> "$log_file"
+        # Generate BedGraphs coverage files (75nt)
+        start_time=$SECONDS
+        bamCoverage -b "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.bam" -o "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.bedgraph" -of bedgraph -p "$N_CPU"  -bs 1 --smoothLength 1
+        elapsed_time=$(( SECONDS - start_time ))
+        echo "Bedgraphs 75nt reads completed in ${elapsed_time} seconds" >> "$log_file"
 
-#         # Sorting Bedgraphs files (75nt)
-#         samtools faidx "${MYREF}/RG_PMV_v9.fasta" # Create index file
-#         cut -f1,2 "${MYREF}/RG_PMV_v9.fasta.fai" > "${MYREF}/chrom_order.txt"
-#         bedtools sort -i "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.bedgraph" -g "${MYREF}/chrom_order.txt" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_sorted.bedgraph"
+        # Sorting Bedgraphs files (75nt)
+        samtools faidx "${MYREF}/RG_PMV_v9.fasta" # Create index file
+        cut -f1,2 "${MYREF}/RG_PMV_v9.fasta.fai" > "${MYREF}/chrom_order.txt"
+        bedtools sort -i "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.bedgraph" -g "${MYREF}/chrom_order.txt" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_sorted.bedgraph"
              
         
-#         # Generate TSV files (75nt)
-#         start_time=$SECONDS
-#         #bedtools coverage -a "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.bedgraph" -b "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.bam" -d > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.tsv"
-#         bedtools coverage -a "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_sorted.bedgraph" -b "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.bam" -sorted -g "${MYREF}/chrom_order.txt" -d > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_sorted.tsv"
+        # Generate TSV files (75nt)
+        start_time=$SECONDS
+        #bedtools coverage -a "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.bedgraph" -b "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.bam" -d > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.tsv"
+        bedtools coverage -a "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_sorted.bedgraph" -b "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.bam" -sorted -g "${MYREF}/chrom_order.txt" -d > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_sorted.tsv"
             
-#         # Keep only coverage for chromosomes CHRIII and CHRV
-#         awk '$1=="CHRIII" || $1=="CHRV"' "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_sorted.tsv" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_filtered.tsv"
+        # Keep only coverage for chromosomes CHRIII and CHRV
+        awk '$1=="CHRIII" || $1=="CHRV"' "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_sorted.tsv" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_filtered.tsv"
 
-#         # Remove intermediate files   
-#         rm "${strain}/${sample}_${experiment}_"*.bai
-#         rm "${strain}/${sample}_${experiment}_"*.bam
-#         rm "${strain}/${sample}_${experiment}_"*.bedgraph
-#         rm "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_sorted.tsv"
-#         rm "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R1.sam"
-#         rm "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R2.sam"
-#         rm "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_header.sam"
+        # Remove intermediate files   
+        rm "${strain}/${sample}_${experiment}_"*.bai
+        rm "${strain}/${sample}_${experiment}_"*.bam
+        rm "${strain}/${sample}_${experiment}_"*.bedgraph
+        rm "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_sorted.tsv"
+        rm "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R1.sam"
+        rm "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R2.sam"
+        rm "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_header.sam"
 
-#       # Calculate elapsed time
-#         elapsed_time=$((( SECONDS - start_time_MATs )))
-#         echo "Total MATs SAM processing completed in ${elapsed_time} seconds" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line 
-#       else
-#       echo "Missing files for $strain/$sample/$experiment: $file_alignment" >> "$log_file"
-#       echo "" >> "$log_file"
-#       fi
-#     done
-#   done
-# done
+      # Calculate elapsed time
+        elapsed_time=$((( SECONDS - start_time_MATs )))
+        echo "Total MATs SAM processing completed in ${elapsed_time} seconds" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line 
+      else
+      echo "Missing files for $strain/$sample/$experiment: $file_alignment" >> "$log_file"
+      echo "" >> "$log_file"
+      fi
+    done
+  done
+done
 
 
-# # R plots for MATa-MATa' coverage (from inter-chromosomal discordant read pairs)
-# # Start timer for R processing
+# R plots for MATa-MATa' coverage (from inter-chromosomal discordant read pairs)
+# Start timer for R processing
 
-# R_SCRIPT="DISC_plot_MATa_cov.R"
+R_SCRIPT="DISC_plot_MATa_cov.R"
 
-# # Loop inside each subdirectory of MYWD
-# for strain in "${MYWD}"*/; do
-#   echo "Processing directory: ${strain}" >> "$log_file"
-#       root_dir="${strain}"
-#       #echo "$root_dir"
-#         echo "$(basename "$strain")" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line
-#         echo "Plotting MATa-MATa' coverage" >> "$log_file"
-#         start_time=$SECONDS
+# Loop inside each subdirectory of MYWD
+for strain in "${MYWD}"*/; do
+  echo "Processing directory: ${strain}" >> "$log_file"
+      root_dir="${strain}"
+      #echo "$root_dir"
+        echo "$(basename "$strain")" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line
+        echo "Plotting MATa-MATa' coverage" >> "$log_file"
+        start_time=$SECONDS
         
-#         if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain"; then
-#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain}" >> "$log_file"
-#             echo "Skipping ${strain} and continuing..." >> "$log_file"
-#         continue
-#         fi
+        if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain"; then
+            echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain}" >> "$log_file"
+            echo "Skipping ${strain} and continuing..." >> "$log_file"
+        continue
+        fi
 
-#       # Calculate elapsed time
-#         elapsed_time=$((( SECONDS - start_time )/60))
-#         echo "Total R processing completed in ${elapsed_time} minutes" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line 
+      # Calculate elapsed time
+        elapsed_time=$((( SECONDS - start_time )/60))
+        echo "Total R processing completed in ${elapsed_time} minutes" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line 
 
-# done
+done
 
-# # Calculate total elapsed time
-# elapsed_time_total=$((( SECONDS - start_time_total_MATs )/60))
-# echo "================================" >> "$log_file"
-# echo "" >> "$log_file"
-# echo "TOTAL MATa-MATa' PROCESSING COMPLETED IN ${elapsed_time_total} MINUTES" >> "$log_file"
-# echo "" >> "$log_file"  # Adds a blank line    
-
-
-# ############## MATa-MATa' analysis of 18bp reads ############
-
-# # MATa-MATa' analysis
-
-# echo "================================" >> "$log_file"
-# echo "" >> "$log_file"  # Adds a blank line
-# echo "### MATa-MATa' analysis, 18bp analysis ###" >> "$log_file"
-# current_time=$(date "+%d-%m-%Y %H:%M:%S")
-# echo "Initiated at ${current_time}" >> "$log_file"
-# echo "" >> "$log_file"  # Adds a blank line 
-# start_time_total_MATs_18=$SECONDS
-
-# # Start timer for the alignment and processing section
-# start_time_total_alignment=$SECONDS
-
-# # Index RG for bowtie alignment
-# bowtie-build "${MYREF}/RG_PMV_v9.fasta" "${MYREF}/S_cerevisiae_indexed"
-
-# # Index RG for bowtie2 alignment
-# bowtie2-build "${MYREF}/RG_PMV_v9.fasta" "${MYREF}/S_cerevisiae_indexed"
-
-# # Loop through each directory inside MYWD
-
-# echo "### Alignments and SAM processing ###" >> "$log_file"
-# echo "Initiated at ${current_time}" >> "$log_file" 
-# echo "" >> "$log_file"  # Adds a blank line
-
-# # Define the pairs
-# declare -a R1_ids=("R1_1_1_1" "R1_1_1_2" "R1_1_2_1" "R1_1_2_2" "R1_2_1_1" "R2_1_1_1" "R2_1_1_2" "R2_1_2_1" "R2_1_2_2" "R2_2_1_1")
-# declare -a R2_ids=("R1_1_2_2" "R1_2_1_1" "R1_2_1_2" "R1_2_2_1" "R1_2_2_2" "R2_1_2_2" "R2_2_1_1" "R2_2_1_2" "R2_2_2_1" "R2_2_2_2")
+# Calculate total elapsed time
+elapsed_time_total=$((( SECONDS - start_time_total_MATs )/60))
+echo "================================" >> "$log_file"
+echo "" >> "$log_file"
+echo "TOTAL MATa-MATa' PROCESSING COMPLETED IN ${elapsed_time_total} MINUTES" >> "$log_file"
+echo "" >> "$log_file"  # Adds a blank line    
 
 
-# for strain in "$MYWD"*/; do
-#   echo "Processing directory: $strain" >> "$log_file"
+############## MATa-MATa' analysis of 18bp reads ############
 
-#   # Loop through sample prefixes (TLG)
-#     for sample in TLG; do
-#       for experiment in "${EXP_LIST[@]}"; do
-#         file1_gz="${strain}/${sample}_${experiment}_R1.fastq.gz"
-#         file2_gz="${strain}/${sample}_${experiment}_R2.fastq.gz"
+# MATa-MATa' analysis
+
+echo "================================" >> "$log_file"
+echo "" >> "$log_file"  # Adds a blank line
+echo "### MATa-MATa' analysis, 18bp analysis ###" >> "$log_file"
+current_time=$(date "+%d-%m-%Y %H:%M:%S")
+echo "Initiated at ${current_time}" >> "$log_file"
+echo "" >> "$log_file"  # Adds a blank line 
+start_time_total_MATs_18=$SECONDS
+
+# Start timer for the alignment and processing section
+start_time_total_alignment=$SECONDS
+
+# Index RG for bowtie alignment
+bowtie-build "${MYREF}/RG_PMV_v9.fasta" "${MYREF}/S_cerevisiae_indexed"
+
+# Index RG for bowtie2 alignment
+bowtie2-build "${MYREF}/RG_PMV_v9.fasta" "${MYREF}/S_cerevisiae_indexed"
+
+# Loop through each directory inside MYWD
+
+echo "### Alignments and SAM processing ###" >> "$log_file"
+echo "Initiated at ${current_time}" >> "$log_file" 
+echo "" >> "$log_file"  # Adds a blank line
+
+# Define the pairs
+declare -a R1_ids=("R1_1_1_1" "R1_1_1_2" "R1_1_2_1" "R1_1_2_2" "R1_2_1_1" "R2_1_1_1" "R2_1_1_2" "R2_1_2_1" "R2_1_2_2" "R2_2_1_1")
+declare -a R2_ids=("R1_1_2_2" "R1_2_1_1" "R1_2_1_2" "R1_2_2_1" "R1_2_2_2" "R2_1_2_2" "R2_2_1_1" "R2_2_1_2" "R2_2_2_1" "R2_2_2_2")
+
+
+for strain in "$MYWD"*/; do
+  echo "Processing directory: $strain" >> "$log_file"
+
+  # Loop through sample prefixes (TLG)
+    for sample in TLG; do
+      for experiment in "${EXP_LIST[@]}"; do
+        file1_gz="${strain}/${sample}_${experiment}_R1.fastq.gz"
+        file2_gz="${strain}/${sample}_${experiment}_R2.fastq.gz"
        
-#         # Check if both compressed files exist
-#         if [[ -f "$file1_gz" && -f "$file2_gz" ]]; then
-#           echo "Processing files: $file1_gz, $file2_gz" >> "$log_file"
-#           echo "" >> "$log_file"  # Adds a blank line
+        # Check if both compressed files exist
+        if [[ -f "$file1_gz" && -f "$file2_gz" ]]; then
+          echo "Processing files: $file1_gz, $file2_gz" >> "$log_file"
+          echo "" >> "$log_file"  # Adds a blank line
 
-#           # Keep the current pair compressed
-#           gunzip -k "$file1_gz" "$file2_gz"
-#           #file1_path="${strain}/${sample}_${experiment}_R1.fastq"
-#           #file2_path="${strain}/${sample}_${experiment}_R2.fastq"
+          # Keep the current pair compressed
+          gunzip -k "$file1_gz" "$file2_gz"
+          #file1_path="${strain}/${sample}_${experiment}_R1.fastq"
+          #file2_path="${strain}/${sample}_${experiment}_R2.fastq"
 
-#           if [[ -f "${strain}/${sample}_${experiment}_R1.fastq" && -f "${strain}/${sample}_${experiment}_R2.fastq" ]]; then
-#             # Determine the number of cores available
-#             N_CPU=$(nproc)
+          if [[ -f "${strain}/${sample}_${experiment}_R1.fastq" && -f "${strain}/${sample}_${experiment}_R2.fastq" ]]; then
+            # Determine the number of cores available
+            N_CPU=$(nproc)
 
-#             # Start timers for total processing of a strain/sample/experiment
-#             start_time_total=$SECONDS
+            # Start timers for total processing of a strain/sample/experiment
+            start_time_total=$SECONDS
         
-#             # Trim reads using cutadapt
-#             echo "### $(basename "$strain")/${sample} ${experiment} ###" >> "$log_file"
-#             echo "" >> "$log_file"  # Adds a blank line
-#             start_time=$SECONDS
+            # Trim reads using cutadapt
+            echo "### $(basename "$strain")/${sample} ${experiment} ###" >> "$log_file"
+            echo "" >> "$log_file"  # Adds a blank line
+            start_time=$SECONDS
 
-#             ### 75 nt reads #################################################################################################################
+            ### 75 nt reads #################################################################################################################
 
-#             # trim R1 reads
-#             cutadapt -j "$N_CPU" --cut -75 -o "${strain}/${sample}_${experiment}_R1_1.fastq" "${strain}/${sample}_${experiment}_R1.fastq"
-#             cutadapt -j "$N_CPU" --cut 75 -o "${strain}/${sample}_${experiment}_R1_2.fastq" "${strain}/${sample}_${experiment}_R1.fastq"
-#             # trim R2 reads
-#             cutadapt -j "$N_CPU" --cut -75 -o "${strain}/${sample}_${experiment}_R2_1.fastq" "${strain}/${sample}_${experiment}_R2.fastq"
-#             cutadapt -j "$N_CPU" --cut 75 -o "${strain}/${sample}_${experiment}_R2_2.fastq" "${strain}/${sample}_${experiment}_R2.fastq"
+            # trim R1 reads
+            cutadapt -j "$N_CPU" --cut -75 -o "${strain}/${sample}_${experiment}_R1_1.fastq" "${strain}/${sample}_${experiment}_R1.fastq"
+            cutadapt -j "$N_CPU" --cut 75 -o "${strain}/${sample}_${experiment}_R1_2.fastq" "${strain}/${sample}_${experiment}_R1.fastq"
+            # trim R2 reads
+            cutadapt -j "$N_CPU" --cut -75 -o "${strain}/${sample}_${experiment}_R2_1.fastq" "${strain}/${sample}_${experiment}_R2.fastq"
+            cutadapt -j "$N_CPU" --cut 75 -o "${strain}/${sample}_${experiment}_R2_2.fastq" "${strain}/${sample}_${experiment}_R2.fastq"
 
-#             # Remove intermediate fastq files
-#             rm "${strain}/${sample}_${experiment}_R1.fastq" "${strain}/${sample}_${experiment}_R2.fastq"
+            # Remove intermediate fastq files
+            rm "${strain}/${sample}_${experiment}_R1.fastq" "${strain}/${sample}_${experiment}_R2.fastq"
 
-#             ### 37 nt reads #################################################################################################################
+            ### 37 nt reads #################################################################################################################
 
-#             # trim R1 reads
-#             cutadapt -j "$N_CPU" --cut -38 -o "${strain}/${sample}_${experiment}_R1_1_1.fastq" "${strain}/${sample}_${experiment}_R1_1.fastq"
-#             cutadapt -j "$N_CPU" --cut 38 -o "${strain}/${sample}_${experiment}_R1_1_2.fastq" "${strain}/${sample}_${experiment}_R1_1.fastq"
+            # trim R1 reads
+            cutadapt -j "$N_CPU" --cut -38 -o "${strain}/${sample}_${experiment}_R1_1_1.fastq" "${strain}/${sample}_${experiment}_R1_1.fastq"
+            cutadapt -j "$N_CPU" --cut 38 -o "${strain}/${sample}_${experiment}_R1_1_2.fastq" "${strain}/${sample}_${experiment}_R1_1.fastq"
 
-#             cutadapt -j "$N_CPU" --cut -38 -o "${strain}/${sample}_${experiment}_R1_2_1.fastq" "${strain}/${sample}_${experiment}_R1_2.fastq"
-#             cutadapt -j "$N_CPU" --cut 38 -o "${strain}/${sample}_${experiment}_R1_2_2.fastq" "${strain}/${sample}_${experiment}_R1_2.fastq"
+            cutadapt -j "$N_CPU" --cut -38 -o "${strain}/${sample}_${experiment}_R1_2_1.fastq" "${strain}/${sample}_${experiment}_R1_2.fastq"
+            cutadapt -j "$N_CPU" --cut 38 -o "${strain}/${sample}_${experiment}_R1_2_2.fastq" "${strain}/${sample}_${experiment}_R1_2.fastq"
 
-#             # trim R2 reads
-#             cutadapt -j "$N_CPU" --cut -38 -o "${strain}/${sample}_${experiment}_R2_1_1.fastq" "${strain}/${sample}_${experiment}_R2_1.fastq"
-#             cutadapt -j "$N_CPU" --cut 38 -o "${strain}/${sample}_${experiment}_R2_1_2.fastq" "${strain}/${sample}_${experiment}_R2_1.fastq"
+            # trim R2 reads
+            cutadapt -j "$N_CPU" --cut -38 -o "${strain}/${sample}_${experiment}_R2_1_1.fastq" "${strain}/${sample}_${experiment}_R2_1.fastq"
+            cutadapt -j "$N_CPU" --cut 38 -o "${strain}/${sample}_${experiment}_R2_1_2.fastq" "${strain}/${sample}_${experiment}_R2_1.fastq"
 
-#             cutadapt -j "$N_CPU" --cut -38 -o "${strain}/${sample}_${experiment}_R2_2_1.fastq" "${strain}/${sample}_${experiment}_R2_2.fastq"
-#             cutadapt -j "$N_CPU" --cut 38 -o "${strain}/${sample}_${experiment}_R2_2_2.fastq" "${strain}/${sample}_${experiment}_R2_2.fastq"
+            cutadapt -j "$N_CPU" --cut -38 -o "${strain}/${sample}_${experiment}_R2_2_1.fastq" "${strain}/${sample}_${experiment}_R2_2.fastq"
+            cutadapt -j "$N_CPU" --cut 38 -o "${strain}/${sample}_${experiment}_R2_2_2.fastq" "${strain}/${sample}_${experiment}_R2_2.fastq"
           
 
-#             # Remove intermediate fastq files
-#             rm "${strain}/${sample}_${experiment}_R1_1.fastq" "${strain}/${sample}_${experiment}_R1_2.fastq" 
-#             rm "${strain}/${sample}_${experiment}_R2_1.fastq" "${strain}/${sample}_${experiment}_R2_2.fastq"
+            # Remove intermediate fastq files
+            rm "${strain}/${sample}_${experiment}_R1_1.fastq" "${strain}/${sample}_${experiment}_R1_2.fastq" 
+            rm "${strain}/${sample}_${experiment}_R2_1.fastq" "${strain}/${sample}_${experiment}_R2_2.fastq"
 
 
-#             ### 18 nt reads #################################################################################################################
+            ### 18 nt reads #################################################################################################################
 
-#             # trim R1 reads
-#             cutadapt -j "$N_CPU" --cut -19 -o "${strain}/${sample}_${experiment}_R1_1_1_1.fastq" "${strain}/${sample}_${experiment}_R1_1_1.fastq"
-#             cutadapt -j "$N_CPU" --cut 19 -o "${strain}/${sample}_${experiment}_R1_1_1_2.fastq" "${strain}/${sample}_${experiment}_R1_1_1.fastq"
+            # trim R1 reads
+            cutadapt -j "$N_CPU" --cut -19 -o "${strain}/${sample}_${experiment}_R1_1_1_1.fastq" "${strain}/${sample}_${experiment}_R1_1_1.fastq"
+            cutadapt -j "$N_CPU" --cut 19 -o "${strain}/${sample}_${experiment}_R1_1_1_2.fastq" "${strain}/${sample}_${experiment}_R1_1_1.fastq"
 
-#             cutadapt -j "$N_CPU" --cut -19 -o "${strain}/${sample}_${experiment}_R1_1_2_1.fastq" "${strain}/${sample}_${experiment}_R1_1_2.fastq"
-#             cutadapt -j "$N_CPU" --cut 19 -o "${strain}/${sample}_${experiment}_R1_1_2_2.fastq" "${strain}/${sample}_${experiment}_R1_1_2.fastq"
+            cutadapt -j "$N_CPU" --cut -19 -o "${strain}/${sample}_${experiment}_R1_1_2_1.fastq" "${strain}/${sample}_${experiment}_R1_1_2.fastq"
+            cutadapt -j "$N_CPU" --cut 19 -o "${strain}/${sample}_${experiment}_R1_1_2_2.fastq" "${strain}/${sample}_${experiment}_R1_1_2.fastq"
 
-#             cutadapt -j "$N_CPU" --cut -19 -o "${strain}/${sample}_${experiment}_R1_2_1_1.fastq" "${strain}/${sample}_${experiment}_R1_2_1.fastq"
-#             cutadapt -j "$N_CPU" --cut 19 -o "${strain}/${sample}_${experiment}_R1_2_1_2.fastq" "${strain}/${sample}_${experiment}_R1_2_1.fastq"
+            cutadapt -j "$N_CPU" --cut -19 -o "${strain}/${sample}_${experiment}_R1_2_1_1.fastq" "${strain}/${sample}_${experiment}_R1_2_1.fastq"
+            cutadapt -j "$N_CPU" --cut 19 -o "${strain}/${sample}_${experiment}_R1_2_1_2.fastq" "${strain}/${sample}_${experiment}_R1_2_1.fastq"
 
-#             cutadapt -j "$N_CPU" --cut -19 -o "${strain}/${sample}_${experiment}_R1_2_2_1.fastq" "${strain}/${sample}_${experiment}_R1_2_2.fastq"
-#             cutadapt -j "$N_CPU" --cut 19 -o "${strain}/${sample}_${experiment}_R1_2_2_2.fastq" "${strain}/${sample}_${experiment}_R1_2_2.fastq"
+            cutadapt -j "$N_CPU" --cut -19 -o "${strain}/${sample}_${experiment}_R1_2_2_1.fastq" "${strain}/${sample}_${experiment}_R1_2_2.fastq"
+            cutadapt -j "$N_CPU" --cut 19 -o "${strain}/${sample}_${experiment}_R1_2_2_2.fastq" "${strain}/${sample}_${experiment}_R1_2_2.fastq"
 
-#             # trim R2 reads
-#             cutadapt -j "$N_CPU" --cut -19 -o "${strain}/${sample}_${experiment}_R2_1_1_1.fastq" "${strain}/${sample}_${experiment}_R2_1_1.fastq"
-#             cutadapt -j "$N_CPU" --cut 19 -o "${strain}/${sample}_${experiment}_R2_1_1_2.fastq" "${strain}/${sample}_${experiment}_R2_1_1.fastq"
+            # trim R2 reads
+            cutadapt -j "$N_CPU" --cut -19 -o "${strain}/${sample}_${experiment}_R2_1_1_1.fastq" "${strain}/${sample}_${experiment}_R2_1_1.fastq"
+            cutadapt -j "$N_CPU" --cut 19 -o "${strain}/${sample}_${experiment}_R2_1_1_2.fastq" "${strain}/${sample}_${experiment}_R2_1_1.fastq"
 
-#             cutadapt -j "$N_CPU" --cut -19 -o "${strain}/${sample}_${experiment}_R2_1_2_1.fastq" "${strain}/${sample}_${experiment}_R2_1_2.fastq"
-#             cutadapt -j "$N_CPU" --cut 19 -o "${strain}/${sample}_${experiment}_R2_1_2_2.fastq" "${strain}/${sample}_${experiment}_R2_1_2.fastq"
+            cutadapt -j "$N_CPU" --cut -19 -o "${strain}/${sample}_${experiment}_R2_1_2_1.fastq" "${strain}/${sample}_${experiment}_R2_1_2.fastq"
+            cutadapt -j "$N_CPU" --cut 19 -o "${strain}/${sample}_${experiment}_R2_1_2_2.fastq" "${strain}/${sample}_${experiment}_R2_1_2.fastq"
 
-#             cutadapt -j "$N_CPU" --cut -19 -o "${strain}/${sample}_${experiment}_R2_2_1_1.fastq" "${strain}/${sample}_${experiment}_R2_2_1.fastq"
-#             cutadapt -j "$N_CPU" --cut 19 -o "${strain}/${sample}_${experiment}_R2_2_1_2.fastq" "${strain}/${sample}_${experiment}_R2_2_1.fastq"
+            cutadapt -j "$N_CPU" --cut -19 -o "${strain}/${sample}_${experiment}_R2_2_1_1.fastq" "${strain}/${sample}_${experiment}_R2_2_1.fastq"
+            cutadapt -j "$N_CPU" --cut 19 -o "${strain}/${sample}_${experiment}_R2_2_1_2.fastq" "${strain}/${sample}_${experiment}_R2_2_1.fastq"
 
-#             cutadapt -j "$N_CPU" --cut -19 -o "${strain}/${sample}_${experiment}_R2_2_2_1.fastq" "${strain}/${sample}_${experiment}_R2_2_2.fastq"
-#             cutadapt -j "$N_CPU" --cut 19 -o "${strain}/${sample}_${experiment}_R2_2_2_2.fastq" "${strain}/${sample}_${experiment}_R2_2_2.fastq"
+            cutadapt -j "$N_CPU" --cut -19 -o "${strain}/${sample}_${experiment}_R2_2_2_1.fastq" "${strain}/${sample}_${experiment}_R2_2_2.fastq"
+            cutadapt -j "$N_CPU" --cut 19 -o "${strain}/${sample}_${experiment}_R2_2_2_2.fastq" "${strain}/${sample}_${experiment}_R2_2_2.fastq"
 
-#             # Remove intermediate fastq files
-#             rm "${strain}/${sample}_${experiment}_R1_1_1.fastq" "${strain}/${sample}_${experiment}_R1_1_2.fastq"
-#             rm "${strain}/${sample}_${experiment}_R1_2_1.fastq" "${strain}/${sample}_${experiment}_R1_2_2.fastq"
-#             rm "${strain}/${sample}_${experiment}_R2_1_1.fastq" "${strain}/${sample}_${experiment}_R2_1_2.fastq"
-#             rm "${strain}/${sample}_${experiment}_R2_2_1.fastq" "${strain}/${sample}_${experiment}_R2_2_2.fastq"
+            # Remove intermediate fastq files
+            rm "${strain}/${sample}_${experiment}_R1_1_1.fastq" "${strain}/${sample}_${experiment}_R1_1_2.fastq"
+            rm "${strain}/${sample}_${experiment}_R1_2_1.fastq" "${strain}/${sample}_${experiment}_R1_2_2.fastq"
+            rm "${strain}/${sample}_${experiment}_R2_1_1.fastq" "${strain}/${sample}_${experiment}_R2_1_2.fastq"
+            rm "${strain}/${sample}_${experiment}_R2_2_1.fastq" "${strain}/${sample}_${experiment}_R2_2_2.fastq"
 
-#             for i in "${!R1_ids[@]}"; do
-#               R1_file=${R1_ids[$i]}
-#               R2_file=${R2_ids[$i]}
-#               echo "Processing files: "${strain}/${sample}_${experiment}_${R1_file}.fastq" "${strain}/${sample}_${experiment}_${R2_file}.fastq"" >> "$log_file"
-#               echo "" >> "$log_file"
+            for i in "${!R1_ids[@]}"; do
+              R1_file=${R1_ids[$i]}
+              R2_file=${R2_ids[$i]}
+              echo "Processing files: "${strain}/${sample}_${experiment}_${R1_file}.fastq" "${strain}/${sample}_${experiment}_${R2_file}.fastq"" >> "$log_file"
+              echo "" >> "$log_file"
 
-#                # Filter 18nt reads Q30
-#               fastp \
-#                 -i "${strain}/${sample}_${experiment}_${R1_file}.fastq" \
-#                 -o "${strain}/${sample}_${experiment}_${R1_file}_filtered.fastq" \
-#                 -I "${strain}/${sample}_${experiment}_${R2_file}.fastq" \
-#                 -O "${strain}/${sample}_${experiment}_${R2_file}_filtered.fastq" \
-#                 -q 30 -u 0 -e 30 \
-#                 --thread "$N_CPU" \
-#                 --html "${strain}/${sample}_${experiment}_${R1_file}${R2_file}_18nt.fastq.html" \
-#                 --json "${strain}/${sample}_${experiment}_${R1_file}${R2_file}_18nt.fastq.json"
+               # Filter 18nt reads Q30
+              fastp \
+                -i "${strain}/${sample}_${experiment}_${R1_file}.fastq" \
+                -o "${strain}/${sample}_${experiment}_${R1_file}_filtered.fastq" \
+                -I "${strain}/${sample}_${experiment}_${R2_file}.fastq" \
+                -O "${strain}/${sample}_${experiment}_${R2_file}_filtered.fastq" \
+                -q 30 -u 0 -e 30 \
+                --thread "$N_CPU" \
+                --html "${strain}/${sample}_${experiment}_${R1_file}${R2_file}_18nt.fastq.html" \
+                --json "${strain}/${sample}_${experiment}_${R1_file}${R2_file}_18nt.fastq.json"
               
               
-#               elapsed_time=$(( SECONDS - start_time ))
-#               echo "Cutting and Filtering Reads completed in ${elapsed_time} seconds" >> "$log_file"
-#               echo ""  >> "$log_file"
+              elapsed_time=$(( SECONDS - start_time ))
+              echo "Cutting and Filtering Reads completed in ${elapsed_time} seconds" >> "$log_file"
+              echo ""  >> "$log_file"
 
-#                 # Bowtie mapping (SR -m1 -v0) for R1 filtered reads
-#               start_time=$SECONDS
-#               echo "### $(basename "$strain")/${sample} 18nt R1 ###" >> "$stats"
-#               echo "${experiment}" >> "$stats"
-#               echo "${R1_file}" >> "$stats"
-#               bowtie -p "$N_CPU" -m 1 -v 0 -S "${MYREF}/S_cerevisiae_indexed" "${strain}/${sample}_${experiment}_${R1_file}_filtered.fastq" > "${strain}/${sample}_${experiment}_${R1_file}_filtered.sam" 2>> "$stats"
-#               echo "" >> "$stats"  # Adds a blank line
-#               elapsed_time=$(( SECONDS - start_time ))
-#               echo "Bowtie SR alignment 18nt for R1 reads completed in ${elapsed_time} seconds" >> "$log_file"
-#               echo "" >> "$log_file"
+                # Bowtie mapping (SR -m1 -v0) for R1 filtered reads
+              start_time=$SECONDS
+              echo "### $(basename "$strain")/${sample} 18nt R1 ###" >> "$stats"
+              echo "${experiment}" >> "$stats"
+              echo "${R1_file}" >> "$stats"
+              bowtie -p "$N_CPU" -m 1 -v 0 -S "${MYREF}/S_cerevisiae_indexed" "${strain}/${sample}_${experiment}_${R1_file}_filtered.fastq" > "${strain}/${sample}_${experiment}_${R1_file}_filtered.sam" 2>> "$stats"
+              echo "" >> "$stats"  # Adds a blank line
+              elapsed_time=$(( SECONDS - start_time ))
+              echo "Bowtie SR alignment 18nt for R1 reads completed in ${elapsed_time} seconds" >> "$log_file"
+              echo "" >> "$log_file"
 
-#               # Bowtie mapping (SR -m1 -v0) for R2 filtered reads
-#               start_time=$SECONDS
-#               echo "### $(basename "$strain")/${sample} 18nt R2 ###" >> "$stats"
-#               echo "${experiment}" >> "$stats"
-#               echo "${R2_file}" >> "$stats"
-#               bowtie -p "$N_CPU" -m 1 -v 0 -S "${MYREF}/S_cerevisiae_indexed" "${strain}/${sample}_${experiment}_${R2_file}_filtered.fastq" > "${strain}/${sample}_${experiment}_${R2_file}_filtered.sam" 2>> "$stats"
-#               echo "" >> "$stats"  # Adds a blank line
-#               elapsed_time=$(( SECONDS - start_time ))
-#               echo "Bowtie SR alignment 18nt for R2 reads completed in ${elapsed_time} seconds" >> "$log_file"
-#               echo "" >> "$log_file"
+              # Bowtie mapping (SR -m1 -v0) for R2 filtered reads
+              start_time=$SECONDS
+              echo "### $(basename "$strain")/${sample} 18nt R2 ###" >> "$stats"
+              echo "${experiment}" >> "$stats"
+              echo "${R2_file}" >> "$stats"
+              bowtie -p "$N_CPU" -m 1 -v 0 -S "${MYREF}/S_cerevisiae_indexed" "${strain}/${sample}_${experiment}_${R2_file}_filtered.fastq" > "${strain}/${sample}_${experiment}_${R2_file}_filtered.sam" 2>> "$stats"
+              echo "" >> "$stats"  # Adds a blank line
+              elapsed_time=$(( SECONDS - start_time ))
+              echo "Bowtie SR alignment 18nt for R2 reads completed in ${elapsed_time} seconds" >> "$log_file"
+              echo "" >> "$log_file"
                     
-#               # Select reads aligning for both R1 and R2
-#               samtools view -F 4 "${strain}/${sample}_${experiment}_${R1_file}_filtered.sam" > "${strain}/${sample}_${experiment}_${R1_file}_mapped.sam"
-#               samtools view -F 4 "${strain}/${sample}_${experiment}_${R2_file}_filtered.sam" > "${strain}/${sample}_${experiment}_${R2_file}_mapped.sam"
+              # Select reads aligning for both R1 and R2
+              samtools view -F 4 "${strain}/${sample}_${experiment}_${R1_file}_filtered.sam" > "${strain}/${sample}_${experiment}_${R1_file}_mapped.sam"
+              samtools view -F 4 "${strain}/${sample}_${experiment}_${R2_file}_filtered.sam" > "${strain}/${sample}_${experiment}_${R2_file}_mapped.sam"
 
-#               # Extract read names, sort and find common reads
-#               cut -f1 "${strain}/${sample}_${experiment}_${R1_file}_mapped.sam" | sed 's/\/[12]//' > "${strain}/${sample}_${experiment}_${R1_file}_mapped.txt"
-#               cut -f1 "${strain}/${sample}_${experiment}_${R2_file}_mapped.sam" | sed 's/\/[12]//' > "${strain}/${sample}_${experiment}_${R2_file}_mapped.txt"
-#               sort "${strain}/${sample}_${experiment}_${R1_file}_mapped.txt" -o "${strain}/${sample}_${experiment}_${R1_file}_mapped_sorted.txt"
-#               sort "${strain}/${sample}_${experiment}_${R2_file}_mapped.txt" -o "${strain}/${sample}_${experiment}_${R2_file}_mapped_sorted.txt"
+              # Extract read names, sort and find common reads
+              cut -f1 "${strain}/${sample}_${experiment}_${R1_file}_mapped.sam" | sed 's/\/[12]//' > "${strain}/${sample}_${experiment}_${R1_file}_mapped.txt"
+              cut -f1 "${strain}/${sample}_${experiment}_${R2_file}_mapped.sam" | sed 's/\/[12]//' > "${strain}/${sample}_${experiment}_${R2_file}_mapped.txt"
+              sort "${strain}/${sample}_${experiment}_${R1_file}_mapped.txt" -o "${strain}/${sample}_${experiment}_${R1_file}_mapped_sorted.txt"
+              sort "${strain}/${sample}_${experiment}_${R2_file}_mapped.txt" -o "${strain}/${sample}_${experiment}_${R2_file}_mapped_sorted.txt"
 
-#               comm -12 "${strain}/${sample}_${experiment}_${R1_file}_mapped_sorted.txt" "${strain}/${sample}_${experiment}_${R2_file}_mapped_sorted.txt" > "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_mapped.txt"
+              comm -12 "${strain}/${sample}_${experiment}_${R1_file}_mapped_sorted.txt" "${strain}/${sample}_${experiment}_${R2_file}_mapped_sorted.txt" > "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_mapped.txt"
             
-#               # Remove intermediate files
-#               rm "${strain}/${sample}_${experiment}_${R1_file}_filtered.sam" "${strain}/${sample}_${experiment}_${R2_file}_filtered.sam"
-#               rm  "${strain}/${sample}_${experiment}_${R1_file}_mapped.sam" "${strain}/${sample}_${experiment}_${R2_file}_mapped.sam"
-#               rm "${strain}/${sample}_${experiment}_${R1_file}_mapped.txt" "${strain}/${sample}_${experiment}_${R2_file}_mapped.txt"
-#               rm "${strain}/${sample}_${experiment}_${R1_file}_mapped_sorted.txt" "${strain}/${sample}_${experiment}_${R2_file}_mapped_sorted.txt"
+              # Remove intermediate files
+              rm "${strain}/${sample}_${experiment}_${R1_file}_filtered.sam" "${strain}/${sample}_${experiment}_${R2_file}_filtered.sam"
+              rm  "${strain}/${sample}_${experiment}_${R1_file}_mapped.sam" "${strain}/${sample}_${experiment}_${R2_file}_mapped.sam"
+              rm "${strain}/${sample}_${experiment}_${R1_file}_mapped.txt" "${strain}/${sample}_${experiment}_${R2_file}_mapped.txt"
+              rm "${strain}/${sample}_${experiment}_${R1_file}_mapped_sorted.txt" "${strain}/${sample}_${experiment}_${R2_file}_mapped_sorted.txt"
             
 
-#               # Bowtie2 mapping (in a forced -m1 -v0 mode)
-#               start_time=$SECONDS
-#               echo "### $(basename "$strain")/${sample} 18nt paired-end Bowtie2 alignment ###" >> "$stats"
-#               echo "${experiment}" >> "$stats"
-#               echo "${R1_file} and ${R2_file}" >> "$stats"
-#               bowtie2 \
-#                 -p "$N_CPU" \
-#                 --no-1mm-upfront \
-#                 --score-min C,0,0 \
-#                 -N 0 \
-#                 --end-to-end \
-#                 --fr \
-#                 -x "${MYREF}/S_cerevisiae_indexed" \
-#                 -1 "${strain}/${sample}_${experiment}_${R1_file}_filtered.fastq" \
-#                 -2 "${strain}/${sample}_${experiment}_${R2_file}_filtered.fastq" \
-#                 -S "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}.sam" 2>> "$stats" 
+              # Bowtie2 mapping (in a forced -m1 -v0 mode)
+              start_time=$SECONDS
+              echo "### $(basename "$strain")/${sample} 18nt paired-end Bowtie2 alignment ###" >> "$stats"
+              echo "${experiment}" >> "$stats"
+              echo "${R1_file} and ${R2_file}" >> "$stats"
+              bowtie2 \
+                -p "$N_CPU" \
+                --no-1mm-upfront \
+                --score-min C,0,0 \
+                -N 0 \
+                --end-to-end \
+                --fr \
+                -x "${MYREF}/S_cerevisiae_indexed" \
+                -1 "${strain}/${sample}_${experiment}_${R1_file}_filtered.fastq" \
+                -2 "${strain}/${sample}_${experiment}_${R2_file}_filtered.fastq" \
+                -S "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}.sam" 2>> "$stats" 
 
-#               echo "" >> "$stats"  # Adds a blank line
-#               elapsed_time=$(( SECONDS - start_time ))
-#               echo "Bowtie2 alignment 18nt for paired-end reads completed in ${elapsed_time} seconds" >> "$log_file"
-#               echo "" >> "$log_file"
+              echo "" >> "$stats"  # Adds a blank line
+              elapsed_time=$(( SECONDS - start_time ))
+              echo "Bowtie2 alignment 18nt for paired-end reads completed in ${elapsed_time} seconds" >> "$log_file"
+              echo "" >> "$log_file"
 
-#               # Remove intermediate files
-#               rm "${strain}/${sample}_${experiment}_${R1_file}_filtered.fastq"
-#               rm "${strain}/${sample}_${experiment}_${R2_file}_filtered.fastq"
+              # Remove intermediate files
+              rm "${strain}/${sample}_${experiment}_${R1_file}_filtered.fastq"
+              rm "${strain}/${sample}_${experiment}_${R2_file}_filtered.fastq"
 
-#               # Bowtie2 SAM processing (inter-chromosomal discordant read-pairs)
-#               start_time=$SECONDS
-#               echo "### $(basename "$strain")/${sample} Bowtie2 SAM processing - inter-chromosomal discordant read pairs ###" >> "$log_file"
-#               echo "${experiment}" >> "$log_file"
-#               echo "${R1_file} and ${R2_file}" >> "$log_file"
+              # Bowtie2 SAM processing (inter-chromosomal discordant read-pairs)
+              start_time=$SECONDS
+              echo "### $(basename "$strain")/${sample} Bowtie2 SAM processing - inter-chromosomal discordant read pairs ###" >> "$log_file"
+              echo "${experiment}" >> "$log_file"
+              echo "${R1_file} and ${R2_file}" >> "$log_file"
 
-#               # Remove header for processing
-#               sed -n -e '1,19p' "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}.sam" > "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_header.sam"
-#               tail -n +20 "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}.sam" > "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment.sam"
+              # Remove header for processing
+              sed -n -e '1,19p' "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}.sam" > "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_header.sam"
+              tail -n +20 "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}.sam" > "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment.sam"
 
-#               # Processing (set pairs in the same row, extract only those aligning both R1 and R2 completely)
-#               # Consider for further processing only reads pair aligning uniquely
-#               awk -vOFS='\t' '{$11="AAAAAAAAAAAAAAAAAA"; print}' "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment.sam" | \
-#               cut -f1-19 | \
-#               sed '$!N;s/\n/ /' | \
-#               awk '($3 != $7 && $7 != "=")' | \
-#               awk '($7 != "*")' | \
-#               awk '$6 == "18M"' | \
-#               awk '$25 == "18M"' | \
-#               awk '$13 == "XN:i:0"' | \
-#               awk '$32 == "XN:i:0"' | \
-#               sed 's/ /\t/g' | \
-#               awk '($19 != "YT:Z:UP")' | \
-#               awk '($38 != "YT:Z:UP")' > "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed.sam"
+              # Processing (set pairs in the same row, extract only those aligning both R1 and R2 completely)
+              # Consider for further processing only reads pair aligning uniquely
+              awk -vOFS='\t' '{$11="AAAAAAAAAAAAAAAAAA"; print}' "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment.sam" | \
+              cut -f1-19 | \
+              sed '$!N;s/\n/ /' | \
+              awk '($3 != $7 && $7 != "=")' | \
+              awk '($7 != "*")' | \
+              awk '$6 == "18M"' | \
+              awk '$25 == "18M"' | \
+              awk '$13 == "XN:i:0"' | \
+              awk '$32 == "XN:i:0"' | \
+              sed 's/ /\t/g' | \
+              awk '($19 != "YT:Z:UP")' | \
+              awk '($38 != "YT:Z:UP")' > "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed.sam"
 
-#               # Remove intermediate files
-#               rm "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment.sam"
+              # Remove intermediate files
+              rm "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment.sam"
 
-#               # Place read pairs in SAM standard output format
-#               cut -f1-19 "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed.sam" > "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R1.sam"
-#               cut -f20-38 "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed.sam" > "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R2.sam"
-#               cat "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R1.sam" "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R2.sam" > "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12.sam"
+              # Place read pairs in SAM standard output format
+              cut -f1-19 "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed.sam" > "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R1.sam"
+              cut -f20-38 "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed.sam" > "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R2.sam"
+              cat "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R1.sam" "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R2.sam" > "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12.sam"
 
-#               # Remove intermediate files
-#               rm "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R1.sam" "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R2.sam"
+              # Remove intermediate files
+              rm "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R1.sam" "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R2.sam"
 
-#               # Add header back
-#               cat "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_header.sam" "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12.sam" > "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12_header.sam"
+              # Add header back
+              cat "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_header.sam" "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12.sam" > "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12_header.sam"
 
-#               # Remove intermediate files
-#               rm "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12.sam"
+              # Remove intermediate files
+              rm "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12.sam"
 
-#               # Extract R1 reads that aligned in -m1 -v0 in SR bowtie mapping
-#               samtools view -N "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_mapped.txt" -o "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12_header_R1.sam" "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12_header.sam"
+              # Extract R1 reads that aligned in -m1 -v0 in SR bowtie mapping
+              samtools view -N "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_mapped.txt" -o "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12_header_R1.sam" "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12_header.sam"
 
-#               # Extract R2 reads that aligned in -m1 -v0 in SR bowtie mapping
-#               samtools view -N "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_mapped.txt" -o "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12_header_R2.sam" "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12_header.sam"
+              # Extract R2 reads that aligned in -m1 -v0 in SR bowtie mapping
+              samtools view -N "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_mapped.txt" -o "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12_header_R2.sam" "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12_header.sam"
 
-#               # Cat mapping reads
-#               cat "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12_header_R1.sam" "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12_header_R2.sam" > "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12_header_R12.sam"
+              # Cat mapping reads
+              cat "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12_header_R1.sam" "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12_header_R2.sam" > "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12_header_R12.sam"
             
-#               # Add header back
-#               cat "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_header.sam" "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12_header_R12.sam" > "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_inter_discordant_pairs.sam"
+              # Add header back
+              cat "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_header.sam" "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12_header_R12.sam" > "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_inter_discordant_pairs.sam"
               
-#               # Remove intermediate files
-#               rm "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_header.sam" 
-#               rm "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12_header_R12.sam"
-#               rm "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12_header_R1.sam" "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12_header_R2.sam"
+              # Remove intermediate files
+              rm "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_header.sam" 
+              rm "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12_header_R12.sam"
+              rm "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12_header_R1.sam" "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12_header_R2.sam"
 
-#               # Inter-chromosomal discordant read pairs - unique reads
-#               awk '!seen[$0]++' "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_inter_discordant_pairs.sam" > "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_inter_discordant_pairs_unique.sam"
+              # Inter-chromosomal discordant read pairs - unique reads
+              awk '!seen[$0]++' "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_inter_discordant_pairs.sam" > "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_inter_discordant_pairs_unique.sam"
 
-#               # Remove intermediate files
-#               rm "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_inter_discordant_pairs.sam"
-#               rm "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12_header.sam"
-#               rm "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed.sam"
-#               rm "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_mapped.txt"
-#               rm "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}.sam"
+              # Remove intermediate files
+              rm "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_inter_discordant_pairs.sam"
+              rm "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed_R12_header.sam"
+              rm "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_alignment_processed.sam"
+              rm "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_mapped.txt"
+              rm "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}.sam"
 
-#               # Extract discordant read pairs for MATa-MATa'
-#               sed -n -e '1,19p' "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_inter_discordant_pairs_unique.sam" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_header.sam"
-#               awk ' ($3=="CHRIII" && $7=="CHRV" && $8>289178 && $8<290483) ' "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_inter_discordant_pairs_unique.sam" > "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_inter_discordant_pairs_unique_R1_MAT.sam"
-#               awk ' ($3=="CHRV" && $7=="CHRIII" && $4>289178 && $4<290483) ' "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_inter_discordant_pairs_unique.sam" > "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_inter_discordant_pairs_unique_R2_MAT.sam"
-#               cat "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_inter_discordant_pairs_unique_R1_MAT.sam" "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_inter_discordant_pairs_unique_R2_MAT.sam" > "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_inter_discordant_pairs_unique_MAT_r18.sam"
+              # Extract discordant read pairs for MATa-MATa'
+              sed -n -e '1,19p' "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_inter_discordant_pairs_unique.sam" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_header.sam"
+              awk ' ($3=="CHRIII" && $7=="CHRV" && $8>289178 && $8<290483) ' "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_inter_discordant_pairs_unique.sam" > "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_inter_discordant_pairs_unique_R1_MAT.sam"
+              awk ' ($3=="CHRV" && $7=="CHRIII" && $4>289178 && $4<290483) ' "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_inter_discordant_pairs_unique.sam" > "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_inter_discordant_pairs_unique_R2_MAT.sam"
+              cat "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_inter_discordant_pairs_unique_R1_MAT.sam" "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_inter_discordant_pairs_unique_R2_MAT.sam" > "${strain}/${sample}_${experiment}_${R1_file}_${R2_file}_inter_discordant_pairs_unique_MAT_r18.sam"
 
             
-#               echo "" >> "$log_file"  # Adds a blank line
-#               elapsed_time=$(( SECONDS - start_time ))
-#               echo "Inter-chromosomal discordant read pairs processing completed in ${elapsed_time} seconds" >> "$log_file"
-#               echo "" >> "$log_file"  # Adds a blank line 
+              echo "" >> "$log_file"  # Adds a blank line
+              elapsed_time=$(( SECONDS - start_time ))
+              echo "Inter-chromosomal discordant read pairs processing completed in ${elapsed_time} seconds" >> "$log_file"
+              echo "" >> "$log_file"  # Adds a blank line 
 
           
 
-#             done
-#             # Calculate elapsed time
-#             elapsed_time=$((( SECONDS - start_time_total )))
-#             echo "Total MATs processing completed in ${elapsed_time} seconds" >> "$log_file"
-#             echo "" >> "$log_file"  # Adds a blank line 
+            done
+            # Calculate elapsed time
+            elapsed_time=$((( SECONDS - start_time_total )))
+            echo "Total MATs processing completed in ${elapsed_time} seconds" >> "$log_file"
+            echo "" >> "$log_file"  # Adds a blank line 
 
-#             rm -f ${strain}/${sample}_${experiment}_*.fastq
-#             cat ${strain}/${sample}_${experiment}_*_inter_discordant_pairs_unique_MAT_r18.sam > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_noheader_r18.sam"
-#             #combined_file="${strain}/${sample}_${experiment}_MAT_noheader.sam"
-#             #find "${strain}" -name '*_inter_discordant_pairs_unique_MAT.sam' -print0 | xargs -0 cat > "$combined_file"
-#             cat "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_header.sam" "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_noheader_r18.sam" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18.sam"
+            rm -f ${strain}/${sample}_${experiment}_*.fastq
+            cat ${strain}/${sample}_${experiment}_*_inter_discordant_pairs_unique_MAT_r18.sam > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_noheader_r18.sam"
+            #combined_file="${strain}/${sample}_${experiment}_MAT_noheader.sam"
+            #find "${strain}" -name '*_inter_discordant_pairs_unique_MAT.sam' -print0 | xargs -0 cat > "$combined_file"
+            cat "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_header.sam" "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_noheader_r18.sam" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18.sam"
 
-#             #####
-#             rm -f ${strain}/${sample}_${experiment}_*_pairs_unique.sam
-#             rm -f ${strain}/${sample}_${experiment}_*_pairs_unique_R1.sam
-#             rm -f ${strain}/${sample}_${experiment}_*_pairs_unique_R2.sam
-#             rm -f ${strain}/${sample}_${experiment}_*_unique_header.sam
-#             rm -f ${strain}/${sample}_${experiment}_*_pairs_unique_R2.sam
-#             rm -f ${strain}/${sample}_${experiment}_*_unique_MAT_noheader_r18.sam
-#             ###### remove this too
-#             rm -f ${strain}/${sample}_${experiment}_R*_MAT.sam
-#             rm -f ${strain}/${sample}_${experiment}_*_header.sam
-#             rm -f ${strain}/${sample}_${experiment}_*_noheader_r18.sam
-#             rm -f ${strain}/${sample}_${experiment}_R*_unique.sam
+            #####
+            rm -f ${strain}/${sample}_${experiment}_*_pairs_unique.sam
+            rm -f ${strain}/${sample}_${experiment}_*_pairs_unique_R1.sam
+            rm -f ${strain}/${sample}_${experiment}_*_pairs_unique_R2.sam
+            rm -f ${strain}/${sample}_${experiment}_*_unique_header.sam
+            rm -f ${strain}/${sample}_${experiment}_*_pairs_unique_R2.sam
+            rm -f ${strain}/${sample}_${experiment}_*_unique_MAT_noheader_r18.sam
+            ###### remove this too
+            rm -f ${strain}/${sample}_${experiment}_R*_MAT.sam
+            rm -f ${strain}/${sample}_${experiment}_*_header.sam
+            rm -f ${strain}/${sample}_${experiment}_*_noheader_r18.sam
+            rm -f ${strain}/${sample}_${experiment}_R*_unique.sam
 
-#           else
-#           echo "Warning: Decompressed files missing for sample $sample in $strain!" >> "$log_file"
-#           echo "" >> "$log_file"
-#           fi
-#         else
-#         echo "Warning: One or both compressed files for sample $sample are missing in $strain!" >> "$log_file"
-#         echo "" >> "$log_file"
-#         fi
+          else
+          echo "Warning: Decompressed files missing for sample $sample in $strain!" >> "$log_file"
+          echo "" >> "$log_file"
+          fi
+        else
+        echo "Warning: One or both compressed files for sample $sample are missing in $strain!" >> "$log_file"
+        echo "" >> "$log_file"
+        fi
         
-#       done
-#     done
-# done
+      done
+    done
+done
 
 
 
-# #Coverage for MATa-MATa' discordant read pairs
+#Coverage for MATa-MATa' discordant read pairs
 
-# # MATa-MATa' analysis
+# MATa-MATa' analysis
 
 
-# # Loop inside each subdirectory of MYWD
-# for strain in "${MYWD}"*/; do
-#   for sample in TLG; do
-#     for experiment in "${EXP_LIST[@]}"; do
-#       file_alignment="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18.sam"
-#       if [[ -f "$file_alignment"  ]]; then
-#         echo "$(basename "$strain") ${sample} ${experiment}" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line
-#         echo "Processing MATs for $file_alignment" >> "$log_file" 
-#         start_time_MATs=$SECONDS
+# Loop inside each subdirectory of MYWD
+for strain in "${MYWD}"*/; do
+  for sample in TLG; do
+    for experiment in "${EXP_LIST[@]}"; do
+      file_alignment="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18.sam"
+      if [[ -f "$file_alignment"  ]]; then
+        echo "$(basename "$strain") ${sample} ${experiment}" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line
+        echo "Processing MATs for $file_alignment" >> "$log_file" 
+        start_time_MATs=$SECONDS
         
-#         # Determine the number of cores available
-#         N_CPU=$(nproc)
+        # Determine the number of cores available
+        N_CPU=$(nproc)
         
-#         # convert SAM to sorted BAM (75nt)
-#         start_time=$SECONDS
-#         samtools sort -@ "$N_CPU" -o "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18.bam" "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18.sam"
-#         samtools index "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18.bam" "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18.bai"
-#         elapsed_time=$(( SECONDS - start_time ))
-#         echo "Bam and Bai 18nt MAT reads completed in ${elapsed_time} seconds" >> "$log_file"
+        # convert SAM to sorted BAM (75nt)
+        start_time=$SECONDS
+        samtools sort -@ "$N_CPU" -o "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18.bam" "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18.sam"
+        samtools index "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18.bam" "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18.bai"
+        elapsed_time=$(( SECONDS - start_time ))
+        echo "Bam and Bai 18nt MAT reads completed in ${elapsed_time} seconds" >> "$log_file"
 
-#         # Generate BedGraphs coverage files (75nt)
-#         start_time=$SECONDS
-#         bamCoverage -b "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18.bam" -o "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18.bedgraph" -of bedgraph -p "$N_CPU"  -bs 1 --smoothLength 1
-#         elapsed_time=$(( SECONDS - start_time ))
-#         echo "Bedgraphs 18nt reads completed in ${elapsed_time} seconds" >> "$log_file"
+        # Generate BedGraphs coverage files (75nt)
+        start_time=$SECONDS
+        bamCoverage -b "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18.bam" -o "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18.bedgraph" -of bedgraph -p "$N_CPU"  -bs 1 --smoothLength 1
+        elapsed_time=$(( SECONDS - start_time ))
+        echo "Bedgraphs 18nt reads completed in ${elapsed_time} seconds" >> "$log_file"
 
-#         # Sorting Bedgraphs files (75nt)
-#         samtools faidx "${MYREF}/RG_PMV_v9.fasta" # Create index file
-#         cut -f1,2 "${MYREF}/RG_PMV_v9.fasta.fai" > "${MYREF}/chrom_order.txt"
-#         bedtools sort -i "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18.bedgraph" -g "${MYREF}/chrom_order.txt" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18_sorted.bedgraph"
+        # Sorting Bedgraphs files (75nt)
+        samtools faidx "${MYREF}/RG_PMV_v9.fasta" # Create index file
+        cut -f1,2 "${MYREF}/RG_PMV_v9.fasta.fai" > "${MYREF}/chrom_order.txt"
+        bedtools sort -i "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18.bedgraph" -g "${MYREF}/chrom_order.txt" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18_sorted.bedgraph"
              
         
-#         # Generate TSV files (75nt)
-#         start_time=$SECONDS
-#         #bedtools coverage -a "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.bedgraph" -b "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.bam" -d > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.tsv"
-#         bedtools coverage -a "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18_sorted.bedgraph" -b "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18.bam" -sorted -g "${MYREF}/chrom_order.txt" -d > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18_sorted.tsv"
+        # Generate TSV files (75nt)
+        start_time=$SECONDS
+        #bedtools coverage -a "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.bedgraph" -b "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.bam" -d > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.tsv"
+        bedtools coverage -a "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18_sorted.bedgraph" -b "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18.bam" -sorted -g "${MYREF}/chrom_order.txt" -d > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18_sorted.tsv"
             
-#         # Keep only coverage for chromosomes CHRIII and CHRV
-#         awk '$1=="CHRIII" || $1=="CHRV"' "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18_sorted.tsv" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18_filtered.tsv"
+        # Keep only coverage for chromosomes CHRIII and CHRV
+        awk '$1=="CHRIII" || $1=="CHRV"' "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18_sorted.tsv" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18_filtered.tsv"
 
-#         # Remove intermediate files   
-#         rm "${strain}/${sample}_${experiment}_"*.bai
-#         rm "${strain}/${sample}_${experiment}_"*.bam
-#         rm "${strain}/${sample}_${experiment}_"*.bedgraph
-#         rm -f ${strain}/${sample}_${experiment}_*_MAT_complete_r18_sorted.tsv
+        # Remove intermediate files   
+        rm "${strain}/${sample}_${experiment}_"*.bai
+        rm "${strain}/${sample}_${experiment}_"*.bam
+        rm "${strain}/${sample}_${experiment}_"*.bedgraph
+        rm -f ${strain}/${sample}_${experiment}_*_MAT_complete_r18_sorted.tsv
        
 
-#       # Calculate elapsed time
-#         elapsed_time=$((( SECONDS - start_time_MATs )))
-#         echo "Total MATs processing completed in ${elapsed_time} seconds" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line 
-#       else
-#       echo "Missing files for $strain/$sample/$experiment: $file_alignment" >> "$log_file"
-#       echo "" >> "$log_file"
-#       fi
-#     done
-#   done
-# done
+      # Calculate elapsed time
+        elapsed_time=$((( SECONDS - start_time_MATs )))
+        echo "Total MATs processing completed in ${elapsed_time} seconds" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line 
+      else
+      echo "Missing files for $strain/$sample/$experiment: $file_alignment" >> "$log_file"
+      echo "" >> "$log_file"
+      fi
+    done
+  done
+done
 
-# # elapsed_time_total=$(( SECONDS - start_time ))
-# # echo "Inter-chromosomal discordant read pairs R processing completed in ${elapsed_time} seconds" >> "$log_file"
+# elapsed_time_total=$(( SECONDS - start_time ))
+# echo "Inter-chromosomal discordant read pairs R processing completed in ${elapsed_time} seconds" >> "$log_file"
 
-# # Calculate total elapsed time
-# elapsed_time_total=$((( SECONDS - start_time_total_MATs_18 )/60))
-# echo "Total MATs processing completed in ${elapsed_time_total} minutes" >> "$log_file"
-# echo "" >> "$log_file"  # Adds a blank line  
+# Calculate total elapsed time
+elapsed_time_total=$((( SECONDS - start_time_total_MATs_18 )/60))
+echo "Total MATs processing completed in ${elapsed_time_total} minutes" >> "$log_file"
+echo "" >> "$log_file"  # Adds a blank line  
 
 
 
-# # R plots for MATa-MATa' discordant read pairs
+# R plots for MATa-MATa' discordant read pairs
 
-# R_SCRIPT="DISC_plot_MATa_cov_r18.R"
+R_SCRIPT="DISC_plot_MATa_cov_r18.R"
 
-# # Start timer for R processing
-# # Loop inside each subdirectory of MYWD
-# for strain in "${MYWD}"*/; do
-#   echo "Processing directory: ${strain}" >> "$log_file"
-#       root_dir="${strain}"
-#       #echo "$root_dir"
-#         echo "$(basename "$strain")" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line
-#         echo "Plotting MATa-MATa' coverage" >> "$log_file"
-#         start_time=$SECONDS
+# Start timer for R processing
+# Loop inside each subdirectory of MYWD
+for strain in "${MYWD}"*/; do
+  echo "Processing directory: ${strain}" >> "$log_file"
+      root_dir="${strain}"
+      #echo "$root_dir"
+        echo "$(basename "$strain")" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line
+        echo "Plotting MATa-MATa' coverage" >> "$log_file"
+        start_time=$SECONDS
         
-#         if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain"; then
-#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain}" >> "$log_file"
-#             echo "Skipping ${strain} and continuing..." >> "$log_file"
-#         continue
-#         fi
+        if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain"; then
+            echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain}" >> "$log_file"
+            echo "Skipping ${strain} and continuing..." >> "$log_file"
+        continue
+        fi
 
 
-#       # Calculate elapsed time
-#         elapsed_time=$((( SECONDS - start_time )))
-#         echo "Total R processing completed in ${elapsed_time} seconds" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line 
+      # Calculate elapsed time
+        elapsed_time=$((( SECONDS - start_time )))
+        echo "Total R processing completed in ${elapsed_time} seconds" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line 
 
-# done
+done
 
-# # Calculate alignment and processing total elapsed time
-# elapsed_time_total_r18=$((( SECONDS - start_time_total_MATs_18 )/60))
-# echo "================================" >> "$log_file"
-# echo "" >> "$log_file"
-# echo "ALIGNMENT AND SAM PROCESSING COMPLETED IN ${elapsed_time_total_r18} MINUTES" >> "$log_file"
-# echo "" >> "$log_file"  # Adds a blank line
+# Calculate alignment and processing total elapsed time
+elapsed_time_total_r18=$((( SECONDS - start_time_total_MATs_18 )/60))
+echo "================================" >> "$log_file"
+echo "" >> "$log_file"
+echo "ALIGNMENT AND SAM PROCESSING COMPLETED IN ${elapsed_time_total_r18} MINUTES" >> "$log_file"
+echo "" >> "$log_file"  # Adds a blank line
 
 
-# # ##### MODULE MATs - DATA ORGANIZATION #####
-# # # Move data into subfolders
-# # for subdir in "$MYWD"*/; do
-# #   mkdir -p "${subdir}/Discordant_alignments" "${subdir}/Discordant_MAT_analysis"
-# #   mkdir -p "${subdir}/Discordant_alignments/FASTQP_75nt" "${subdir}/Discordant_alignments/FASTQP_18nt" "${subdir}/Discordant_alignments/SAM_75nt" "${subdir}/Discordant_alignments/SAM_18nt" 
-# #   mkdir -p "${subdir}/Discordant_MAT_analysis/MAT_Data_75nt" "${subdir}/Discordant_MAT_analysis/MAT_Plots_75nt" "${subdir}/Discordant_MAT_analysis/MAT_Data_18nt" "${subdir}/Discordant_MAT_analysis/MAT_Plots_18nt" 
+##### MODULE MATs - DATA ORGANIZATION #####
+# Move data into subfolders
+for subdir in "$MYWD"*/; do
+  mkdir -p "${subdir}/Discordant_alignments" "${subdir}/Discordant_MAT_analysis"
+  mkdir -p "${subdir}/Discordant_alignments/FASTQP_75nt" "${subdir}/Discordant_alignments/FASTQP_18nt" "${subdir}/Discordant_alignments/SAM_75nt" "${subdir}/Discordant_alignments/SAM_18nt" 
+  mkdir -p "${subdir}/Discordant_MAT_analysis/MAT_Data_75nt" "${subdir}/Discordant_MAT_analysis/MAT_Plots_75nt" "${subdir}/Discordant_MAT_analysis/MAT_Data_18nt" "${subdir}/Discordant_MAT_analysis/MAT_Plots_18nt" 
   
-# #   mv "${subdir}"/*_75nt.fastq.html "${subdir}/Discordant_alignments/FASTQP_75nt/" 2> /dev/null
-# #   mv "${subdir}"/*_75nt.fastq.json "${subdir}/Discordant_alignments/FASTQP_75nt/" 2> /dev/null
-# #   mv "${subdir}"/*_18nt.fastq.html "${subdir}/Discordant_alignments/FASTQP_18nt/" 2> /dev/null
-# #   mv "${subdir}"/*_18nt.fastq.json "${subdir}/Discordant_alignments/FASTQP_18nt/" 2> /dev/null
+  mv "${subdir}"/*_75nt.fastq.html "${subdir}/Discordant_alignments/FASTQP_75nt/" 2> /dev/null
+  mv "${subdir}"/*_75nt.fastq.json "${subdir}/Discordant_alignments/FASTQP_75nt/" 2> /dev/null
+  mv "${subdir}"/*_18nt.fastq.html "${subdir}/Discordant_alignments/FASTQP_18nt/" 2> /dev/null
+  mv "${subdir}"/*_18nt.fastq.json "${subdir}/Discordant_alignments/FASTQP_18nt/" 2> /dev/null
 
-# #   mv "${subdir}"/*_inter_discordant_pairs_unique_MAT_filtered.tsv "${subdir}/Discordant_alignments/SAM_75nt/" 2> /dev/null
-# #   mv "${subdir}"/*_inter_discordant_pairs_unique_MAT.sam "${subdir}/Discordant_alignments/SAM_75nt/" 2> /dev/null
+  mv "${subdir}"/*_inter_discordant_pairs_unique_MAT_filtered.tsv "${subdir}/Discordant_alignments/SAM_75nt/" 2> /dev/null
+  mv "${subdir}"/*_inter_discordant_pairs_unique_MAT.sam "${subdir}/Discordant_alignments/SAM_75nt/" 2> /dev/null
 
-# #   mv "${subdir}"/*_inter_discordant_pairs_unique_MAT_complete_r18_filtered.tsv "${subdir}/Discordant_alignments/SAM_18nt/" 2> /dev/null
-# #   mv "${subdir}"/*_inter_discordant_pairs_unique_MAT_complete_r18.sam "${subdir}/Discordant_alignments/SAM_18nt/" 2> /dev/null
-# #   mv "${subdir}"/*_inter_discordant_pairs_unique_MAT_r18.sam "${subdir}/Discordant_alignments/SAM_18nt/" 2> /dev/null
+  mv "${subdir}"/*_inter_discordant_pairs_unique_MAT_complete_r18_filtered.tsv "${subdir}/Discordant_alignments/SAM_18nt/" 2> /dev/null
+  mv "${subdir}"/*_inter_discordant_pairs_unique_MAT_complete_r18.sam "${subdir}/Discordant_alignments/SAM_18nt/" 2> /dev/null
+  mv "${subdir}"/*_inter_discordant_pairs_unique_MAT_r18.sam "${subdir}/Discordant_alignments/SAM_18nt/" 2> /dev/null
 
-# #   mv "${subdir}"/*_MAT_coverage_r18_df.tsv "${subdir}/Discordant_MAT_analysis/MAT_Data_18nt/" 2> /dev/null
-# #   mv "${subdir}"/*_MAT_pairs_r18_count_HOinc_reads_summary_df.tsv "${subdir}/Discordant_MAT_analysis/MAT_Data_18nt/" 2> /dev/null
-# #   mv "${subdir}"/*_MAT_pairs_r18_count_total_reads_summary_df.tsv "${subdir}/Discordant_MAT_analysis/MAT_Data_18nt/" 2> /dev/null
-# #   mv "${subdir}"/*_MAT_pairs_r18_df.tsv "${subdir}/Discordant_MAT_analysis/MAT_Data_18nt/" 2> /dev/null
-# #   mv "${subdir}"/*_MAT_pairs_r18_GC_CO_summary_df.tsv "${subdir}/Discordant_MAT_analysis/MAT_Data_18nt/" 2> /dev/null
-# #   mv "${subdir}"/*_MAT_pairs_r18_groups_summary_df.tsv "${subdir}/Discordant_MAT_analysis/MAT_Data_18nt/" 2> /dev/null
-# #   mv "${subdir}"/*_MAT_pairs_r18_processed_df.tsv "${subdir}/Discordant_MAT_analysis/MAT_Data_18nt/" 2> /dev/null
+  mv "${subdir}"/*_MAT_coverage_r18_df.tsv "${subdir}/Discordant_MAT_analysis/MAT_Data_18nt/" 2> /dev/null
+  mv "${subdir}"/*_MAT_pairs_r18_count_HOinc_reads_summary_df.tsv "${subdir}/Discordant_MAT_analysis/MAT_Data_18nt/" 2> /dev/null
+  mv "${subdir}"/*_MAT_pairs_r18_count_total_reads_summary_df.tsv "${subdir}/Discordant_MAT_analysis/MAT_Data_18nt/" 2> /dev/null
+  mv "${subdir}"/*_MAT_pairs_r18_df.tsv "${subdir}/Discordant_MAT_analysis/MAT_Data_18nt/" 2> /dev/null
+  mv "${subdir}"/*_MAT_pairs_r18_GC_CO_summary_df.tsv "${subdir}/Discordant_MAT_analysis/MAT_Data_18nt/" 2> /dev/null
+  mv "${subdir}"/*_MAT_pairs_r18_groups_summary_df.tsv "${subdir}/Discordant_MAT_analysis/MAT_Data_18nt/" 2> /dev/null
+  mv "${subdir}"/*_MAT_pairs_r18_processed_df.tsv "${subdir}/Discordant_MAT_analysis/MAT_Data_18nt/" 2> /dev/null
 
-# #   mv "${subdir}"/MATa_MATa_GC_CO_r18_*.svg "${subdir}/Discordant_MAT_analysis/MAT_Plots_18nt/" 2> /dev/null
-# #   mv "${subdir}"/MATa_MATa_GC_group_r18_*.svg "${subdir}/Discordant_MAT_analysis/MAT_Plots_18nt/" 2> /dev/null
-# #   mv "${subdir}"/MATa_MATa_pairs_r18_*.svg "${subdir}/Discordant_MAT_analysis/MAT_Plots_18nt/" 2> /dev/null
-# #   mv "${subdir}"/MATa_MATa_poly_*.svg "${subdir}/Discordant_MAT_analysis/MAT_Plots_18nt/" 2> /dev/null
-# #   mv "${subdir}"/Average_MATa_MATa_coverage_r18*.svg "${subdir}/Discordant_MAT_analysis/MAT_Plots_18nt/" 2> /dev/null
+  mv "${subdir}"/MATa_MATa_GC_CO_r18_*.svg "${subdir}/Discordant_MAT_analysis/MAT_Plots_18nt/" 2> /dev/null
+  mv "${subdir}"/MATa_MATa_GC_group_r18_*.svg "${subdir}/Discordant_MAT_analysis/MAT_Plots_18nt/" 2> /dev/null
+  mv "${subdir}"/MATa_MATa_pairs_r18_*.svg "${subdir}/Discordant_MAT_analysis/MAT_Plots_18nt/" 2> /dev/null
+  mv "${subdir}"/MATa_MATa_poly_*.svg "${subdir}/Discordant_MAT_analysis/MAT_Plots_18nt/" 2> /dev/null
+  mv "${subdir}"/Average_MATa_MATa_coverage_r18*.svg "${subdir}/Discordant_MAT_analysis/MAT_Plots_18nt/" 2> /dev/null
 
-# #   mv "${subdir}"/*_MAT_coverage_df.tsv "${subdir}/Discordant_MAT_analysis/MAT_Data_75nt/" 2> /dev/null
-# #   mv "${subdir}"/*_MAT_pairs_df.tsv "${subdir}/Discordant_MAT_analysis/MAT_Data_75nt/" 2> /dev/null
-# #   mv "${subdir}"/*_MAT_pairs_summary_df.tsv "${subdir}/Discordant_MAT_analysis/MAT_Data_75nt/" 2> /dev/null
+  mv "${subdir}"/*_MAT_coverage_df.tsv "${subdir}/Discordant_MAT_analysis/MAT_Data_75nt/" 2> /dev/null
+  mv "${subdir}"/*_MAT_pairs_df.tsv "${subdir}/Discordant_MAT_analysis/MAT_Data_75nt/" 2> /dev/null
+  mv "${subdir}"/*_MAT_pairs_summary_df.tsv "${subdir}/Discordant_MAT_analysis/MAT_Data_75nt/" 2> /dev/null
 
-# #   mv "${subdir}"/Average_MATa_MATa_coverage_*.svg "${subdir}/Discordant_MAT_analysis/MAT_Plots_75nt/" 2> /dev/null
-# #   mv "${subdir}"/MATa_MATa_pairs_*.svg  "${subdir}/Discordant_MAT_analysis/MAT_Plots_75nt/" 2> /dev/null
+  mv "${subdir}"/Average_MATa_MATa_coverage_*.svg "${subdir}/Discordant_MAT_analysis/MAT_Plots_75nt/" 2> /dev/null
+  mv "${subdir}"/MATa_MATa_pairs_*.svg  "${subdir}/Discordant_MAT_analysis/MAT_Plots_75nt/" 2> /dev/null
 
-# # done
+done
   
 
-# # ##### MODULE MATs - END #####
+##### MODULE MATs - END #####
 
 
-# ##### MODULE WHOLE GENOME ANALYSIS - START #####
+##### MODULE WHOLE GENOME ANALYSIS - START #####
 
-# ############## R processing of 75bp reads ############
+############## R processing of 75bp reads ############
 
-# # R processing for inter-chromosomal discordant read pairs
-# # After processing all samples, all discordant pairs are associated to their genomic features
-# # and only discordant pairs not present at T0 are kept for further BLAST validation.
+# R processing for inter-chromosomal discordant read pairs
+# After processing all samples, all discordant pairs are associated to their genomic features
+# and only discordant pairs not present at T0 are kept for further BLAST validation.
 
-# start_time_total_R=$SECONDS
+start_time_total_R=$SECONDS
 
 
-# echo "================================" >> "$log_file"
-# echo "" >> "$log_file"  # Adds a blank line
-# echo "### R processing for new discordant read pairs, 75bp analysis ###" >> "$log_file"
-# current_time=$(date "+%d-%m-%Y %H:%M:%S")
-# echo "Initiated at ${current_time}" >> "$log_file"
-# echo "" >> "$log_file"  # Adds a blank line 
+echo "================================" >> "$log_file"
+echo "" >> "$log_file"  # Adds a blank line
+echo "### R processing for new discordant read pairs, 75bp analysis ###" >> "$log_file"
+current_time=$(date "+%d-%m-%Y %H:%M:%S")
+echo "Initiated at ${current_time}" >> "$log_file"
+echo "" >> "$log_file"  # Adds a blank line 
 
-# # Loop inside each subdirectory of MYWD
-# R_SCRIPT="DISC_process_inter_discordant_pairs.R"
+# Loop inside each subdirectory of MYWD
+R_SCRIPT="DISC_process_inter_discordant_pairs.R"
 
-# for strain in "${MYWD}"*/; do
-#   for sample in TSG TLG TLR; do
-#     for experiment in "${EXP_LIST[@]}"; do
-#       echo "### $(basename "$strain")/${sample} ${experiment} ###" >> "$log_file"
-#       echo "" >> "$log_file"  # Adds a blank line
-#       strain="${strain}"
-#       sample="${sample}"
-#       experiment="${experiment}"
-#       category_path="${CATEGORY_PATH}"
-#       file1="${strain}/T0_${experiment}_inter_discordant_pairs_unique.tsv"
-#       file2="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique.tsv"
-#       if [[ -f "$file1" && -f "$file2" ]]; then
-#         # echo "$(basename "$strain") ${sample} ${experiment}" >> "$log_file"
-#         # echo "" >> "$log_file"  # Adds a blank line
-#         echo "Processing inter-discordant tsv files for $file1 and $file2" >> "$log_file"
-#         start_time=$SECONDS
+for strain in "${MYWD}"*/; do
+  for sample in TSG TLG TLR; do
+    for experiment in "${EXP_LIST[@]}"; do
+      echo "### $(basename "$strain")/${sample} ${experiment} ###" >> "$log_file"
+      echo "" >> "$log_file"  # Adds a blank line
+      strain="${strain}"
+      sample="${sample}"
+      experiment="${experiment}"
+      category_path="${CATEGORY_PATH}"
+      file1="${strain}/T0_${experiment}_inter_discordant_pairs_unique.tsv"
+      file2="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique.tsv"
+      if [[ -f "$file1" && -f "$file2" ]]; then
+        # echo "$(basename "$strain") ${sample} ${experiment}" >> "$log_file"
+        # echo "" >> "$log_file"  # Adds a blank line
+        echo "Processing inter-discordant tsv files for $file1 and $file2" >> "$log_file"
+        start_time=$SECONDS
         
-#         if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$strain" "$sample" "$experiment" "$file1" "$file2" "$category_path"; then
-#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${sample} ${experiment}" >> "$log_file"
-#             echo "Skipping ${strain} ${sample} ${experiment} and continuing..." >> "$log_file"
-#         continue
-#         fi
+        if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$strain" "$sample" "$experiment" "$file1" "$file2" "$category_path"; then
+            echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${sample} ${experiment}" >> "$log_file"
+            echo "Skipping ${strain} ${sample} ${experiment} and continuing..." >> "$log_file"
+        continue
+        fi
 
       
-#       # Calculate elapsed time
-#         elapsed_time=$((( SECONDS - start_time )/60))
-#         echo "Total R processing completed in ${elapsed_time} minutes" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line 
-#       else
-#       echo "Missing files for $strain/$sample/$experiment: $file1 or $file2" >> "$log_file"
-#       echo "" >> "$log_file"
-#       fi
-#     done
-#   done
-# done
+      # Calculate elapsed time
+        elapsed_time=$((( SECONDS - start_time )/60))
+        echo "Total R processing completed in ${elapsed_time} minutes" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line 
+      else
+      echo "Missing files for $strain/$sample/$experiment: $file1 or $file2" >> "$log_file"
+      echo "" >> "$log_file"
+      fi
+    done
+  done
+done
 
 
-# # Calculate total elapsed time
-# elapsed_time_total_R=$((( SECONDS - start_time_total_R )/60))
-# echo "================================" >> "$log_file"
-# echo "" >> "$log_file"
-# echo "TOTAL INTER-CHROMOSOMAL DISCORDANT READ PAIRS R PROCESSING COMPLETED IN ${elapsed_time_total_R} MINUTES" >> "$log_file"
-# echo "" >> "$log_file"  # Adds a blank line
+# Calculate total elapsed time
+elapsed_time_total_R=$((( SECONDS - start_time_total_R )/60))
+echo "================================" >> "$log_file"
+echo "" >> "$log_file"
+echo "TOTAL INTER-CHROMOSOMAL DISCORDANT READ PAIRS R PROCESSING COMPLETED IN ${elapsed_time_total_R} MINUTES" >> "$log_file"
+echo "" >> "$log_file"  # Adds a blank line
           
 
 
-# ############## BLAST processing of 75bp reads ############
+############## BLAST processing of 75bp reads ############
 
-# # BLAST processing for inter-chromosomal discordant read pairs
-# # For each inter-chromosomal discordant read pair not present in T0,
-# # a BLAST cross-validation is performed to discard false positives arising from 
-# # PCR mutation after library amplification or sequencing errors.
+# BLAST processing for inter-chromosomal discordant read pairs
+# For each inter-chromosomal discordant read pair not present in T0,
+# a BLAST cross-validation is performed to discard false positives arising from 
+# PCR mutation after library amplification or sequencing errors.
 
-# start_time_total_blast=$SECONDS
-# # Loop through each directory inside MYWD
+start_time_total_blast=$SECONDS
+# Loop through each directory inside MYWD
 
-# echo "================================" >> "$log_file"
-# echo "" >> "$log_file"  # Adds a blank line
-# echo "### BLAST cross-validation for inter-chromosomal discordant read pairs ###" >> "$log_file"
-# current_time=$(date "+%d-%m-%Y %H:%M:%S")
-# echo "Initiated at ${current_time}" >> "$log_file"
-# echo "" >> "$log_file"  # Adds a blank line 
+echo "================================" >> "$log_file"
+echo "" >> "$log_file"  # Adds a blank line
+echo "### BLAST cross-validation for inter-chromosomal discordant read pairs ###" >> "$log_file"
+current_time=$(date "+%d-%m-%Y %H:%M:%S")
+echo "Initiated at ${current_time}" >> "$log_file"
+echo "" >> "$log_file"  # Adds a blank line 
 
-# for strain in "$MYWD"*/; do
-#   echo "Processing directory: ${strain}" >> "$log_file"
-#   start_time_total=$SECONDS
+for strain in "$MYWD"*/; do
+  echo "Processing directory: ${strain}" >> "$log_file"
+  start_time_total=$SECONDS
 
-#   # Loop through sample prefixes (TSG, TLG, TLR)
-#     for sample in TSG TLG TLR; do
-#       for experiment in "${EXP_LIST[@]}"; do
-#         for pos in center prev next; do
-#           input_file="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_processed_blast_${pos}.tsv"
-#           if [[ -f "$input_file" ]]; then
-#             echo "### $(basename "$strain")/${sample} ${experiment} ###" >> "$log_file"
-#             echo "### ${pos} ###" >> "$log_file"
-#             echo "" >> "$log_file"
-#             echo "Processing: Input file ${input_file} " >> "$log_file"
-#             echo "" >> "$log_file"
-#             cp "$input_file" "$MYBLAST" 
-#             # Start timer for blast processing
-#             start_time=$SECONDS
-#             file_name=$(basename "${input_file%.tsv}")
-#             output_dir="${MYBLAST}/1.blast_results"
-#             # Create output directory if it doesn't exist
-#             mkdir -p "$output_dir"
-#             (
-#                 cd "$MYBLAST" || exit
+  # Loop through sample prefixes (TSG, TLG, TLR)
+    for sample in TSG TLG TLR; do
+      for experiment in "${EXP_LIST[@]}"; do
+        for pos in center prev next; do
+          input_file="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_processed_blast_${pos}.tsv"
+          if [[ -f "$input_file" ]]; then
+            echo "### $(basename "$strain")/${sample} ${experiment} ###" >> "$log_file"
+            echo "### ${pos} ###" >> "$log_file"
+            echo "" >> "$log_file"
+            echo "Processing: Input file ${input_file} " >> "$log_file"
+            echo "" >> "$log_file"
+            cp "$input_file" "$MYBLAST" 
+            # Start timer for blast processing
+            start_time=$SECONDS
+            file_name=$(basename "${input_file%.tsv}")
+            output_dir="${MYBLAST}/1.blast_results"
+            # Create output directory if it doesn't exist
+            mkdir -p "$output_dir"
+            (
+                cd "$MYBLAST" || exit
 
-#                     while IFS=$'\t' read -r nombre_read query_A reference_B || [ -n "$nombre_read" ]; do # -n to read last row also if it doesn't end with a newline
-#                         if [[ -z "$nombre_read" || -z "$query_A" || -z "$reference_B" ]]; then
-#                             echo "WARNING: Malformed line in $file_name.tsv - skipping" >> "$log_file"
-#                             continue
-#                         fi
-#                         reference_ext="_seq.fasta" 
-#                         reference_name=$reference_B
-#                         reference_file_path="${reference_name}${reference_ext}"
-#                         read_name=$nombre_read
-#                         query=$query_A
-#                         random_id=$RANDOM
-#                         # # Debug output
-#                         # echo "Read: $read_name" >> "$log_file"
-#                         # echo "Query: $query" >> "$log_file"
-#                         # echo "Reference: $reference_file_path" >> "$log_file"
+                    while IFS=$'\t' read -r nombre_read query_A reference_B || [ -n "$nombre_read" ]; do # -n to read last row also if it doesn't end with a newline
+                        if [[ -z "$nombre_read" || -z "$query_A" || -z "$reference_B" ]]; then
+                            echo "WARNING: Malformed line in $file_name.tsv - skipping" >> "$log_file"
+                            continue
+                        fi
+                        reference_ext="_seq.fasta" 
+                        reference_name=$reference_B
+                        reference_file_path="${reference_name}${reference_ext}"
+                        read_name=$nombre_read
+                        query=$query_A
+                        random_id=$RANDOM
+                        # # Debug output
+                        # echo "Read: $read_name" >> "$log_file"
+                        # echo "Query: $query" >> "$log_file"
+                        # echo "Reference: $reference_file_path" >> "$log_file"
 
-#                         if [[ ! -f "$reference_file_path" ]]; then
-#                             echo "WARNING: Reference file $reference_file_path not found - skipping" >> "$log_file"
-#                             continue
-#                         fi
-#                         echo -e ">$read_name\n$query" > "$file_name".fasta
-#                         makeblastdb -in "$reference_file_path" -dbtype nucl -out "$reference_name"
-#                         blastn -db "$reference_name" -query "$file_name".fasta -outfmt "7 qseqid sseqid mismatch length" -out "$read_name"_"$reference_name"_randomid"$random_id"_results.tsv
-#                         mv *_results.tsv "$output_dir"
-#                         rm $file_name.fasta
-#                         rm -f *.nhr *.nin *.nsq *.ndb *.njs *.not *.ntf *.nto
-#                         # Process the result inside blast_results
-#                         result_file="${output_dir}/${read_name}_${reference_name}_randomid${random_id}_results.tsv"
-#                         file_base="${result_file%.tsv}"
-#                         grep -E 'Query|Database|hits|E25|V35' "$result_file" > "${file_base}_selected.tsv"
-#                         tr ' ' '\t' < "${file_base}_selected.tsv" > "${file_base}_selected_tab.tsv"
-#                         tr '\n ' '\t' < "${file_base}_selected_tab.tsv" > "${file_base}_selected_tab_n.tsv"
-#                         cut -f3,6,8,13,14 "${file_base}_selected_tab_n.tsv" > "${file_base}_results_processed.tsv"
-#                         rm -f "${file_base}_selected.tsv" "${file_base}_selected_tab.tsv" "${file_base}_selected_tab_n.tsv" "${result_file}"
+                        if [[ ! -f "$reference_file_path" ]]; then
+                            echo "WARNING: Reference file $reference_file_path not found - skipping" >> "$log_file"
+                            continue
+                        fi
+                        echo -e ">$read_name\n$query" > "$file_name".fasta
+                        makeblastdb -in "$reference_file_path" -dbtype nucl -out "$reference_name"
+                        blastn -db "$reference_name" -query "$file_name".fasta -outfmt "7 qseqid sseqid mismatch length" -out "$read_name"_"$reference_name"_randomid"$random_id"_results.tsv
+                        mv *_results.tsv "$output_dir"
+                        rm $file_name.fasta
+                        rm -f *.nhr *.nin *.nsq *.ndb *.njs *.not *.ntf *.nto
+                        # Process the result inside blast_results
+                        result_file="${output_dir}/${read_name}_${reference_name}_randomid${random_id}_results.tsv"
+                        file_base="${result_file%.tsv}"
+                        grep -E 'Query|Database|hits|E25|V35' "$result_file" > "${file_base}_selected.tsv"
+                        tr ' ' '\t' < "${file_base}_selected.tsv" > "${file_base}_selected_tab.tsv"
+                        tr '\n ' '\t' < "${file_base}_selected_tab.tsv" > "${file_base}_selected_tab_n.tsv"
+                        cut -f3,6,8,13,14 "${file_base}_selected_tab_n.tsv" > "${file_base}_results_processed.tsv"
+                        rm -f "${file_base}_selected.tsv" "${file_base}_selected_tab.tsv" "${file_base}_selected_tab_n.tsv" "${result_file}"
                         
                         
-#                     done < "$input_file"  
-#                 # Combine all processed results into a single file
-#                 combined_file="${output_dir}/${file_name}_combined_results.tsv"
-#                 find "${output_dir}" -name '*_results_results_processed.tsv' -print0 | xargs -0 cat > "$combined_file"
-#                 #rm -f "${output_dir}"/*_results_processed.tsv
-#                 find "${output_dir}" -name '*_results_results_processed.tsv' -delete
-#                 #find . -name "*_processed.tsv" -delete
-#                 # cat "${output_dir}"/*_results_results_processed.tsv > "$combined_file"
-#                 # rm -f "${output_dir}"/*_results_processed.tsv
+                    done < "$input_file"  
+                # Combine all processed results into a single file
+                combined_file="${output_dir}/${file_name}_combined_results.tsv"
+                find "${output_dir}" -name '*_results_results_processed.tsv' -print0 | xargs -0 cat > "$combined_file"
+                #rm -f "${output_dir}"/*_results_processed.tsv
+                find "${output_dir}" -name '*_results_results_processed.tsv' -delete
+                #find . -name "*_processed.tsv" -delete
+                # cat "${output_dir}"/*_results_results_processed.tsv > "$combined_file"
+                # rm -f "${output_dir}"/*_results_processed.tsv
             
-#             cp "$combined_file" "${strain}"
-#             rm -r "${output_dir}"
-#             rm "${MYBLAST}/${sample}_${experiment}_inter_discordant_pairs_unique_processed_blast_${pos}.tsv"
+            cp "$combined_file" "${strain}"
+            rm -r "${output_dir}"
+            rm "${MYBLAST}/${sample}_${experiment}_inter_discordant_pairs_unique_processed_blast_${pos}.tsv"
             
-#             echo "" >> "$log_file"
-#             echo "Blast processing for $input_file completed and results saved to ${strain}" >> "$log_file"
-#             echo "" >> "$log_file"
+            echo "" >> "$log_file"
+            echo "Blast processing for $input_file completed and results saved to ${strain}" >> "$log_file"
+            echo "" >> "$log_file"
 
-#             )  # End subshell to change directory  
+            )  # End subshell to change directory  
             
             
-#             # End timer for blast processing
-#             elapsed_time=$((( SECONDS - start_time )/60))
-#             echo "Blast processing completed in ${elapsed_time} minutes" >> "$log_file"
-#             echo "" >> "$log_file"  # Adds a blank line
-#           else
-#             echo "Warning: Input file $input_file does not exist!" >> "$log_file"
-#           fi
+            # End timer for blast processing
+            elapsed_time=$((( SECONDS - start_time )/60))
+            echo "Blast processing completed in ${elapsed_time} minutes" >> "$log_file"
+            echo "" >> "$log_file"  # Adds a blank line
+          else
+            echo "Warning: Input file $input_file does not exist!" >> "$log_file"
+          fi
 
-#         done
-#       done
-#     done
-#   # End timer for the current strain processing
-#   elapsed_time_total=$((( SECONDS - start_time_total )/60))
-#   echo "" >> "$log_file"
-#   echo "Processing for strain $(basename "$strain") completed in ${elapsed_time_total} minutes" >> "$log_file"
-#   echo "" >> "$log_file"  # Adds a blank line
-# done  
+        done
+      done
+    done
+  # End timer for the current strain processing
+  elapsed_time_total=$((( SECONDS - start_time_total )/60))
+  echo "" >> "$log_file"
+  echo "Processing for strain $(basename "$strain") completed in ${elapsed_time_total} minutes" >> "$log_file"
+  echo "" >> "$log_file"  # Adds a blank line
+done  
 
-# # Calculate total elapsed time in BLAST processing
-# elapsed_time_total_blast=$((( SECONDS - start_time_total_blast )/60))
-# echo "================================" >> "$log_file"
-# echo "" >> "$log_file"
-# echo "BLAST CROSS-VALIDATION FOR INTER-CHROMOSOMAL DISCORDANT READ PAIRS COMPLETED IN ${elapsed_time_total_blast} MINUTES" >> "$log_file"
-# echo "" >> "$log_file"
+# Calculate total elapsed time in BLAST processing
+elapsed_time_total_blast=$((( SECONDS - start_time_total_blast )/60))
+echo "================================" >> "$log_file"
+echo "" >> "$log_file"
+echo "BLAST CROSS-VALIDATION FOR INTER-CHROMOSOMAL DISCORDANT READ PAIRS COMPLETED IN ${elapsed_time_total_blast} MINUTES" >> "$log_file"
+echo "" >> "$log_file"
 
 
-# ############## R processing of 75bp VALID reads ############
+############## R processing of 75bp VALID reads ############
 
-# # R processing for inter-chromosomal discordant read pairs after BLAST cross-validation
-# # After processing all samples, only valid discordant reads are kept for further analysis.
-# # With this script, valid reads are identified and saved in a df.
-# # Start timer for R processing
+# R processing for inter-chromosomal discordant read pairs after BLAST cross-validation
+# After processing all samples, only valid discordant reads are kept for further analysis.
+# With this script, valid reads are identified and saved in a df.
+# Start timer for R processing
 
-# start_time_total_R_valid=$SECONDS
+start_time_total_R_valid=$SECONDS
 
-# echo "================================" >> "$log_file"
-# echo "" >> "$log_file"  # Adds a blank line
-# echo "### R processing for new valid discordant read pairs, 75bp analysis ###" >> "$log_file"
-# current_time=$(date "+%d-%m-%Y %H:%M:%S")
-# echo "Initiated at ${current_time}" >> "$log_file"
-# echo "" >> "$log_file"  # Adds a blank line 
+echo "================================" >> "$log_file"
+echo "" >> "$log_file"  # Adds a blank line
+echo "### R processing for new valid discordant read pairs, 75bp analysis ###" >> "$log_file"
+current_time=$(date "+%d-%m-%Y %H:%M:%S")
+echo "Initiated at ${current_time}" >> "$log_file"
+echo "" >> "$log_file"  # Adds a blank line 
 
-# # Loop inside each subdirectory of MYWD
-# R_SCRIPT="DISC_validate_inter_discordant_pairs.R"
+# Loop inside each subdirectory of MYWD
+R_SCRIPT="DISC_validate_inter_discordant_pairs.R"
 
-# for strain in "${MYWD}"*/; do
-#   for sample in TSG TLG TLR; do
-#     for experiment in "${EXP_LIST[@]}"; do
+for strain in "${MYWD}"*/; do
+  for sample in TSG TLG TLR; do
+    for experiment in "${EXP_LIST[@]}"; do
 
-#       strain="${strain}"
-#       sample="${sample}"
-#       experiment="${experiment}"
-#       category_path="${CATEGORY_PATH}"
+      strain="${strain}"
+      sample="${sample}"
+      experiment="${experiment}"
+      category_path="${CATEGORY_PATH}"
 
-#       file1="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_processed_blast_center_combined_results.tsv"
-#       file2="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_processed_blast_prev_combined_results.tsv"
-#       file3="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_processed_blast_next_combined_results.tsv"
-#       fileorig="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_processed.tsv"
-#       filecontrol="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_processed_control.tsv"
+      file1="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_processed_blast_center_combined_results.tsv"
+      file2="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_processed_blast_prev_combined_results.tsv"
+      file3="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_processed_blast_next_combined_results.tsv"
+      fileorig="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_processed.tsv"
+      filecontrol="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_processed_control.tsv"
 
-#       if [[ -f "$file1" && -f "$file2" && -f "$file3" && -f "$fileorig" && -f "$filecontrol" ]]; then
-#         echo "$(basename "$strain") ${sample} ${experiment}" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line
-#         echo "Processing inter-discordant tsv files for $file1 , $file2 , $file3 and $fileorig" >> "$log_file"
-#         start_time=$SECONDS
+      if [[ -f "$file1" && -f "$file2" && -f "$file3" && -f "$fileorig" && -f "$filecontrol" ]]; then
+        echo "$(basename "$strain") ${sample} ${experiment}" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line
+        echo "Processing inter-discordant tsv files for $file1 , $file2 , $file3 and $fileorig" >> "$log_file"
+        start_time=$SECONDS
         
-#         if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$strain" "$sample" "$experiment" "$file1" "$file2" "$file3" "$fileorig" "$filecontrol" "$category_path"; then
-#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${sample} ${experiment}" >> "$log_file"
-#             echo "Skipping ${strain} ${sample} ${experiment} and continuing..." >> "$log_file"
-#         continue
-#         fi
+        if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$strain" "$sample" "$experiment" "$file1" "$file2" "$file3" "$fileorig" "$filecontrol" "$category_path"; then
+            echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${sample} ${experiment}" >> "$log_file"
+            echo "Skipping ${strain} ${sample} ${experiment} and continuing..." >> "$log_file"
+        continue
+        fi
 
-#       # Calculate elapsed time
-#         elapsed_time=$((( SECONDS - start_time )/60))
-#         echo "Total R processing completed in ${elapsed_time} minutes" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line 
-#       else
-#       echo "Missing files for $strain/$sample/$experiment: $file1 or $file2 or $file3 or $fileorig" >> "$log_file"
-#       echo "" >> "$log_file"
-#       fi
-#     done
-#   done
-# done
+      # Calculate elapsed time
+        elapsed_time=$((( SECONDS - start_time )/60))
+        echo "Total R processing completed in ${elapsed_time} minutes" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line 
+      else
+      echo "Missing files for $strain/$sample/$experiment: $file1 or $file2 or $file3 or $fileorig" >> "$log_file"
+      echo "" >> "$log_file"
+      fi
+    done
+  done
+done
 
         
 
-# # R processing for inter-chromosomal discordant read pairs global distribution
-# # Start timer for R processing
-# R_SCRIPT="DISC_calculate_global_distribution.R"
+# R processing for inter-chromosomal discordant read pairs global distribution
+# Start timer for R processing
+R_SCRIPT="DISC_calculate_global_distribution.R"
 
-# # Loop inside each subdirectory of MYWD
-# for strain in "${MYWD}"*/; do
-#   for sample in TSG TLG TLR; do
-#     root_dir="${strain}"
-#     strain="${strain}"
-#     sample="${sample}"
+# Loop inside each subdirectory of MYWD
+for strain in "${MYWD}"*/; do
+  for sample in TSG TLG TLR; do
+    root_dir="${strain}"
+    strain="${strain}"
+    sample="${sample}"
     
-#     echo "$(basename "$strain") ${sample}" >> "$log_file"
-#     echo "" >> "$log_file"  # Adds a blank line
-#     echo "Processing inter-discordant global distribution tsv files for ${strain} , ${sample}" >> "$log_file"
-#     start_time=$SECONDS
+    echo "$(basename "$strain") ${sample}" >> "$log_file"
+    echo "" >> "$log_file"  # Adds a blank line
+    echo "Processing inter-discordant global distribution tsv files for ${strain} , ${sample}" >> "$log_file"
+    start_time=$SECONDS
 
-#     if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$sample"; then
-#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${sample}" >> "$log_file"
-#             echo "Skipping ${strain} ${sample} and continuing..." >> "$log_file"
-#         continue
-#     fi   
-#     # Calculate elapsed time
-#       elapsed_time=$((( SECONDS - start_time )/60))
-#       echo "Total R processing completed in ${elapsed_time} minutes" >> "$log_file"
-#       echo "" >> "$log_file"  # Adds a blank line 
+    if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$sample"; then
+            echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${sample}" >> "$log_file"
+            echo "Skipping ${strain} ${sample} and continuing..." >> "$log_file"
+        continue
+    fi   
+    # Calculate elapsed time
+      elapsed_time=$((( SECONDS - start_time )/60))
+      echo "Total R processing completed in ${elapsed_time} minutes" >> "$log_file"
+      echo "" >> "$log_file"  # Adds a blank line 
 
-#   done
-# done
-
-
-
-# # R processing for inter-chromosomal discordant read pairs category distribution
+  done
+done
 
 
-# # Loop inside each subdirectory of MYWD
-# R_SCRIPT="DISC_calculate_category_distribution.R"
 
-# for strain in "${MYWD}"*/; do
-#   for sample in TSG TLG TLR; do
-#     root_dir="${strain}"
-#     strain="${strain}"
-#     sample="${sample}"
+# R processing for inter-chromosomal discordant read pairs category distribution
+
+
+# Loop inside each subdirectory of MYWD
+R_SCRIPT="DISC_calculate_category_distribution.R"
+
+for strain in "${MYWD}"*/; do
+  for sample in TSG TLG TLR; do
+    root_dir="${strain}"
+    strain="${strain}"
+    sample="${sample}"
       
-#     echo "$(basename "$strain") ${sample}" >> "$log_file"
-#     echo "" >> "$log_file"  # Adds a blank line
-#     echo "Processing inter-discordant category distribution tsv files for ${strain} , ${sample}" >> "$log_file"
-#     start_time=$SECONDS
+    echo "$(basename "$strain") ${sample}" >> "$log_file"
+    echo "" >> "$log_file"  # Adds a blank line
+    echo "Processing inter-discordant category distribution tsv files for ${strain} , ${sample}" >> "$log_file"
+    start_time=$SECONDS
 
-#     if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$sample"; then
-#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${sample}" >> "$log_file"
-#             echo "Skipping ${strain} ${sample} and continuing..." >> "$log_file"
-#         continue
-#     fi   
+    if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$sample"; then
+            echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${sample}" >> "$log_file"
+            echo "Skipping ${strain} ${sample} and continuing..." >> "$log_file"
+        continue
+    fi   
     
-#   # Calculate elapsed time
-#     elapsed_time=$((( SECONDS - start_time )/60))
-#     echo "Total R processing completed in ${elapsed_time} minutes" >> "$log_file"
-#     echo "" >> "$log_file"  # Adds a blank line 
+  # Calculate elapsed time
+    elapsed_time=$((( SECONDS - start_time )/60))
+    echo "Total R processing completed in ${elapsed_time} minutes" >> "$log_file"
+    echo "" >> "$log_file"  # Adds a blank line 
       
 
-#   done
-# done
+  done
+done
 
 
 
-# # R processing for inter-chromosomal discordant read pairs matrix (merge all experiments)
+# R processing for inter-chromosomal discordant read pairs matrix (merge all experiments)
 
-# R_SCRIPT="DISC_calculate_matrix_all_exp.R"
-# # Loop inside each subdirectory of MYWD
-# for strain in "${MYWD}"*/; do
-#   for sample in TSG TLG TLR; do
-#     root_dir="${strain}"
-#     strain="${strain}"
-#     sample="${sample}"
-#     category_path="${CATEGORY_PATH}"
+R_SCRIPT="DISC_calculate_matrix_all_exp.R"
+# Loop inside each subdirectory of MYWD
+for strain in "${MYWD}"*/; do
+  for sample in TSG TLG TLR; do
+    root_dir="${strain}"
+    strain="${strain}"
+    sample="${sample}"
+    category_path="${CATEGORY_PATH}"
       
-#     echo "$(basename "$strain") ${sample}" >> "$log_file"
-#     echo "" >> "$log_file"  # Adds a blank line
-#     echo "Processing inter-discordant valid reads tsv files for ${strain} , ${sample}" >> "$log_file"
-#     start_time=$SECONDS
-#     if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$sample" "$category_path"; then
-#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${sample}" >> "$log_file"
-#             echo "Skipping ${strain} ${sample} and continuing..." >> "$log_file"
-#         continue
-#     fi  
+    echo "$(basename "$strain") ${sample}" >> "$log_file"
+    echo "" >> "$log_file"  # Adds a blank line
+    echo "Processing inter-discordant valid reads tsv files for ${strain} , ${sample}" >> "$log_file"
+    start_time=$SECONDS
+    if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$sample" "$category_path"; then
+            echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${sample}" >> "$log_file"
+            echo "Skipping ${strain} ${sample} and continuing..." >> "$log_file"
+        continue
+    fi  
         
-#     # Calculate elapsed time
-#     elapsed_time=$((( SECONDS - start_time )))
-#     echo "Total R processing completed in ${elapsed_time} seconds" >> "$log_file"
-#     echo "" >> "$log_file"  # Adds a blank line 
+    # Calculate elapsed time
+    elapsed_time=$((( SECONDS - start_time )))
+    echo "Total R processing completed in ${elapsed_time} seconds" >> "$log_file"
+    echo "" >> "$log_file"  # Adds a blank line 
      
 
-#   done
-# done
+  done
+done
 
 
 
-# ##### Calculate % of discordant reads in each Category_A and plot bar plot with SD
-# R_SCRIPT="DISC_calculate_distrib_categoryA.R"
-# # Loop inside each subdirectory of MYWD
-# for strain in "${MYWD}"*/; do
-#   echo "Processing directory: ${strain}" >> "$log_file"
-#       root_dir="${strain}"
-#       strain="${strain}"
-#       #echo "$root_dir"
-#         echo "$(basename "$strain")" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line
-#         echo "Processing discordant reads distribution by Category_A" >> "$log_file"
-#         start_time=$SECONDS
-#         if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain"; then
-#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain}" >> "$log_file"
-#             echo "Skipping ${strain} and continuing..." >> "$log_file"
-#           continue
-#         fi
+##### Calculate % of discordant reads in each Category_A and plot bar plot with SD
+R_SCRIPT="DISC_calculate_distrib_categoryA.R"
+# Loop inside each subdirectory of MYWD
+for strain in "${MYWD}"*/; do
+  echo "Processing directory: ${strain}" >> "$log_file"
+      root_dir="${strain}"
+      strain="${strain}"
+      #echo "$root_dir"
+        echo "$(basename "$strain")" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line
+        echo "Processing discordant reads distribution by Category_A" >> "$log_file"
+        start_time=$SECONDS
+        if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain"; then
+            echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain}" >> "$log_file"
+            echo "Skipping ${strain} and continuing..." >> "$log_file"
+          continue
+        fi
         
 
-#       # Calculate elapsed time
-#         elapsed_time=$((( SECONDS - start_time )))
-#         echo "Total R processing completed in ${elapsed_time} seconds" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line 
+      # Calculate elapsed time
+        elapsed_time=$((( SECONDS - start_time )))
+        echo "Total R processing completed in ${elapsed_time} seconds" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line 
 
-# done
+done
 
-# # R processing for inter-chromosomal discordant read pairs hotspots (all experiments)
-# R_SCRIPT="DISC_identify_hotspots.R"
-# # Loop inside each subdirectory of MYWD
+# R processing for inter-chromosomal discordant read pairs hotspots (all experiments)
+R_SCRIPT="DISC_identify_hotspots.R"
+# Loop inside each subdirectory of MYWD
 
-# for strain in "${MYWD}"*/; do
-#   for sample in TSG TLG TLR; do
-#       freqs="${strain}/${sample}_inter_discordant_pairs_unique_processed_valid_discordant_matrix_allexperiments.tsv"
-#       root_dir="${strain}"
-#       strain="${strain}"
-#       sample="${sample}"
+for strain in "${MYWD}"*/; do
+  for sample in TSG TLG TLR; do
+      freqs="${strain}/${sample}_inter_discordant_pairs_unique_processed_valid_discordant_matrix_allexperiments.tsv"
+      root_dir="${strain}"
+      strain="${strain}"
+      sample="${sample}"
 
       
-#       if [[ -f "$freqs" ]]; then
-#         echo "$(basename "$strain") ${sample}" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line
-#         echo "Processing inter-discordant valid reads tsv files for ${strain} , ${sample}" >> "$log_file"
-#         start_time=$SECONDS
-#         if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$sample" "$freqs"; then
-#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} , ${sample}" >> "$log_file"
-#             echo "Skipping ${strain} ${sample} and continuing..." >> "$log_file"
-#           continue
-#         fi
+      if [[ -f "$freqs" ]]; then
+        echo "$(basename "$strain") ${sample}" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line
+        echo "Processing inter-discordant valid reads tsv files for ${strain} , ${sample}" >> "$log_file"
+        start_time=$SECONDS
+        if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$sample" "$freqs"; then
+            echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} , ${sample}" >> "$log_file"
+            echo "Skipping ${strain} ${sample} and continuing..." >> "$log_file"
+          continue
+        fi
 
 
-#       # Calculate elapsed time
-#         elapsed_time=$((( SECONDS - start_time )))
-#         echo "Total R processing completed in ${elapsed_time} seconds" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line 
-#       else
-#       echo "Missing files for $strain/$sample: $file1 or $file2 or $file3" >> "$log_file"
-#       echo "" >> "$log_file"
-#       fi
+      # Calculate elapsed time
+        elapsed_time=$((( SECONDS - start_time )))
+        echo "Total R processing completed in ${elapsed_time} seconds" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line 
+      else
+      echo "Missing files for $strain/$sample: $file1 or $file2 or $file3" >> "$log_file"
+      echo "" >> "$log_file"
+      fi
 
-#   done
-# done
+  done
+done
 
 
-# ##### R processing for recombination rate
+##### R processing for recombination rate
 
-# R_SCRIPT="DISC_calculate_recombination_rate.R"
-# # Get all processed_control.tsv files recursively in root folder
+R_SCRIPT="DISC_calculate_recombination_rate.R"
+# Get all processed_control.tsv files recursively in root folder
 
-# echo "Calculating recombination rate" >> "$log_file"
-# echo "" >> "$log_file"  # Adds a blank line
-# echo "Calculating HO-pGAL read count" >> "$log_file"
-# start_time=$SECONDS
+echo "Calculating recombination rate" >> "$log_file"
+echo "" >> "$log_file"  # Adds a blank line
+echo "Calculating HO-pGAL read count" >> "$log_file"
+start_time=$SECONDS
 
-# echo "Processing directory: ${MYWD}" >> "$log_file"
-#       root_dir="${MYWD}"
-#       reference_strain="${STRAIN_REF}"
-#       
-#         echo "" >> "$log_file"  # Adds a blank line
-#         echo "Finding all processed_control.tsv files..." >> "$log_file"
-#         if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$reference_strain"; then
-#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${root_dir}" >> "$log_file"
-#             echo "Skipping ${root_dir} and continuing..." >> "$log_file"
-#           continue
-#         fi
+echo "Processing directory: ${MYWD}" >> "$log_file"
+      root_dir="${MYWD}"
+      reference_strain="${STRAIN_REF}"
+      
+        echo "" >> "$log_file"  # Adds a blank line
+        echo "Finding all processed_control.tsv files..." >> "$log_file"
+        if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$reference_strain"; then
+            echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${root_dir}" >> "$log_file"
+            echo "Skipping ${root_dir} and continuing..." >> "$log_file"
+        fi
         
         
 
 
 
-# # Loop inside each subdirectory of MYWD
-# R_SCRIPT="DISC_calculate_recombination_rate_conc_disc.R"
-# for strain in "${MYWD}"*/; do
-#   echo "Processing directory: ${strain}" >> "$log_file"
-#       root_dir="${strain}"
-#       wd_dir="${MYWD}"
-#       strain="${strain}"
-#       #echo "$root_dir"
-#         echo "$(basename "$strain")" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line
-#         echo "Calculating recombination rate" >> "$log_file"
-#         #start_time=$SECONDS
-#         # Export variables for R access
+# Loop inside each subdirectory of MYWD
+R_SCRIPT="DISC_calculate_recombination_rate_conc_disc.R"
+for strain in "${MYWD}"*/; do
+  echo "Processing directory: ${strain}" >> "$log_file"
+      root_dir="${strain}"
+      wd_dir="${MYWD}"
+      strain="${strain}"
+      #echo "$root_dir"
+        echo "$(basename "$strain")" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line
+        echo "Calculating recombination rate" >> "$log_file"
+        #start_time=$SECONDS
+        # Export variables for R access
         
-#         if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$wd_dir"; then
-#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${root_dir} ${strain}" >> "$log_file"
-#             echo "Skipping ${root_dir} ${strain} and continuing..." >> "$log_file"
-#           continue
-#         fi
+        if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$wd_dir"; then
+            echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${root_dir} ${strain}" >> "$log_file"
+            echo "Skipping ${root_dir} ${strain} and continuing..." >> "$log_file"
+          continue
+        fi
 
-#       # Calculate elapsed time
-#         elapsed_time=$((( SECONDS - start_time )/60))
-#         echo "Total R processing completed in ${elapsed_time} minutes" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line 
+      # Calculate elapsed time
+        elapsed_time=$((( SECONDS - start_time )/60))
+        echo "Total R processing completed in ${elapsed_time} minutes" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line 
 
-# done
+done
 
 
-# ### R script to calculate Category_A read number and plot all timepoints###
-# R_SCRIPT="DISC_calculate_distrib_read_number_categoryA.R"
-# # Loop inside each subdirectory of MYWD 
-# for strain in "${MYWD}"*/; do
-#   echo "Processing directory: ${strain}" >> "$log_file"
-#       root_dir="${strain}"
-#       wd_dir="${MYWD}"
-#       strain="${strain}"
-#       #echo "$root_dir"
-#         echo "$(basename "$strain")" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line
-#         echo "Calculating Category_A read number" >> "$log_file"
-#         start_time=$SECONDS
-#        if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$wd_dir"; then
-#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${root_dir} ${strain}" >> "$log_file"
-#             echo "Skipping ${root_dir} ${strain} and continuing..." >> "$log_file"
-#           continue
-#         fi
+### R script to calculate Category_A read number and plot all timepoints###
+R_SCRIPT="DISC_calculate_distrib_read_number_categoryA.R"
+# Loop inside each subdirectory of MYWD 
+for strain in "${MYWD}"*/; do
+  echo "Processing directory: ${strain}" >> "$log_file"
+      root_dir="${strain}"
+      wd_dir="${MYWD}"
+      strain="${strain}"
+      #echo "$root_dir"
+        echo "$(basename "$strain")" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line
+        echo "Calculating Category_A read number" >> "$log_file"
+        start_time=$SECONDS
+       if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$wd_dir"; then
+            echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${root_dir} ${strain}" >> "$log_file"
+            echo "Skipping ${root_dir} ${strain} and continuing..." >> "$log_file"
+          continue
+        fi
         
-# done
+done
 
-# # R processing for error rate
-# R_SCRIPT="DISC_calculate_error_rate.R"
-# # Get all processed_valid_error_rate.tsv files recursively in root folder
+# R processing for error rate
+R_SCRIPT="DISC_calculate_error_rate.R"
+# Get all processed_valid_error_rate.tsv files recursively in root folder
 
-# echo "Calculating error rate" >> "$log_file"
-# echo "" >> "$log_file"  # Adds a blank line
-# start_time=$SECONDS
+echo "Calculating error rate" >> "$log_file"
+echo "" >> "$log_file"  # Adds a blank line
+start_time=$SECONDS
 
-# # Loop inside each subdirectory of MYWD
-# for strain in "${MYWD}"*/; do
-#   echo "Processing directory: ${strain}" >> "$log_file"
-#       root_dir="${strain}"
-#       wd_dir="${MYWD}"
-#       strain="${strain}"
-#       #echo "$root_dir"
-#         echo "$(basename "$strain")" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line
+# Loop inside each subdirectory of MYWD
+for strain in "${MYWD}"*/; do
+  echo "Processing directory: ${strain}" >> "$log_file"
+      root_dir="${strain}"
+      wd_dir="${MYWD}"
+      strain="${strain}"
+      #echo "$root_dir"
+        echo "$(basename "$strain")" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line
         
-#         start_time=$SECONDS
-#         # Export variables for R access
+        start_time=$SECONDS
+        # Export variables for R access
         
-#       #echo "$root_dir"
-#         #echo "$(basename "$strain")" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line
-#         echo "Finding all processed_valid_error_rate.tsv files..." >> "$log_file"
+      #echo "$root_dir"
+        #echo "$(basename "$strain")" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line
+        echo "Finding all processed_valid_error_rate.tsv files..." >> "$log_file"
         
-#         if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$wd_dir"; then
-#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${root_dir} ${strain}" >> "$log_file"
-#             echo "Skipping ${root_dir} ${strain} and continuing..." >> "$log_file"
-#           continue
-#         fi
+        if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$wd_dir"; then
+            echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${root_dir} ${strain}" >> "$log_file"
+            echo "Skipping ${root_dir} ${strain} and continuing..." >> "$log_file"
+          continue
+        fi
     
 
         
-#       # Calculate elapsed time
-#         elapsed_time=$((( SECONDS - start_time )/60))
-#         echo "Total R processing completed in ${elapsed_time} minutes" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line 
+      # Calculate elapsed time
+        elapsed_time=$((( SECONDS - start_time )/60))
+        echo "Total R processing completed in ${elapsed_time} minutes" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line 
 
-# done
-
-
-
-# ### Added BLAST levels of validation
-# ############## R processing of 75bp VALID reads ############
-
-# # R processing for inter-chromosomal discordant read pairs after BLAST cross-validation
-# # After processing all samples, only valid discordant reads are kept for further analysis.
-# # With this script, valid reads are identified and saved in a df.
-# # We have defined 5 different levels of validation for each read pair:
-# # Start timer for R processing
-
-# start_time_total_R_valid=$SECONDS
-# R_SCRIPT="DISC_validate_inter_discordant_pairs_levels_1feature.R"
-
-# echo "================================" >> "$log_file"
-# echo "" >> "$log_file"  # Adds a blank line
-# echo "### R processing for new valid discordant read pairs, 75bp analysis, different BLAST levels ###" >> "$log_file"
-# current_time=$(date "+%d-%m-%Y %H:%M:%S")
-# echo "Initiated at ${current_time}" >> "$log_file"
-# echo "" >> "$log_file"  # Adds a blank line 
-
-# # Loop inside each subdirectory of MYWD
-# for strain in "${MYWD}"*/; do
-#   for sample in TSG TLG TLR; do
-#     for experiment in "${EXP_LIST[@]}"; do
-#       file1="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_processed_blast_center_combined_results.tsv"
-#       file2="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_processed_blast_prev_combined_results.tsv"
-#       file3="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_processed_blast_next_combined_results.tsv"
-#       fileorig="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_processed.tsv"
-#       filecontrol="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_processed_control.tsv"
-#       if [[ -f "$file1" && -f "$file2" && -f "$file3" && -f "$fileorig" && -f "$filecontrol" ]]; then
-#         echo "$(basename "$strain") ${sample} ${experiment}" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line
-#         echo "Processing inter-discordant tsv files for $file1 , $file2 , $file3 and $fileorig" >> "$log_file"
-#         start_time=$SECONDS
-#         strain="${strain}"
-#         sample="${sample}"
-#         experiment="${experiment}"
-#         category_path="${CATEGORY_PATH}"
-#         if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$strain" "$sample" "$experiment" "$category_path" "$file1" "$file2" "$file3" "$fileorig" "$filecontrol"; then
-#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${sample} ${experiment}" >> "$log_file"
-#             echo "Skipping ${strain} ${sample} ${experiment} and continuing..." >> "$log_file"
-#           continue
-#         fi
-
-#       # Calculate elapsed time
-#         elapsed_time=$((( SECONDS - start_time )/60))
-#         echo "Total R processing for different blast options completed in ${elapsed_time} minutes" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line 
-#       else
-#       echo "Missing files for $strain/$sample/$experiment: $file1 or $file2 or $file3 or $fileorig" >> "$log_file"
-#       echo "" >> "$log_file"
-#       fi
-#     done
-#   done
-# done
+done
 
 
-# # R script to repeat discordant analysis with all blast options
-# R_SCRIPT="DISC_process_valid_inter_discordant_pairs_levels.R"
-# # Loop inside each subdirectory of MYWD
-# for strain in "${MYWD}"*/; do
-#   for sample in TSG TLG TLR; do
-#     for experiment in "${EXP_LIST[@]}"; do
-#         for blast_option in option1 option2 option3 option4 option5 ; do
-#         file1="${strain}/${sample}_${experiment}_${blast_option}_inter_discordant_pairs_unique_processed_valid.tsv"
-#         file2="${strain}/${sample}_${experiment}_${blast_option}_inter_discordant_pairs_unique_processed_valid_error_rate.tsv"
-#         filecontrol="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_processed_control.tsv"
-#       if [[ -f "$file1" && -f "$file2" ]]; then
-#         echo "$(basename "$strain") ${sample} ${experiment} ${blast_option}" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line
-#         echo "Processing inter-discordant tsv files for $file1 , $file2" >> "$log_file"
-#         start_time=$SECONDS
-#         strain="${strain}"
-#         sample="${sample}"
-#         experiment="${experiment}"
-#         category_path="${CATEGORY_PATH}"
-#         blast_option="${blast_option}"
-#         if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$strain" "$sample" "$experiment" "$blast_option" "$category_path" "$file1" "$file2" "$filecontrol"; then
-#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${sample} ${experiment} ${blast_option}" >> "$log_file"
-#             echo "Skipping ${strain} ${sample} ${experiment} ${blast_option} and continuing..." >> "$log_file"
-#           continue
-#         fi
+
+### Added BLAST levels of validation
+############## R processing of 75bp VALID reads ############
+
+# R processing for inter-chromosomal discordant read pairs after BLAST cross-validation
+# After processing all samples, only valid discordant reads are kept for further analysis.
+# With this script, valid reads are identified and saved in a df.
+# We have defined 5 different levels of validation for each read pair:
+# Start timer for R processing
+
+start_time_total_R_valid=$SECONDS
+R_SCRIPT="DISC_validate_inter_discordant_pairs_levels_1feature.R"
+
+echo "================================" >> "$log_file"
+echo "" >> "$log_file"  # Adds a blank line
+echo "### R processing for new valid discordant read pairs, 75bp analysis, different BLAST levels ###" >> "$log_file"
+current_time=$(date "+%d-%m-%Y %H:%M:%S")
+echo "Initiated at ${current_time}" >> "$log_file"
+echo "" >> "$log_file"  # Adds a blank line 
+
+# Loop inside each subdirectory of MYWD
+for strain in "${MYWD}"*/; do
+  for sample in TSG TLG TLR; do
+    for experiment in "${EXP_LIST[@]}"; do
+      file1="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_processed_blast_center_combined_results.tsv"
+      file2="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_processed_blast_prev_combined_results.tsv"
+      file3="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_processed_blast_next_combined_results.tsv"
+      fileorig="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_processed.tsv"
+      filecontrol="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_processed_control.tsv"
+      if [[ -f "$file1" && -f "$file2" && -f "$file3" && -f "$fileorig" && -f "$filecontrol" ]]; then
+        echo "$(basename "$strain") ${sample} ${experiment}" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line
+        echo "Processing inter-discordant tsv files for $file1 , $file2 , $file3 and $fileorig" >> "$log_file"
+        start_time=$SECONDS
+        strain="${strain}"
+        sample="${sample}"
+        experiment="${experiment}"
+        category_path="${CATEGORY_PATH}"
+        if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$strain" "$sample" "$experiment" "$category_path" "$file1" "$file2" "$file3" "$fileorig" "$filecontrol"; then
+            echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${sample} ${experiment}" >> "$log_file"
+            echo "Skipping ${strain} ${sample} ${experiment} and continuing..." >> "$log_file"
+          continue
+        fi
+
+      # Calculate elapsed time
+        elapsed_time=$((( SECONDS - start_time )/60))
+        echo "Total R processing for different blast options completed in ${elapsed_time} minutes" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line 
+      else
+      echo "Missing files for $strain/$sample/$experiment: $file1 or $file2 or $file3 or $fileorig" >> "$log_file"
+      echo "" >> "$log_file"
+      fi
+    done
+  done
+done
+
+
+# R script to repeat discordant analysis with all blast options
+R_SCRIPT="DISC_process_valid_inter_discordant_pairs_levels.R"
+# Loop inside each subdirectory of MYWD
+for strain in "${MYWD}"*/; do
+  for sample in TSG TLG TLR; do
+    for experiment in "${EXP_LIST[@]}"; do
+        for blast_option in option1 option2 option3 option4 option5 ; do
+        file1="${strain}/${sample}_${experiment}_${blast_option}_inter_discordant_pairs_unique_processed_valid.tsv"
+        file2="${strain}/${sample}_${experiment}_${blast_option}_inter_discordant_pairs_unique_processed_valid_error_rate.tsv"
+        filecontrol="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_processed_control.tsv"
+      if [[ -f "$file1" && -f "$file2" ]]; then
+        echo "$(basename "$strain") ${sample} ${experiment} ${blast_option}" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line
+        echo "Processing inter-discordant tsv files for $file1 , $file2" >> "$log_file"
+        start_time=$SECONDS
+        strain="${strain}"
+        sample="${sample}"
+        experiment="${experiment}"
+        category_path="${CATEGORY_PATH}"
+        blast_option="${blast_option}"
+        if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$strain" "$sample" "$experiment" "$blast_option" "$category_path" "$file1" "$file2" "$filecontrol"; then
+            echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${sample} ${experiment} ${blast_option}" >> "$log_file"
+            echo "Skipping ${strain} ${sample} ${experiment} ${blast_option} and continuing..." >> "$log_file"
+          continue
+        fi
         
-#       # Calculate elapsed time
-#         elapsed_time=$((( SECONDS - start_time )/60))
-#         echo "Total R processing completed in ${elapsed_time} minutes" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line 
-#       else
-#       echo "Missing files for $strain/$sample/$experiment: $file1 or $file2 or $filecontrol" >> "$log_file"
-#       echo "" >> "$log_file"
-#       fi
-#       done
-#     done
-#   done
-# done
+      # Calculate elapsed time
+        elapsed_time=$((( SECONDS - start_time )/60))
+        echo "Total R processing completed in ${elapsed_time} minutes" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line 
+      else
+      echo "Missing files for $strain/$sample/$experiment: $file1 or $file2 or $filecontrol" >> "$log_file"
+      echo "" >> "$log_file"
+      fi
+      done
+    done
+  done
+done
 
 
-# # R processing for inter-chromosomal discordant read pairs global distribution
-# # Start timer for R processing
-# R_SCRIPT="DISC_calculate_global_distribution_levels.R"
-# # Loop inside each subdirectory of MYWD
-# for strain in "${MYWD}"*/; do
-#   for sample in TSG TLG TLR; do
-#     for blast_option in option1 option2 option3 option4 option5 ; do
-#       root_dir=${strain}
-#       strain=${strain}
-#       sample=${sample}
-#       blast_option=${blast_option}
-#         echo "$(basename "$strain") ${sample}" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line
-#         echo "Processing inter-discordant global distribution tsv files for $strain , $sample and $blast_option" >> "$log_file"
-#         start_time=$SECONDS
-#         if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$sample" "$blast_option"; then
-#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${sample} ${blast_option}" >> "$log_file"
-#             echo "Skipping ${strain} ${sample} ${blast_option} and continuing..." >> "$log_file"
-#           continue
-#         fi
-#       # Calculate elapsed time
-#         elapsed_time=$((( SECONDS - start_time )/60))
-#         echo "Total R processing completed in ${elapsed_time} minutes" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line 
+# R processing for inter-chromosomal discordant read pairs global distribution
+# Start timer for R processing
+R_SCRIPT="DISC_calculate_global_distribution_levels.R"
+# Loop inside each subdirectory of MYWD
+for strain in "${MYWD}"*/; do
+  for sample in TSG TLG TLR; do
+    for blast_option in option1 option2 option3 option4 option5 ; do
+      root_dir=${strain}
+      strain=${strain}
+      sample=${sample}
+      blast_option=${blast_option}
+        echo "$(basename "$strain") ${sample}" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line
+        echo "Processing inter-discordant global distribution tsv files for $strain , $sample and $blast_option" >> "$log_file"
+        start_time=$SECONDS
+        if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$sample" "$blast_option"; then
+            echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${sample} ${blast_option}" >> "$log_file"
+            echo "Skipping ${strain} ${sample} ${blast_option} and continuing..." >> "$log_file"
+          continue
+        fi
+      # Calculate elapsed time
+        elapsed_time=$((( SECONDS - start_time )/60))
+        echo "Total R processing completed in ${elapsed_time} minutes" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line 
       
-#     done
-#   done
-# done
+    done
+  done
+done
 
 
 
-# # R processing for inter-chromosomal discordant read pairs category distribution
+# R processing for inter-chromosomal discordant read pairs category distribution
 
-# R_SCRIPT="DISC_calculate_category_distribution_levels.R"
-# # Loop inside each subdirectory of MYWD
-# for strain in "${MYWD}"*/; do
-#   for sample in TSG TLG TLR; do
-#     for blast_option in option1 option2 option3 option4 option5 ; do
+R_SCRIPT="DISC_calculate_category_distribution_levels.R"
+# Loop inside each subdirectory of MYWD
+for strain in "${MYWD}"*/; do
+  for sample in TSG TLG TLR; do
+    for blast_option in option1 option2 option3 option4 option5 ; do
 
-#       root_dir=${strain}
-#       strain=${strain}
-#       sample=${sample}
-#       blast_option=${blast_option}
-#         echo "$(basename "$strain") ${sample}" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line
-#         echo "Processing inter-discordant category distribution tsv files for $strain $sample $blast_option" >> "$log_file"
-#         start_time=$SECONDS
-#         if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$sample" "$blast_option"; then
-#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${sample} ${blast_option}" >> "$log_file"
-#             echo "Skipping ${strain} ${sample} ${blast_option} and continuing..." >> "$log_file"
-#           continue
-#         fi
-#       # Calculate elapsed time
-#         elapsed_time=$((( SECONDS - start_time )/60))
-#         echo "Total R processing completed in ${elapsed_time} minutes" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line 
+      root_dir=${strain}
+      strain=${strain}
+      sample=${sample}
+      blast_option=${blast_option}
+        echo "$(basename "$strain") ${sample}" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line
+        echo "Processing inter-discordant category distribution tsv files for $strain $sample $blast_option" >> "$log_file"
+        start_time=$SECONDS
+        if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$sample" "$blast_option"; then
+            echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${sample} ${blast_option}" >> "$log_file"
+            echo "Skipping ${strain} ${sample} ${blast_option} and continuing..." >> "$log_file"
+          continue
+        fi
+      # Calculate elapsed time
+        elapsed_time=$((( SECONDS - start_time )/60))
+        echo "Total R processing completed in ${elapsed_time} minutes" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line 
    
-#     done
-#   done
-# done
+    done
+  done
+done
 
 
 
-# # R processing for inter-chromosomal discordant read pairs matrix (merge all experiments)
+# R processing for inter-chromosomal discordant read pairs matrix (merge all experiments)
 
-# R_SCRIPT="DISC_calculate_matrix_all_exp_levels.R"
-# # Loop inside each subdirectory of MYWD
-# for strain in "${MYWD}"*/; do
-#   for sample in TSG TLG TLR; do
-#     for blast_option in option1 option2 option3 option4 option5 ; do
-#         root_dir=${strain}
-#         strain=${strain}
-#         sample=${sample}
-#         blast_option=${blast_option}
-#         category_path=${CATEGORY_PATH}
-#         echo "$(basename "$strain") ${sample}" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line
-#         echo "Processing inter-discordant valid reads tsv files for $strain , $sample and $blast_option" >> "$log_file"
-#         start_time=$SECONDS
-#         if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$sample" "$blast_option" "$category_path"; then
-#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${sample} ${blast_option}" >> "$log_file"
-#             echo "Skipping ${strain} ${sample} ${blast_option} and continuing..." >> "$log_file"
-#           continue
-#         fi    
-#         # Calculate elapsed time
-#         elapsed_time=$((( SECONDS - start_time )))
-#         echo "Total R processing completed in ${elapsed_time} seconds" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line 
+R_SCRIPT="DISC_calculate_matrix_all_exp_levels.R"
+# Loop inside each subdirectory of MYWD
+for strain in "${MYWD}"*/; do
+  for sample in TSG TLG TLR; do
+    for blast_option in option1 option2 option3 option4 option5 ; do
+        root_dir=${strain}
+        strain=${strain}
+        sample=${sample}
+        blast_option=${blast_option}
+        category_path=${CATEGORY_PATH}
+        echo "$(basename "$strain") ${sample}" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line
+        echo "Processing inter-discordant valid reads tsv files for $strain , $sample and $blast_option" >> "$log_file"
+        start_time=$SECONDS
+        if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$sample" "$blast_option" "$category_path"; then
+            echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${sample} ${blast_option}" >> "$log_file"
+            echo "Skipping ${strain} ${sample} ${blast_option} and continuing..." >> "$log_file"
+          continue
+        fi    
+        # Calculate elapsed time
+        elapsed_time=$((( SECONDS - start_time )))
+        echo "Total R processing completed in ${elapsed_time} seconds" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line 
         
-#     done
-#   done
-# done
+    done
+  done
+done
 
 
-## aquí
-# ##### Calculate % of discordant reads in each Category_A and plot bar plot with SD
-# # Loop inside each subdirectory of MYWD
-# for strain in "${MYWD}"*/; do
-#     for blast_option in option1 option2 option3 option4 option5 ; do
-#         echo "Processing directory: ${strain}" >> "$log_file"
-#             root_dir="${strain}"
-#             #echo "$root_dir"
-#                 echo "$(basename "$strain")" >> "$log_file"
-#                 echo "" >> "$log_file"  # Adds a blank line
-#                 echo "Processing discordant reads distribution by Category_A" >> "$log_file"
-#                 start_time=$SECONDS
-#                 # Export variables for R access
-#                 export ROOT_DIR="$root_dir"
-#                 export STRAIN="$strain"
-#                 export BLAST_OPTION="$blast_option"
-#                 #echo "ROOT_DIR: $ROOT_DIR"
-#                 #echo "STRAIN: $STRAIN"
-#                 Rscript - <<'EOF'
-#                 # load libraries
-                
-#                 library(ggplot2)
-#                 library(extrafont)
-#                 library(svglite)
-#                 library(purrr)
-#                 library(stringr)
-#                 library(readr)
-#                 library(tidyverse, warn.conflicts = FALSE)
-#                 library(tidyr, warn.conflicts = FALSE)
-#                 library(dplyr, warn.conflicts = FALSE)
-#                 options(dplyr.summarise.inform = FALSE)
 
-#                 # Read environment variables
-#                 root_dir <- Sys.getenv("ROOT_DIR")
-#                 strain <- Sys.getenv("STRAIN")
-#                 blast_option <- Sys.getenv("BLAST_OPTION")
-#                 strain <- sub("/$", "", strain)  # Remove trailing slash
-#                 strain_name <- basename(strain)
+##### Calculate % of discordant reads in each Category_A and plot bar plot with SD
+R_SCRIPT="DISC_calculate_distrib_categoryA_levels.R"
+# Loop inside each subdirectory of MYWD
+for strain in "${MYWD}"*/; do
+    for blast_option in option1 option2 option3 option4 option5 ; do
+        echo "Processing directory: ${strain}" >> "$log_file"
+        root_dir="${strain}"
+        strain="${strain}"
+        blast_option="${blast_option}"
+        #echo "$root_dir"
+        echo "$(basename "$strain") ${blast_option}" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line
+        echo "Processing discordant reads distribution by Category_A" >> "$log_file"
+        start_time=$SECONDS
+        if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$blast_option"; then
+            echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${blast_option}" >> "$log_file"
+            echo "Skipping ${strain} ${blast_option} and continuing..." >> "$log_file"
+          continue
+        fi     
+      # Calculate elapsed time
+        elapsed_time=$((( SECONDS - start_time )))
+        echo "Total R processing completed in ${elapsed_time} seconds" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line 
+    done
+done
 
-#                 print(paste("ROOT_DIR:", root_dir))
+# R processing for inter-chromosomal discordant read pairs hotspots (all experiments)
+R_SCRIPT="DISC_identify_hotspots_levels.R"
+# Loop inside each subdirectory of MYWD
+for strain in "${MYWD}"*/; do
+  for sample in TSG TLG TLR; do
+    for blast_option in option1 option2 option3 option4 option5 ; do
+        root_dir="${strain}"
+        strain="${strain}"
+        sample="${sample}"
+        blast_option="${blast_option}"    
+        freqs="${strain}/${sample}_${blast_option}_inter_discordant_pairs_unique_processed_valid_discordant_matrix_allexperiments.tsv"
 
-#                 log_step <- function(message) {
-#                     timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-#                     message(sprintf("[%s] %s", timestamp, message))
-#                 }
+        echo "$(basename "$strain") ${sample} ${blast_option}" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line
+        echo "Processing inter-discordant valid reads tsv files" >> "$log_file"
+        start_time=$SECONDS
+        if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$sample" "$blast_option" "$freqs"; then
+            echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${sample} ${blast_option}" >> "$log_file"
+            echo "Skipping ${strain} ${sample} ${blast_option} and continuing..." >> "$log_file"
+          continue
+        fi 
+        # Calculate elapsed time
+        elapsed_time=$((( SECONDS - start_time )))
+        echo "Total R processing completed in ${elapsed_time} seconds" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line 
+    done
+  done
+done
 
-#                 # Define a function to process tsv files
-#                 process_valid_counts_files <- function(file_path) {
-#                     # Extract filename and directory parts
-#                     file_base <- basename(file_path)
-#                     strain_name <- basename(dirname(file_path))  # directory name above the file
 
-#                     # 
-#                     parts <- str_split(file_base, "_", simplify = TRUE)
+##### Hotspots distribution TSG, TLG and TLR
+R_SCRIPT="DISC_calculate_hotspots_distribution_levels.R"
+root_dir="${MYWD}"
+echo "" >> "$log_file"  # Adds a blank line
+echo "Plotting hotspots distribution..." >> "$log_file"
+start_time=$SECONDS
 
-#                     # Validate and extract parts safely
-#                     if (ncol(parts) >= 3) {
-#                     sample_name <- parts[1]
-#                     experiment_name <- parts[2]
-#                     } else {
-#                     warning(paste("Filename does not match expected format:", file_base))
-#                     return(NULL)
-#                     }
+if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir"; then
+    echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script" >> "$log_file"
+    echo "Skipping and continuing..." >> "$log_file"
+fi 
+elapsed_time=$((( SECONDS - start_time )))
+echo "Total R processing completed in ${elapsed_time} seconds" >> "$log_file"
+echo "" >> "$log_file"  # Adds a blank line 
 
-#                     # Read file
-#                     temp_file <- read_tsv(file_path, col_names = TRUE, show_col_types = FALSE)
 
-#                     # Skip if empty
-#                     if (nrow(temp_file) == 0) {
-#                     return(NULL)
-#                     }
+##### Radar plot TSG,TLG,TLR same plot
+R_SCRIPT="DISC_calculate_radar_perc_levels.R"
+# Loop inside each subdirectory of MYWD
+for strain in "${MYWD}"*/; do
+  for blast_option in option1 option2 option3 option4 option5 ; do
+    echo "Processing directory: ${strain}" >> "$log_file"
+    root_dir="${strain}"
+    wd_dir="${MYWD}"
+    strain="${strain}"
+    blast_option="${blast_option}"
 
-#                     # Prepare counts distribution dataframe
-#                     counts_distribution_file <- temp_file %>%
-#                         group_by(strain, sample, experiment, Category_A) %>%
-#                         summarise(total_count = sum(count), .groups = "drop_last") %>%
-#                         mutate(
-#                         group_total = sum(total_count),
-#                         percent = 100 * (total_count / group_total)
-#                         ) %>%
-#                         ungroup()
+    echo "$(basename "$strain")" >> "$log_file"
+    echo "" >> "$log_file"  # Adds a blank line
+    echo "Calculating radar plot for $blast_option" >> "$log_file"
+    start_time=$SECONDS
+    if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$wd_dir" "$blast_option"; then
+        echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${blast_option}" >> "$log_file"
+        echo "Skipping ${strain} ${blast_option} and continuing..." >> "$log_file"
+        continue
+    fi 
+    elapsed_time=$((( SECONDS - start_time )))
+    echo "Total R processing completed in ${elapsed_time} seconds" >> "$log_file"
+    echo "" >> "$log_file"  # Adds a blank line   
+  done
+done
 
-#                     return(counts_distribution_file)
-#                 }
-                
 
-#                 log_step("Finding valid_counts files...")
-#                 # Get all tsv files recursively in root folder
-#                 valid_counts_files <- list.files(
-#                     path = root_dir,
-#                     pattern = paste0(blast_option,".*valid_counts\\.tsv$"),
-#                     recursive = TRUE,
-#                     full.names = TRUE
-#                 )
-#                 valid_counts_files
-#                 log_step("Processing valid_counts files...")
-#                 valid_counts_processed_df <- purrr::map_dfr(valid_counts_files, process_valid_counts_files)
+##### Radar plots TSG, TLG and TLR (read_number)
+R_SCRIPT="DISC_calculate_radar_number_levels.R"
+# Loop inside each subdirectory of MYWD
+for strain in "${MYWD}"*/; do
+    echo "Processing directory: ${strain}" >> "$log_file"
+    root_dir="${strain}"
+    wd_dir="${MYWD}"
+    strain="${strain}"
+    echo "$(basename "$strain")" >> "$log_file"
+    echo "" >> "$log_file"  # Adds a blank line
+    echo "Plotting radar plots TSG, TLG and TLR - all blast options..." >> "$log_file"
+    start_time=$SECONDS
+    if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$wd_dir"; then
+        echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain}" >> "$log_file"
+        echo "Skipping ${strain} and continuing..." >> "$log_file"
+        continue
+    fi                
+    # Calculate elapsed time
+    elapsed_time=$((( SECONDS - start_time )))
+    echo "Total R processing completed in ${elapsed_time} seconds" >> "$log_file"
+    echo "" >> "$log_file"  # Adds a blank line 
+done
 
-#                 genomic_categories_order <- c(
-#                     "ORF", "intergenic", "long_terminal_repeat", "transposable_element_gene",
-#                     "LTR_retrotransposon", "tRNA_gene", "rRNA_gene", "ncRNA_gene",
-#                     "snRNA_gene", "snoRNA_gene", "ARS", "centromere", "telomere"
-#                 )
+# Discordant networks
+R_SCRIPT="DISC_calculate_discordant_network.R"
+# Loop inside each subdirectory of MYWD
+for strain in "${MYWD}"*/; do
+  for sample in TSG TLG TLR; do
+    echo "Processing network for sample: ${sample}" >> "$log_file"
+    root_dir="${strain}"
+    strain="${strain}"
+    sample="${sample}"
 
-#                 samples_order <- c("TSG", "TLG", "TLR")
-
-#                 valid_counts_processed_df_summary <- valid_counts_processed_df %>%
-#                     group_by(strain, sample, Category_A) %>%
-#                     summarise(
-#                     mean_percent = mean(percent, na.rm = TRUE),
-#                     sd_percent = sd(percent, na.rm = TRUE),
-#                     .groups = "drop"
-#                     )
-
-#                 valid_counts_processsed_df_summary_ordered <- valid_counts_processed_df_summary %>% mutate(Category_A = factor(Category_A, levels = genomic_categories_order)) %>%
-#                     arrange(strain, sample, Category_A)
-
-#                 #write_tsv(valid_counts_processed_df_summary, file.path(root_dir, paste0(strain_name, "_valid_counts_summary.tsv")))
-#                 write_tsv(valid_counts_processsed_df_summary_ordered, file.path(root_dir, paste0(strain_name, "_", blast_option, "_valid_counts_summary_ordered.tsv")))
-#                 #write_tsv(valid_counts_processed_df, file.path(root_dir, paste0(strain_name, "_valid_counts.tsv")))
-
-#                 log_step("Plotting...")
-#                 # Generate plots
-
-#                 valid_counts_processsed_df_summary_ordered <-  valid_counts_processsed_df_summary_ordered %>% 
-#                     mutate(Category_A = factor(Category_A, levels = genomic_categories_order)) %>% 
-#                     mutate(sample = factor(sample, levels = samples_order))
-
-#                 bar_plot <- ggplot(valid_counts_processsed_df_summary_ordered, aes(x = Category_A, y = mean_percent, fill = sample)) +
-#                     geom_col(position = "dodge2") +
-#                     geom_errorbar(aes(ymin = mean_percent - sd_percent, ymax = mean_percent + sd_percent), 
-#                                 linewidth = 0.8, width = 0.5, colour = "gray10", position = position_dodge(width = 0.9)) +
-#                     scale_fill_manual(values=c("#252159", "#469CD7", "#8BE0FC")) +
-#                     theme_classic(base_family = "Arial") + theme(panel.grid = element_line(color = "black", linewidth = 0.1),
-#                                                                     panel.background = element_blank(), 
-#                                                                     plot.background = element_rect(fill = "transparent", colour = NA)) +
-#                     theme(legend.position="right") +  
-#                     coord_cartesian(expand=FALSE) +
-#                     #coord_cartesian(ylim = c(0, 6), expand=FALSE) +
-#                     coord_cartesian(ylim = c(0, 100), expand=FALSE) +
-#                     theme(aspect.ratio = 0.75) + 
-#                     scale_x_discrete(name = expression("Category"), 
-#                                     labels = c("ORF", "Intergenic","LTR","TEG", "Ty", "tRNA", "rRNA", "ncRNA", "snRNA", "snoRNA", "ARS", "Centromere", "Telomere")) +
-#                     scale_y_continuous(name = expression("Percentage"),
-#                                     limits = c(0, 100),
-#                                     breaks = seq(0,100,10)) +
-#                     theme(axis.title.x = element_text(hjust = 1, vjust = 0, size = 25), 
-#                         axis.title.y = element_text(vjust = 1, size = 25)) + 
-#                     theme(axis.text.x = element_text(hjust = 1, vjust = 0.5, size = 20, angle = 90), 
-#                         axis.text.y = element_text(vjust = 0, size = 20)) +
-#                     labs(
-#                         title = paste0("Discordant reads distribution - ", strain_name, " - ", blast_option)
-#                     )
-                
-#                 ggsave(
-#                     filename = paste0(strain,"/", "Discordant_reads_distribution_plot_", strain_name, "_", blast_option, ".svg"),
-#                     plot = bar_plot,
-#                     #width = 8,
-#                     #height = 3.6,
-#                     device = svglite,
-#                     bg = "transparent"
-#                 )
-
-#                 bar_plot_reduced <- ggplot(valid_counts_processsed_df_summary_ordered, aes(x = Category_A, y = mean_percent, fill = sample)) +
-#                     geom_col(position = "dodge2") +
-#                     geom_errorbar(aes(ymin = mean_percent - sd_percent, ymax = mean_percent + sd_percent), 
-#                                 linewidth = 0.8, width = 0.5, colour = "gray10", position = position_dodge(width = 0.9)) +
-#                     scale_fill_manual(values=c("#252159", "#469CD7", "#8BE0FC")) +
-#                     theme_classic(base_family = "Arial") + theme(panel.grid = element_line(color = "black", linewidth = 0.1),
-#                                                                     panel.background = element_blank(), 
-#                                                                     plot.background = element_rect(fill = "transparent", colour = NA)) +
-#                     theme(legend.position="right") +  
-#                     coord_cartesian(expand=FALSE) +
-#                     coord_cartesian(ylim = c(0, 6), expand=FALSE) +
-#                     #coord_cartesian(ylim = c(0, 100), expand=FALSE) +
-#                     theme(aspect.ratio = 0.75) + 
-#                     scale_x_discrete(name = expression("Category"), 
-#                                     labels = c("ORF", "Intergenic","LTR","TEG", "Ty", "tRNA", "rRNA", "ncRNA", "snRNA", "snoRNA", "ARS", "Centromere", "Telomere")) +
-#                     scale_y_continuous(name = expression("Percentage"),
-#                                     limits = c(0, 100),
-#                                     breaks = seq(0,100,2)) +
-#                     theme(axis.title.x = element_text(hjust = 1, vjust = 0, size = 25), 
-#                         axis.title.y = element_text(vjust = 1, size = 25)) + 
-#                     theme(axis.text.x = element_text(hjust = 1, vjust = 0.5, size = 20, angle = 90), 
-#                         axis.text.y = element_text(vjust = 0, size = 20)) +
-#                     labs(
-#                         title = paste0("Discordant reads distribution - reduced - ", strain_name, " - ", blast_option)
-#                     )
-                
-#                 ggsave(
-#                     filename = paste0(strain,"/", "Discordant_reads_distribution_plot_reduced_", strain_name, "_", blast_option, ".svg"),
-#                     plot = bar_plot_reduced,
-#                     #width = 8,
-#                     #height = 3.6,
-#                     device = svglite,
-#                     bg = "transparent"
-#                 )
-
+    echo "" >> "$log_file"  # Adds a blank line
+    echo "Calculating discordant reads network" >> "$log_file"
+    start_time=$SECONDS
+    if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$sample"; then
+        echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} ${sample}" >> "$log_file"
+        echo "Skipping ${strain} ${sample} and continuing..." >> "$log_file"
+        continue
+    fi                
+    # Calculate elapsed time
+    elapsed_time=$((( SECONDS - start_time )))
+    echo "Total R processing completed in ${elapsed_time} seconds" >> "$log_file"
+    echo "" >> "$log_file"  # Adds a blank line 
           
-          
-# EOF
-#       # Calculate elapsed time
-#         elapsed_time=$((( SECONDS - start_time )))
-#         echo "Total R processing completed in ${elapsed_time} seconds" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line 
-#     done
-# done
-
-# # R processing for inter-chromosomal discordant read pairs hotspots (all experiments)
-
-# # Loop inside each subdirectory of MYWD
-# for strain in "${MYWD}"*/; do
-#   for sample in TSG TLG TLR; do
-#     for blast_option in option1 option2 option3 option4 option5 ; do
-#       file1="${strain}/${sample}_E1_${blast_option}_inter_discordant_pairs_unique_processed_valid_discordant_matrix.tsv"
-#       file2="${strain}/${sample}_E2_${blast_option}_inter_discordant_pairs_unique_processed_valid_discordant_matrix.tsv"
-#       file3="${strain}/${sample}_E3_${blast_option}_inter_discordant_pairs_unique_processed_valid_discordant_matrix.tsv"
-#       freqs="${strain}/${sample}_${blast_option}_inter_discordant_pairs_unique_processed_valid_discordant_matrix_allexperiments.tsv"
-      
-#       if [[ -f "$file1" && -f "$file2" && -f "$file3" && -f "$freqs" ]]; then
-#         echo "$(basename "$strain") ${sample}" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line
-#         echo "Processing inter-discordant valid reads tsv files for $file1 , $file2 and $file3" >> "$log_file"
-#         start_time=$SECONDS
-#         Rscript - <<EOF
-#           # load libraries
-
-#           library(readr)
-#           library(stringr)
-#           library(svglite)
-#           library(extrafont)
-#           library(tidyverse, warn.conflicts = FALSE)
-#           library(tidyr, warn.conflicts = FALSE)
-#           library(dplyr, warn.conflicts = FALSE)
-#           # Suppress summarise info
-#           options(dplyr.summarise.inform = FALSE)
-
-#           # Variables from Bash
-#           category_path <- "${CATEGORY_PATH}"
-#           strain <- "${strain}"
-#           sample <- "${sample}"
-#           blast_option <- "${blast_option}"
-#           strain <- sub("/\$", "", strain)  # Remove trailing slash
-#           strain_name <- basename(strain)  # Get the name of the strain directory
-#           path_to_file_1 <- "${file1}"
-#           path_to_file_2 <- "${file2}"
-#           path_to_file_3 <- "${file3}"
-#           path_to_freqs <- "${freqs}"
-
-#           # Functions
-#           log_step <- function(message) {
-#             timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-#             message(sprintf("[%s] %s", timestamp, message))
-#           }
-
-        
-#           log_step("Loading matrix files...")
-#           # Load valid reads
-#           file1 <- read_tsv(path_to_file_1, col_names = TRUE,
-#             col_select = c("Feature_name_A", "Category_A", "Chromosome_A", "Essential_A",
-#                                                     "Feature_name_B", "Category_B", "Chromosome_B", "Essential_B",
-#                                                     "strain", "sample", "experiment", "Read_name_ID")) 
-
-#           file2 <- read_tsv(path_to_file_2, col_names = TRUE,
-#             col_select = c("Feature_name_A", "Category_A", "Chromosome_A", "Essential_A",
-#                                                     "Feature_name_B", "Category_B", "Chromosome_B", "Essential_B",
-#                                                     "strain", "sample", "experiment", "Read_name_ID")) 
-                                          
-#           file3 <- read_tsv(path_to_file_3, col_names = TRUE,
-#             col_select = c("Feature_name_A", "Category_A", "Chromosome_A", "Essential_A",
-#                                                     "Feature_name_B", "Category_B", "Chromosome_B", "Essential_B",
-#                                                     "strain", "sample", "experiment", "Read_name_ID")) 
-
-          
-#           log_step("Finding recombination hotspots...")
-#           hotspots_feature_A <-  merge(file1, file2, by= c("Feature_name_A")) %>% 
-#             merge(., file3, by= c("Feature_name_A")) %>% select(1, 2, 3, 4) %>% rename("Category_A" = !!names(.[2]),
-#                                                                                       "Chromosome_A" = !!names(.[3]),
-#                                                                                       "Essential_A" = !!names(.[4])) %>% 
-#             unique()
-
-          
-
-#           log_step("Loading freq file...")
-#           # Load control reads
-#           freq_1_2_3 <- read_tsv(path_to_freqs, col_names = TRUE) %>% select("Feature_name_A", "Position_A", "count_norm") %>% 
-#             group_by(Feature_name_A) %>% 
-#             mutate(global_freq = sum(count_norm)) %>%  select(!c("count_norm")) %>%  unique()
-
-#           hotspots_freq <- merge(hotspots_feature_A, freq_1_2_3, by = c("Feature_name_A")) %>% unique()
-
-#           log_step("Saving hotspots dataframe...")
-#           write_tsv(hotspots_freq, file = paste0(strain, "/", sample, "_", blast_option,"_inter_discordant_pairs_unique_processed_valid_discordant_hotspots.tsv"))
-          
-#           log_step("Plotting hotspots...")
-#           hotspots_plot <- ggplot(hotspots_freq, aes(y = Position_A, x = 0)) +
-#             #geom_segment(aes(xend = 0.95, yend = Position_A, color = global_freq), alpha = 1)+
-#             geom_tile(aes(color = global_freq), alpha = 1)+
-#             scale_color_gradientn(
-#               colors = c("white", "#e31a1c", "#8b2500"),
-#               #values = scales::rescale(c(0, 25, 50)),
-#               na.value = "gray90",
-#               #limits = c(0, 50),
-#               limits = c(0, 25),
-#               oob = scales::squish) +
-#             guides (color = guide_colourbar(barwidth = 0.5, barheight = 10,
-#                                           frame.colour = "black", frame.linewidth = 0.25,
-#                                           ticks.colour = NA)) + 
-#             labs(color = "%") +
-#             theme_classic(base_family = "Arial") + theme(panel.grid = element_line(color = "black", linewidth = 0.1),
-#                                                             panel.background = element_blank(), 
-#                                                             plot.background = element_rect(fill = "transparent", colour = NA)) +
-#             theme(panel.background = element_rect(fill = "white")) +
-#             theme(legend.position="right") +
-#             #coord_cartesian(ylim = c(13195,14518), expand=FALSE) +
-#             #coord_cartesian(ylim = c(1, 14519), xlim = c(0,1), expand=FALSE) +
-#             coord_cartesian(ylim = c(1, 14519), xlim = c(0,0.1), expand=FALSE) +
-#             theme(aspect.ratio = 20) +
-#             scale_y_continuous(breaks = c(1, 6570,
-#                                           13195, 13578, 13669, 13719, 13994, 14019, 14036, 14042, 14119, 14471, 14487)) +
-#             theme(axis.text.y=element_text(size=0)) +
-#             theme(axis.text.x=element_text(size=0)) +
-#             theme(axis.title.x = element_text(size=0)) +
-#             theme(axis.title.y = element_text(size=0)) +
-#             theme(axis.ticks.x = element_blank()) +
-#             labs(
-#               title = paste0("Hotspots - ", strain_name, " - ", sample, " - ", blast_option)
-#             )
-
-          
-#           ggsave(
-#             filename = paste0(strain,"/", "Inter_chromosomal_discordant_hotspots_plot_", strain_name, "_", sample, "_", blast_option, ".svg"),
-#             plot = hotspots_plot,
-#             #width = 8,
-#             #height = 3.6,
-#             device = svglite,
-#             bg = "transparent"
-#           )
-
-          
-
-# EOF
-#       # Calculate elapsed time
-#         elapsed_time=$((( SECONDS - start_time )))
-#         echo "Total R processing completed in ${elapsed_time} seconds" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line 
-#       else
-#       echo "Missing files for $strain/$sample: $file1 or $file2 or $file3" >> "$log_file"
-#       echo "" >> "$log_file"
-#       fi
-#     done
-#   done
-# done
-
-
-# ##### Hotspots distribution TSG, TLG and TLR
-
-# root_dir="${MYWD}"
-# #echo "$root_dir"
-#     echo "" >> "$log_file"  # Adds a blank line
-#     echo "Plotting hotspots distribution..." >> "$log_file"
-#     start_time=$SECONDS
-#     # Export variables for R access
-#     export ROOT_DIR="$root_dir"
-#     #echo "ROOT_DIR: $ROOT_DIR"
-#     #echo "STRAIN: $STRAIN"
-#     Rscript - <<'EOF'
-#     # load libraries
-    
-#     library(ggplot2)
-#     library(svglite)
-#     library(purrr)
-#     library(stringr)
-#     library(readr)
-#     library(scales)
-#     library(extrafont)
-#     library(tidyverse, warn.conflicts = FALSE)
-#     library(tidyr, warn.conflicts = FALSE)
-#     library(dplyr, warn.conflicts = FALSE)
-#     options(dplyr.summarise.inform = FALSE)
-
-#     # Read environment variables
-#     root_dir <- Sys.getenv("ROOT_DIR")
-
-#     print(paste("ROOT_DIR:", root_dir))
-
-#     log_step <- function(message) {
-#         timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-#         message(sprintf("[%s] %s", timestamp, message))
-#     }
-
-#     TSG_hotspots_files <- list.files(
-#       path = root_dir,
-#       pattern ="TSG_option1_inter_discordant_pairs_unique_processed_valid_discordant_hotspots\\.tsv$",
-#       recursive = TRUE,
-#       full.names = TRUE
-#     )
-
-
-#     TLG_hotspots_files <- list.files(
-#       path = root_dir,
-#       pattern ="TLG_option1_inter_discordant_pairs_unique_processed_valid_discordant_hotspots\\.tsv$",
-#       recursive = TRUE,
-#       full.names = TRUE
-#     )
-
-#     TLR_hotspots_files <- list.files(
-#       path = root_dir,
-#       pattern ="TLR_option1_inter_discordant_pairs_unique_processed_valid_discordant_hotspots\\.tsv$",
-#       recursive = TRUE,
-#       full.names = TRUE
-#     )
-
-#     all_TSG_valid_hotspots_files <- lapply(TSG_hotspots_files, function(f) {
-#       df <- read_tsv(f, show_col_types = FALSE)
-#       option <- str_extract(basename(f), "option[0-9]+")
-#       strain_name <- basename(dirname(f))
-#       df <- df %>% mutate(blast_option = option,
-#                           strain = strain_name,
-#                           sample = "TSG") %>% 
-#         filter(global_freq > 4)
-      
-#       return(df)
-#     }) %>%
-#       bind_rows()  
-
-#     all_TLG_valid_hotspots_files <- lapply(TLG_hotspots_files, function(f) {
-#       df <- read_tsv(f, show_col_types = FALSE)
-#       option <- str_extract(basename(f), "option[0-9]+")
-#       strain_name <- basename(dirname(f))
-#       df <- df %>% mutate(blast_option = option,
-#                           strain = strain_name,
-#                           sample = "TLG") %>% 
-#         filter(global_freq > 4)
-      
-#       return(df)
-#     }) %>%
-#       bind_rows()  
-
-
-#     all_TLR_valid_hotspots_files <- lapply(TLR_hotspots_files, function(f) {
-#       df <- read_tsv(f, show_col_types = FALSE)
-#       option <- str_extract(basename(f), "option[0-9]+")
-#       strain_name <- basename(dirname(f))
-#       df <- df %>% mutate(blast_option = option,
-#                           strain = strain_name,
-#                           sample = "TLR") %>% 
-#         filter(global_freq > 4)
-      
-#       return(df)
-#     }) %>%
-#       bind_rows()  
-
-
-
-#     all_hotspots <- bind_rows(all_TSG_valid_hotspots_files,
-#                               all_TLG_valid_hotspots_files,
-#                               all_TLR_valid_hotspots_files)
-
-#     sample_order <- c("TSG", "TLG", "TLR")
-
-#     all_hotspots_ordered <- all_hotspots %>% mutate(sample = factor(sample, levels = sample_order)) 
-
-
-#     p <- ggplot(all_hotspots_ordered, aes(x = global_freq, color = sample, fill = sample)) +
-#       geom_histogram(alpha = 0.25, position = "identity") +
-#       coord_cartesian(xlim = c(0,70), ylim = c(0, 60), expand=FALSE) +
-#       theme_classic(base_family = "Arial") +
-#       theme(panel.grid = element_line(color = "black", linewidth = 0.1),
-#             panel.background = element_blank(),
-#             plot.background = element_rect(fill = "transparent", colour = NA)) +
-#       theme(panel.background = element_rect(fill = "white")) +
-#       theme(legend.position="right") +
-#       labs(title = paste0("Hotspots distribution")) +
-#       facet_wrap(sample~ strain, nrow = 3, ncol = 5) 
-
-#     ggsave(
-#             filename = paste0(root_dir,"/", "Inter_chromosomal_discordant_hotspots_distribution.svg"),
-#             plot = p,
-#             width = 12,
-#             height = 8,
-#             device = svglite,
-#             bg = "transparent"
-#           )
-
-
-
-# EOF
-
-# ##### Radar plot TSG,TLG,TLR same plot
-# # Loop inside each subdirectory of MYWD
-# for strain in "${MYWD}"*/; do
-#   for blast_option in option1 option2 option3 option4 option5 ; do
-#   echo "Processing directory: ${strain}" >> "$log_file"
-#       root_dir="${strain}"
-#       wd_dir="${MYWD}"
-#       #echo "$root_dir"
-#         echo "$(basename "$strain")" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line
-#         echo "Calculating radar plot for $blast_option" >> "$log_file"
-#         start_time=$SECONDS
-#         # Export variables for R access
-#         export ROOT_DIR="$root_dir"
-#         export STRAIN="$strain"
-#         export WD_DIR="$wd_dir"
-#         export BLAST_OPTION="$blast_option"
-#         #echo "ROOT_DIR: $ROOT_DIR"
-#         #echo "STRAIN: $STRAIN"
-#         Rscript - <<'EOF'
-#         # load libraries
-
-#         library(ggplot2)
-#         library(svglite)
-#         library(extrafont)
-#         library(purrr)
-#         library(stringr)
-#         library(readr)
-#         library(fmsb)
-#         #library(ggbreak)
-#         library(tidyverse, warn.conflicts = FALSE)
-#         library(tidyr, warn.conflicts = FALSE)
-#         library(dplyr, warn.conflicts = FALSE)
-#         options(dplyr.summarise.inform = FALSE)
-
-#         # Read environment variables
-#         root_dir <- Sys.getenv("ROOT_DIR")
-#         wd_dir <- Sys.getenv("WD_DIR")
-#         blast_option <- Sys.getenv("BLAST_OPTION")
-#         strain <- Sys.getenv("STRAIN")
-#         strain <- sub("/$", "", strain)  # Remove trailing slash
-#         strain_name <- basename(strain)
-
-      
-
-
-
-
-#         print(paste("ROOT_DIR:", root_dir))
-
-#         log_step <- function(message) {
-#           timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-#           message(sprintf("[%s] %s", timestamp, message))
-#         }
-
-#         # Define a function to process tsv files
-#         process_valid_counts_files <- function(file_path) {
-#           # Extract filename and directory parts
-#           file_base <- basename(file_path)
-#           strain_name <- basename(dirname(file_path))  # directory name above the file
-          
-#           # 
-#           parts <- str_split(file_base, "_", simplify = TRUE)
-          
-#           # Validate and extract parts safely
-#           if (ncol(parts) >= 3) {
-#             sample_name <- parts[1]
-#             experiment_name <- parts[2]
-#           } else {
-#             warning(paste("Filename does not match expected format:", file_base))
-#             return(NULL)
-#           }
-          
-#           # Read file
-#           temp_file <- read_tsv(file_path, col_names = TRUE, show_col_types = FALSE)
-          
-#           # Skip if empty
-#           if (nrow(temp_file) == 0) {
-#             return(NULL)
-#           }
-          
-#           # Prepare counts distribution dataframe
-#           counts_distribution_file <- temp_file %>%
-#             mutate(blast_option = blast_option) %>% 
-#             group_by(strain, sample, experiment, blast_option,  Category_A) %>%
-#             summarise(total_count = sum(count), .groups = "drop_last") %>%
-#             mutate(
-#               group_total = sum(total_count),
-#               percent = 100 * (total_count / group_total)
-#             ) %>%
-#             ungroup()
-          
-#           return(counts_distribution_file)
-#         }
-
-
-#         log_step("Finding valid_counts files...")
-#         # Get all _inter_discordant_pairs_unique_processed_valid_counts files recursively in root folder
-          
-#           valid_counts_files <- list.files(
-#             path = root_dir,
-#             pattern = paste0(blast_option,"_inter_discordant_pairs_unique_processed_valid_counts\\.tsv$"),
-#             recursive = TRUE,
-#             full.names = TRUE
-#           )
-          
-        
-#         log_step("Processing valid_counts files...")
-#         valid_counts_processed_df <- purrr::map_dfr(valid_counts_files, process_valid_counts_files)
-
-
-
-#         log_step("Finding ratio control file...")
-
-#         ratio_control_file <- read_tsv(file.path(wd_dir, "control_count_ratio.tsv"), col_names = TRUE)
-
-
-
-#         complete_valid_counts_df <- left_join(valid_counts_processed_df, ratio_control_file) %>%  
-#           mutate(total_count_norm = total_count / Ratio_vs_reference)
-
-#         genomic_categories_order <- c(
-#           "ORF", "intergenic", "long_terminal_repeat", "transposable_element_gene",
-#           "LTR_retrotransposon", "tRNA_gene", "rRNA_gene", "ncRNA_gene",
-#           "snRNA_gene", "snoRNA_gene", "ARS", "centromere", "telomere"
-#         )
-
-#         sample_order <- c("TSG" , "TLG", "TLR")
-
-
-#         complete_valid_counts_summary_df <- complete_valid_counts_df %>% 
-#           group_by(strain, sample, Category_A) %>% 
-#           summarise(mean_total_count_norm = mean(total_count_norm)) %>% 
-#           mutate(Category_A = factor(Category_A, levels = genomic_categories_order),
-#                 sample = factor(sample, levels = sample_order)) %>% 
-#           arrange(strain, sample, Category_A) %>% 
-#           ungroup()
-
-
-
-
-
-#         ######
-#         # Define the transformation function
-#         transform_y <- function(y) {
-#           ifelse(
-#             y <= 100,
-#             y * (0.75 / 100),                     # scale 0-100 to 0-0.75
-#             0.75 + ((y - 100) * (0.25 / (5000 - 100))) # scale 100-5000 to 0.25-1
-#           )
-#         }
-
-#         transform_y_50 <- function(y) {
-#           ifelse(
-#             y <= 50,
-#             y * (0.75 / 50),                     # scale 0-50 to 0-0.75
-#             0.75 + ((y - 50) * (0.25 / (5000 - 50))) # scale 50-5000 to 0.25-1
-#           )
-#         }
-
-
-
-
-
-#         # Add a transformed y column
-#         complete_valid_counts_summary_df$mean_total_count_norm_trans <- transform_y(complete_valid_counts_summary_df$mean_total_count_norm)
-#         complete_valid_counts_summary_df$mean_total_count_norm_trans_50 <- transform_y_50(complete_valid_counts_summary_df$mean_total_count_norm)
-        
-
-#         complete_valid_counts_summary_df_radar <- complete_valid_counts_summary_df %>% 
-#           select(Category_A, mean_total_count_norm_trans, sample) %>% 
-#           pivot_wider(names_from = "Category_A", values_from = "mean_total_count_norm_trans") %>% 
-#           as.data.frame() %>% 
-#           select(!c("sample"))
-
-#         rownames(complete_valid_counts_summary_df_radar) <- c("TSG", "TLG", "TLR")
-
-#         complete_valid_counts_summary_df_radar_50 <- complete_valid_counts_summary_df %>% 
-#           select(Category_A, mean_total_count_norm_trans_50, sample) %>% 
-#           pivot_wider(names_from = "Category_A", values_from = "mean_total_count_norm_trans_50") %>% 
-#           as.data.frame() %>% 
-#           select(!c("sample"))
-
-#         rownames(complete_valid_counts_summary_df_radar_50) <- c("TSG", "TLG", "TLR")
-
-
-
-
-#         max_min <- data.frame(
-#           ORF = c(1, 0), intergenic = c(1, 0), long_terminal_repeat = c(1, 0),
-#           transposable_element_gene = c(1, 0), LTR_retrotransposon = c(1, 0), tRNA_gene = c(1, 0),
-#           rRNA_gene = c(1, 0), ncRNA_gene = c(1, 0), snRNA_gene = c(1, 0),
-#           snoRNA_gene = c(1, 0), ARS = c(1, 0), centromere = c(1, 0),
-#           telomere = c(1, 0)
-#         )
-
-
-
-#         rownames(max_min) <- c("Max", "Min")
-
-
-#         # Bind the variable ranges to the data
-#         df_radar <- rbind(max_min, complete_valid_counts_summary_df_radar)
-#         df_radar_50 <- rbind(max_min, complete_valid_counts_summary_df_radar_50)
-
-
-
-
-#         log_step("Plotting...")
-#         # Generate plots
-
-#         svglite::svglite(file = paste0(strain,"/", "Radar_plot_", strain_name, "_", blast_option, "_TSG_TLG_TLR", ".svg"), width = 8, height = 8)
-#         radarchartcirc(df_radar, axistype = 1,
-#                       # Customize the polygon
-#                       pcol = c("#252159", "#469CD7", "#8BE0FC"), 
-#                       seg = 4,
-#                       pty = 32, #32
-#                       #pfcol = FALSE, 
-#                       #pfcol = scales::alpha("black", 0.0), 
-#                       plwd = 1.5, plty = 1,
-#                       # Customize the grid
-#                       cglcol = "grey", cglty = 2, cglwd = 0.8,
-#                       # Customize the axis
-#                       axislabcol = "grey9", calcex = 0.6,
-#                       title = paste0("radar plot", "-", strain, "-", blast_option),
-#                       # Variable labels
-#                       vlcex = 0.7, vlabels = colnames(df_radar),
-#                       caxislabels = c(0, 33.3, 66.6, 100, 5000)
-#         )
-#         dev.off()
-
-#         svglite::svglite(file = paste0(strain,"/", "Radar_plot_", strain_name, "_", blast_option, "_50_TSG_TLG_TLR", ".svg"), width = 8, height = 8)
-#         radarchartcirc(df_radar_50, axistype = 1,
-#                       # Customize the polygon
-#                       pcol = c("#252159", "#469CD7", "#8BE0FC"), 
-#                       seg = 4,
-#                       pty = 32, #32
-#                       #pfcol = FALSE, 
-#                       #pfcol = scales::alpha("black", 0.0), 
-#                       plwd = 1.5, plty = 1,
-#                       # Customize the grid
-#                       cglcol = "grey", cglty = 2, cglwd = 0.8,
-#                       # Customize the axis
-#                       axislabcol = "grey9", calcex = 0.6,
-#                       title = paste0("radar plot_50", "-", strain, "-", blast_option),
-#                       # Variable labels
-#                       vlcex = 0.7, vlabels = colnames(df_radar_50),
-#                       caxislabels = c(0, 16.6, 33.3, 50, 5000)
-#         )
-#         dev.off()
-        
-
-
-        
-
-# EOF
-#   done
-# done
-
-
-# ##### Radar plots TSG, TLG and TLR (read_number)
-# # Loop inside each subdirectory of MYWD
-# for strain in "${MYWD}"*/; do
-#         echo "Processing directory: ${strain}" >> "$log_file"
-#             root_dir="${strain}"
-#             wd_dir="${MYWD}"
-#             #echo "$root_dir"
-#                 echo "$(basename "$strain")" >> "$log_file"
-#                 echo "" >> "$log_file"  # Adds a blank line
-#                 echo "Plotting radar plots TSG, TLG and TLR - all blast options..." >> "$log_file"
-#                 start_time=$SECONDS
-#                 # Export variables for R access
-#                 export ROOT_DIR="$root_dir"
-#                 export WD_DIR="$wd_dir"
-#                 export STRAIN="$strain"
-#                 export BLAST_OPTION="$blast_option"
-#                 #echo "ROOT_DIR: $ROOT_DIR"
-#                 #echo "STRAIN: $STRAIN"
-#                 Rscript - <<'EOF'
-#                 # load libraries
-                
-#                 library(ggplot2)
-#                 library(svglite)
-#                 library(purrr)
-#                 library(stringr)
-#                 library(readr)
-#                 library(scales)
-#                 library(fmsb)
-#                 library(extrafont)
-#                 library(tidyverse, warn.conflicts = FALSE)
-#                 library(tidyr, warn.conflicts = FALSE)
-#                 library(dplyr, warn.conflicts = FALSE)
-#                 options(dplyr.summarise.inform = FALSE)
-
-#                 ###
-#                  # Read environment variables
-#                 root_dir <- Sys.getenv("ROOT_DIR")
-#                 wd_dir <- Sys.getenv("WD_DIR")
-
-#                 strain <- Sys.getenv("STRAIN")
-#                 strain <- sub("/$", "", strain)  # Remove trailing slash
-#                 strain_name <- basename(strain)
-
-
-#                 print(paste("ROOT_DIR:", root_dir))
-
-#                 log_step <- function(message) {
-#                   timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-#                   message(sprintf("[%s] %s", timestamp, message))
-#                 }
-
-#                 # Define a function to process tsv files
-#                 process_valid_counts_files <- function(file_path) {
-#                   # Extract filename and directory parts
-#                   file_base <- basename(file_path)
-#                   strain_name <- basename(dirname(file_path))
-#                   option <- str_extract(basename(file_path), "option[0-9]+")
-#                   # directory name above the file
-                  
-#                   # 
-#                   parts <- str_split(file_base, "_", simplify = TRUE)
-                  
-#                   # Validate and extract parts safely
-#                   if (ncol(parts) >= 3) {
-#                     sample_name <- parts[1]
-#                     experiment_name <- parts[2]
-#                   } else {
-#                     warning(paste("Filename does not match expected format:", file_base))
-#                     return(NULL)
-#                   }
-                  
-#                   # Read file
-#                   temp_file <- read_tsv(file_path, col_names = TRUE, show_col_types = FALSE)
-                  
-#                   # Skip if empty
-#                   if (nrow(temp_file) == 0) {
-#                     return(NULL)
-#                   }
-                  
-#                   # Prepare counts distribution dataframe
-#                   counts_distribution_file <- temp_file %>%
-#                     mutate(blast_option = option) %>% 
-#                     group_by(strain, sample, experiment, blast_option,  Category_A) %>%
-#                     summarise(total_count = sum(count), .groups = "drop_last") %>%
-#                     mutate(
-#                       group_total = sum(total_count),
-#                       percent = 100 * (total_count / group_total)
-#                     ) %>%
-#                     ungroup()
-                  
-#                   return(counts_distribution_file)
-#                 }
-
-
-#                 log_step("Finding valid_counts files...")
-#                 # Get all coverage.tsv files recursively in root folder
-
-#                 valid_counts_files <- list.files(
-#                   path = root_dir,
-#                   pattern = "_inter_discordant_pairs_unique_processed_valid_counts\\.tsv$",
-#                   recursive = TRUE,
-#                   full.names = TRUE
-#                 )
-
-
-#                 log_step("Processing valid_counts files...")
-#                 valid_counts_processed_df <- purrr::map_dfr(valid_counts_files, process_valid_counts_files)
-
-
-
-#                 log_step("Finding ratio control file...")
-
-#                 ratio_control_file <- read_tsv(file.path(wd_dir, "control_count_ratio.tsv"), col_names = TRUE)
-
-
-
-#                 complete_valid_counts_df <- left_join(valid_counts_processed_df, ratio_control_file) %>%  
-#                   filter(blast_option != "NA") %>% 
-#                   mutate(total_count_norm = total_count / Ratio_vs_reference)
-
-#                 genomic_categories_order <- c(
-#                   "ORF", "intergenic", "long_terminal_repeat", "transposable_element_gene",
-#                   "LTR_retrotransposon", "tRNA_gene", "rRNA_gene", "ncRNA_gene",
-#                   "snRNA_gene", "snoRNA_gene", "ARS", "centromere", "telomere"
-#                 )
-
-#                 option_order <- c("option1" , "option2", "option3", "option4", "option5")
-#                 sample_order <- c("TSG" , "TLG", "TLR")
-
-
-#                 complete_valid_counts_summary_df <- complete_valid_counts_df %>% 
-#                   group_by(strain, sample, blast_option, Category_A) %>% 
-#                   summarise(mean_total_count_norm = mean(total_count_norm)) %>% 
-#                   mutate(Category_A = factor(Category_A, levels = genomic_categories_order),
-#                         blast_option = factor(blast_option, levels = option_order),
-#                         sample = factor(sample, levels =sample_order)) %>% 
-#                   arrange(strain, sample, blast_option, Category_A) %>% 
-#                   ungroup()
-
-
-
-
-
-#                 ######
-#                 # Define the transformation function
-#                 transform_y <- function(y) {
-#                   ifelse(
-#                     y <= 100,
-#                     y * (0.75 / 100),                     # scale 0-100 to 0-0.75
-#                     0.75 + ((y - 100) * (0.25 / (5000 - 100))) # scale 100-5000 to 0.25-1
-#                   )
-#                 }
-
-#                 transform_y_50 <- function(y) {
-#                   ifelse(
-#                     y <= 50,
-#                     y * (0.75 / 50),                     # scale 0-50 to 0-0.75
-#                     0.75 + ((y - 50) * (0.25 / (5000 - 50))) # scale 50-5000 to 0.25-1
-#                   )
-#                 }
-
-
-
-
-
-#                 # Add a transformed y column
-#                 complete_valid_counts_summary_df$mean_total_count_norm_trans <- transform_y(complete_valid_counts_summary_df$mean_total_count_norm)
-#                 complete_valid_counts_summary_df$mean_total_count_norm_trans_50 <- transform_y_50(complete_valid_counts_summary_df$mean_total_count_norm)
-
-
-#                 complete_valid_counts_summary_TSG_df_radar <- complete_valid_counts_summary_df %>% 
-#                   filter(sample == "TSG") %>% 
-#                   select(Category_A, mean_total_count_norm_trans, blast_option) %>% 
-#                   pivot_wider(names_from = "Category_A", values_from = "mean_total_count_norm_trans") %>% 
-#                   as.data.frame() %>% 
-#                   select(!c("blast_option"))
-
-#                 rownames(complete_valid_counts_summary_TSG_df_radar) <- c("option1", "option2", "option3", "option4", "option5")
-
-#                 complete_valid_counts_summary_TSG_df_radar_50 <- complete_valid_counts_summary_df %>% 
-#                   filter(sample == "TSG") %>% 
-#                   select(Category_A, mean_total_count_norm_trans_50, blast_option) %>% 
-#                   pivot_wider(names_from = "Category_A", values_from = "mean_total_count_norm_trans_50") %>% 
-#                   as.data.frame() %>% 
-#                   select(!c("blast_option"))
-
-#                 rownames(complete_valid_counts_summary_TSG_df_radar_50) <- c("option1", "option2", "option3", "option4", "option5")
-
-
-#                 complete_valid_counts_summary_TLG_df_radar <- complete_valid_counts_summary_df %>% 
-#                   filter(sample == "TLG") %>% 
-#                   select(Category_A, mean_total_count_norm_trans, blast_option) %>% 
-#                   pivot_wider(names_from = "Category_A", values_from = "mean_total_count_norm_trans") %>% 
-#                   as.data.frame() %>% 
-#                   select(!c("blast_option"))
-
-#                 rownames(complete_valid_counts_summary_TLG_df_radar) <- c("option1", "option2", "option3", "option4", "option5")
-
-#                 complete_valid_counts_summary_TLG_df_radar_50 <- complete_valid_counts_summary_df %>% 
-#                   filter(sample == "TLG") %>% 
-#                   select(Category_A, mean_total_count_norm_trans_50, blast_option) %>% 
-#                   pivot_wider(names_from = "Category_A", values_from = "mean_total_count_norm_trans_50") %>% 
-#                   as.data.frame() %>% 
-#                   select(!c("blast_option"))
-
-#                 rownames(complete_valid_counts_summary_TLG_df_radar_50) <- c("option1", "option2", "option3", "option4", "option5")
-
-
-#                 complete_valid_counts_summary_TLR_df_radar <- complete_valid_counts_summary_df %>% 
-#                   filter(sample == "TLR") %>% 
-#                   select(Category_A, mean_total_count_norm_trans, blast_option) %>% 
-#                   pivot_wider(names_from = "Category_A", values_from = "mean_total_count_norm_trans") %>% 
-#                   as.data.frame() %>% 
-#                   select(!c("blast_option"))
-
-#                 rownames(complete_valid_counts_summary_TLR_df_radar) <- c("option1", "option2", "option3", "option4", "option5")
-
-#                 complete_valid_counts_summary_TLR_df_radar_50 <- complete_valid_counts_summary_df %>% 
-#                   filter(sample == "TLR") %>% 
-#                   select(Category_A, mean_total_count_norm_trans_50, blast_option) %>% 
-#                   pivot_wider(names_from = "Category_A", values_from = "mean_total_count_norm_trans_50") %>% 
-#                   as.data.frame() %>% 
-#                   select(!c("blast_option"))
-
-#                 rownames(complete_valid_counts_summary_TLR_df_radar_50) <- c("option1", "option2", "option3", "option4", "option5")
-
-
-
-
-#                 max_min <- data.frame(
-#                   ORF = c(1, 0), intergenic = c(1, 0), long_terminal_repeat = c(1, 0),
-#                   transposable_element_gene = c(1, 0), LTR_retrotransposon = c(1, 0), tRNA_gene = c(1, 0),
-#                   rRNA_gene = c(1, 0), ncRNA_gene = c(1, 0), snRNA_gene = c(1, 0),
-#                   snoRNA_gene = c(1, 0), ARS = c(1, 0), centromere = c(1, 0),
-#                   telomere = c(1, 0)
-#                 )
-
-
-
-#                 rownames(max_min) <- c("Max", "Min")
-
-
-#                 # Bind the variable ranges to the data
-#                 df_radar_TSG <- rbind(max_min, complete_valid_counts_summary_TSG_df_radar)
-#                 df_radar_50_TSG <- rbind(max_min, complete_valid_counts_summary_TSG_df_radar_50)
-
-#                 df_radar_TLG <- rbind(max_min, complete_valid_counts_summary_TLG_df_radar)
-#                 df_radar_50_TLG <- rbind(max_min, complete_valid_counts_summary_TLG_df_radar_50)
-
-#                 df_radar_TLR <- rbind(max_min, complete_valid_counts_summary_TLR_df_radar)
-#                 df_radar_50_TLR <- rbind(max_min, complete_valid_counts_summary_TLR_df_radar_50)
-
-
-#                 svglite::svglite(file = paste0(strain,"/", "Radar_plot_", strain_name, "_TSG", "_blast_options_read_number", ".svg"), width = 8, height = 8)
-#                 radarchartcirc(df_radar_TSG, axistype = 1,
-#                               # Customize the polygon
-#                               pcol = c("darkgreen", "chartreuse3", "darkorange", "red", "darkred"), 
-#                               seg = 4,
-#                               pty = 32, #32
-#                               #pfcol = FALSE, 
-#                               #pfcol = scales::alpha("black", 0.0), 
-#                               plwd = 1.5, plty = 1,
-#                               # Customize the grid
-#                               cglcol = "grey", cglty = 2, cglwd = 0.8,
-#                               # Customize the axis
-#                               axislabcol = "grey9", calcex = 0.6,
-#                               title = paste0("radar plot_read_number", "-", strain, "-", "TSG"),
-#                               # Variable labels
-#                               vlcex = 0.7, vlabels = colnames(df_radar_TSG),
-#                               caxislabels = c(0, 33.3, 66.6, 100, 5000)
-#                 )
-#                 dev.off()
-
-#                 svglite::svglite(file = paste0(strain,"/", "Radar_plot_50_", strain_name, "_TSG", "_blast_options_read_number", ".svg"), width = 8, height = 8)
-#                 radarchartcirc(df_radar_50_TSG, axistype = 1,
-#                               # Customize the polygon
-#                               pcol = c("darkgreen", "chartreuse3", "darkorange", "red", "darkred"), 
-#                               seg = 4,
-#                               pty = 32, #32
-#                               #pfcol = FALSE, 
-#                               #pfcol = scales::alpha("black", 0.0), 
-#                               plwd = 1.5, plty = 1,
-#                               # Customize the grid
-#                               cglcol = "grey", cglty = 2, cglwd = 0.8,
-#                               # Customize the axis
-#                               axislabcol = "grey9", calcex = 0.6,
-#                               title = paste0("radar plot_read_number_50", "-", strain, "-", "TSG"),
-#                               # Variable labels
-#                               vlcex = 0.7, vlabels = colnames(df_radar_50_TSG),
-#                               caxislabels = c(0, 16.6, 33.3, 50, 5000)
-#                 )
-#                 dev.off()
-
-
-#                 svglite::svglite(file = paste0(strain,"/", "Radar_plot_", strain_name, "_TLG", "_blast_options_read_number", ".svg"), width = 8, height = 8)
-#                 radarchartcirc(df_radar_TLG, axistype = 1,
-#                               # Customize the polygon
-#                               pcol = c("darkgreen", "chartreuse3", "darkorange", "red", "darkred"), 
-#                               seg = 4,
-#                               pty = 32, #32
-#                               #pfcol = FALSE, 
-#                               #pfcol = scales::alpha("black", 0.0), 
-#                               plwd = 1.5, plty = 1,
-#                               # Customize the grid
-#                               cglcol = "grey", cglty = 2, cglwd = 0.8,
-#                               # Customize the axis
-#                               axislabcol = "grey9", calcex = 0.6,
-#                               title = paste0("radar plot_read_number", "-", strain, "-", "TLG"),
-#                               # Variable labels
-#                               vlcex = 0.7, vlabels = colnames(df_radar_TLG),
-#                               caxislabels = c(0, 33.3, 66.6, 100, 5000)
-#                 )
-#                 dev.off()
-
-#                 svglite::svglite(file = paste0(strain,"/", "Radar_plot_50_", strain_name, "_TLG", "_blast_options_read_number", ".svg"), width = 8, height = 8)
-#                 radarchartcirc(df_radar_50_TLG, axistype = 1,
-#                               # Customize the polygon
-#                               pcol = c("darkgreen", "chartreuse3", "darkorange", "red", "darkred"), 
-#                               seg = 4,
-#                               pty = 32, #32
-#                               #pfcol = FALSE, 
-#                               #pfcol = scales::alpha("black", 0.0), 
-#                               plwd = 1.5, plty = 1,
-#                               # Customize the grid
-#                               cglcol = "grey", cglty = 2, cglwd = 0.8,
-#                               # Customize the axis
-#                               axislabcol = "grey9", calcex = 0.6,
-#                               title = paste0("radar plot_read_number_50", "-", strain, "-", "TLG"),
-#                               # Variable labels
-#                               vlcex = 0.7, vlabels = colnames(df_radar_50_TLG),
-#                               caxislabels = c(0, 16.6, 33.3, 50, 5000)
-#                 )
-#                 dev.off()
-
-
-#                 svglite::svglite(file = paste0(strain,"/", "Radar_plot_", strain_name, "_TLR", "_blast_options_read_number", ".svg"), width = 8, height = 8)
-#                 radarchartcirc(df_radar_TLR, axistype = 1,
-#                               # Customize the polygon
-#                               pcol = c("darkgreen", "chartreuse3", "darkorange", "red", "darkred"), 
-#                               seg = 4,
-#                               pty = 32, #32
-#                               #pfcol = FALSE, 
-#                               #pfcol = scales::alpha("black", 0.0), 
-#                               plwd = 1.5, plty = 1,
-#                               # Customize the grid
-#                               cglcol = "grey", cglty = 2, cglwd = 0.8,
-#                               # Customize the axis
-#                               axislabcol = "grey9", calcex = 0.6,
-#                               title = paste0("radar plot_read_number", "-", strain, "-", "TLR"),
-#                               # Variable labels
-#                               vlcex = 0.7, vlabels = colnames(df_radar_TLR),
-#                               caxislabels = c(0, 33.3, 66.6, 100, 5000)
-#                 )
-#                 dev.off()
-
-#                 svglite::svglite(file = paste0(strain,"/", "Radar_plot_50_", strain_name, "_TLR", "_blast_options_read_number", ".svg"), width = 8, height = 8)
-#                 radarchartcirc(df_radar_50_TLR, axistype = 1,
-#                               # Customize the polygon
-#                               pcol = c("darkgreen", "chartreuse3", "darkorange", "red", "darkred"), 
-#                               seg = 4,
-#                               pty = 32, #32
-#                               #pfcol = FALSE, 
-#                               #pfcol = scales::alpha("black", 0.0), 
-#                               plwd = 1.5, plty = 1,
-#                               # Customize the grid
-#                               cglcol = "grey", cglty = 2, cglwd = 0.8,
-#                               # Customize the axis
-#                               axislabcol = "grey9", calcex = 0.6,
-#                               title = paste0("radar plot_read_number_50", "-", strain, "-", "TLR"),
-#                               # Variable labels
-#                               vlcex = 0.7, vlabels = colnames(df_radar_50_TLR),
-#                               caxislabels = c(0, 16.6, 33.3, 50, 5000)
-#                 )
-#                 dev.off()
-
-                         
-          
-# EOF
-#       # Calculate elapsed time
-#         elapsed_time=$((( SECONDS - start_time )))
-#         echo "Total R processing completed in ${elapsed_time} seconds" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line 
-    
-# done
-
-# # Discordant networks
-
-# # Loop inside each subdirectory of MYWD
-# for strain in "${MYWD}"*/; do
-#   for sample in TSG TLG TLR; do
-#     echo "Processing network for sample: ${sample}" >> "$log_file"
-#         root_dir="${strain}"
-#         export ROOT_DIR="$root_dir"
-#         export SAMPLE="$sample"
-#         export STRAIN="$strain"
-#         #echo "$root_dir"
-#           echo "" >> "$log_file"  # Adds a blank line
-#           echo "Calculating discordant reads network" >> "$log_file"
-#           start_time=$SECONDS
-#           Rscript - <<'EOF'
-#           # load libraries
-
-#           library(ggplot2)
-#           library(svglite)
-#           library(purrr)
-#           library(stringr)
-#           library(readr)
-#           library(tidyverse, warn.conflicts = FALSE)
-#           library(tidyr, warn.conflicts = FALSE)
-#           library(dplyr, warn.conflicts = FALSE)
-#           options(dplyr.summarise.inform = FALSE)
-
-#           # Variables from Bash
-#           #sample <- "${sample}"
-#           sample <- Sys.getenv("SAMPLE")
-
-#           strain <- Sys.getenv("STRAIN")
-#           strain <- sub("/$", "", strain)  # Remove trailing slash
-#           strain_name <- basename(strain)
-
-
-#           root_dir <- Sys.getenv("ROOT_DIR")
-
-#           log_step <- function(message) {
-#             timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-#             message(sprintf("[%s] %s", timestamp, message))
-#           }
-
-
-#           # Define a function to process tsv files
-#           process_hotspots_files <- function(file_path) {
-#             # Extract filename and directory parts
-#             file_base <- basename(file_path)
-#             strain_name <- basename(dirname(file_path))  # directory name above the file
-            
-#             # Expect filename like T4_E07_MAT_filtered.tsv
-#             parts <- str_split(file_base, "_", simplify = TRUE)
-            
-#             # Validate and extract parts safely
-#             if (ncol(parts) >= 3) {
-#               sample_name <- parts[1]
-#               option <- parts[2]
-#             } 
-#             else {
-#               warning(paste("Filename does not match expected format:", file_base))
-#               return(NULL)
-#             }
-            
-#             # Read file
-#             temp_file <- read_tsv(file_path, col_names = TRUE, show_col_types = FALSE)
-            
-#             # Skip if empty
-#             if (nrow(temp_file) == 0) {
-#               return(NULL)
-#             }
-            
-            
-#             # Process file
-#             hotspots_file <- temp_file %>% 
-#               mutate(strain = strain_name, 
-#                     sample = sample_name,
-#                     blast_option = option) %>% 
-#               filter(global_freq > 6)
-            
-#             return(hotspots_file)
-#           }
-
-
-
-#           # Define a function to process tsv files
-#           process_matrix_files <- function(file_path) {
-#             # Extract filename and directory parts
-#             file_base <- basename(file_path)
-#             strain_name <- basename(dirname(file_path))  # directory name above the file
-            
-#             # Expect filename like T4_E07_MAT_filtered.tsv
-#             parts <- str_split(file_base, "_", simplify = TRUE)
-            
-#             # Validate and extract parts safely
-#             if (ncol(parts) >= 3) {
-#               sample_name <- parts[1]
-#               option <- parts[2]
-#             } 
-#             else {
-#               warning(paste("Filename does not match expected format:", file_base))
-#               return(NULL)
-#             }
-            
-#             # Read file
-#             temp_file <- read_tsv(file_path, col_names = TRUE, show_col_types = FALSE)
-            
-#             # Skip if empty
-#             if (nrow(temp_file) == 0) {
-#               return(NULL)
-#             }
-            
-            
-#             # Process file
-#             matrix_file <- temp_file %>% 
-#               mutate(strain = strain_name, 
-#                     sample = sample_name,
-#                     blast_option = option) %>% 
-#               select(Read_name_ID, 
-#                     Chromosome_A, Feature_name_A, Category_A, Position_A, Essential_A,
-#                     Chromosome_B, Feature_name_B, Category_B, Position_B, Essential_B,
-#                     strain, sample, blast_option)
-            
-#             return(matrix_file)
-#           }
-
-
-#           # Get all inter_discordant_pairs_unique_processed_valid_discordant_matrix_allexperiments.tsv files recursively in root folder
-#           matrix_files <- list.files(
-#             path = root_dir,
-#             pattern = paste0(sample,".*option1_inter_discordant_pairs_unique_processed_valid_discordant_matrix_allexperiments\\.tsv$"),
-#             #pattern = "inter_discordant_pairs_unique_processed_valid_discordant_matrix_allexperiments\\.tsv$",
-#             recursive = TRUE,
-#             full.names = TRUE
-#           )
-
-#           log_step("Processing matrix files...")
-#           matrix_processed_df <- purrr::map_dfr(matrix_files, process_matrix_files) 
-
-
-
-
-#           log_step("Finding hotspots files...")
-
-#           # Get all hotspots.tsv files recursively in root folder
-#           hotspots_files <- list.files(
-#             path = root_dir,
-#             pattern = paste0(sample,".*option1_inter_discordant_pairs_unique_processed_valid_discordant_hotspots\\.tsv$"),
-#             #pattern = "inter_discordant_pairs_unique_processed_valid_discordant_hotspots\\.tsv$",
-#             recursive = TRUE,
-#             full.names = TRUE
-#           )
-
-#           log_step("Processing hotspots files...")
-#           hotspots_processed_df <- purrr::map_dfr(hotspots_files, process_hotspots_files) 
-
-#           write_tsv(hotspots_processed_df, file.path(root_dir, paste0(strain_name, "_", sample, "_hotspots_processed_df.tsv")))
-
-#           hotspots_counts <- hotspots_processed_df %>%
-#             count(Feature_name_A, name = "n_occurrences")
-
-#           #####
-
-#           # Select hotspots from full matrix
-
-#           hotspots_matrix <- left_join(hotspots_processed_df, matrix_processed_df, by = c("strain", "sample", "blast_option", "Feature_name_A")) %>% 
-#             select(Feature_name_A, Category_A.x, Chromosome_A.x, Essential_A.x, Position_A.x,
-#                   Feature_name_B, Category_B, Chromosome_B, Essential_B, Position_B,
-#                   strain, sample, blast_option, global_freq) %>% 
-#             rename("Category_A" = !!names(.[2]), "Chromosome_A" = !!names(.[3]),
-#                   "Essential_A" = !!names(.[4]), "Position_A" = !!names(.[5])) %>% 
-#             unique() %>% 
-#             mutate(id = 1:n()) 
-
-#           write_tsv(hotspots_matrix, file.path(root_dir, paste0(strain_name, "_", sample, "_hotspots_matrix.tsv")))
-
-
-
-#           hotspots_matrix_A <- hotspots_matrix %>% 
-#             select(Feature_name_A, Category_A, strain, sample, id)
-
-#           hotspots_matrix_B <- hotspots_matrix %>% 
-#             select(Feature_name_B, Category_B, strain, sample, id) %>% 
-#             rename(Category_A = Category_B)
-
-#           hotspots_matrix_size <- hotspots_matrix %>% 
-#             group_by(Feature_name_A) %>% 
-#             count(Feature_name_A, name = "n_occurrences") %>% 
-#             ungroup()
-
-
-#           hotspots_matrix_size_B <- hotspots_matrix %>% 
-#             group_by(Feature_name_B) %>% 
-#             count(Feature_name_B, name = "n_occurrences") %>% 
-#             ungroup()
-
-#           hotspots_matrix_size_B_no_A <- hotspots_matrix_size_B %>% 
-#             rename(Feature_name_A = Feature_name_B) %>% 
-#             anti_join(., hotspots_matrix_size , by = "Feature_name_A") %>% 
-#             rename(Feature_name_B = Feature_name_A)
-
-#           hotspots_matrix_A <- left_join(hotspots_matrix_A, hotspots_matrix_size) 
-
-#           hotspots_matrix_B <- left_join(hotspots_matrix_B, hotspots_matrix_size_B_no_A) %>% 
-#             rename(Feature_name_A = Feature_name_B)
-
-#           hotspots_matrix_A_B <- bind_rows(hotspots_matrix_A, hotspots_matrix_B)
-
-
-#           edges <- hotspots_matrix %>%  select(Feature_name_A, Feature_name_B, Category_A, strain, id) %>% 
-#             rename("Source" = !!names(.[1]), "Target" = !!names(.[2])) %>% 
-#             as.data.frame()
-
-
-#           ########## NETWORK
-
-#           library(tidyverse)
-#           library(igraph)
-#           library(ggraph)
-
-
-#           node_sizes <- hotspots_matrix_size %>% 
-#             rename("name" = !!names(.[1]), "Size" = !!names(.[2]))
-
-
-#           g <- graph_from_data_frame(edges, directed = FALSE)
-
-
-#           # Derive node data
-#           nodes <- data.frame(name = V(g)$name) %>%
-#             mutate(order = 1:n()) %>%
-#             left_join(hotspots_matrix_A_B %>% select(Feature_name_A, Category_A, strain, id, n_occurrences),
-#                       by = c("name" = "Feature_name_A")) %>% 
-#             arrange(order)
-
-#           nodes_def <- nodes %>% group_by(name) %>%
-#             slice(1) %>%
-#             ungroup() %>% 
-#             arrange(order)
-
-
-
-
-
-#           # Attach node attributes to igraph
-#           V(g)$Category_A <- nodes_def$Category_A
-#           V(g)$Size <- nodes_def$n_occurrences
-#           V(g)$strain <- nodes_def$strain
-#           #V(g)$name
-
-#           custom_palette <- c(
-#             "1_Wt" = "#00AFBB",   
-#             "2_exo1d" = "#293781",  
-#             "3_sgs1d" = "#AE2D2C",   
-#             "4_srs2d" = "#439645", 
-#             "5_rad51d" = "#5D297D",
-#             "1_Wt_2_exo1d" = "#15739e",
-#             "1_Wt_3_sgs1d" = "#576e74",
-#             "1_Wt_4_srs2d" = "#22a380",
-#             "1_Wt_5_rad51d" = "#2f6c9c",
-#             "2_exo1d_3_sgs1d " = "#6c3257",
-#             "2_exo1d_4_srs2d" = "#366763",
-#             "2_exo1d_5_rad51d" = "#43307f",
-#             "3_sgs1d_4_srs2d" = "#796239",
-#             "3_sgs1d_5_rad51d" = "#862b55",
-#             "4_srs2d_5_rad51d" = "#506061",
-#             "1_Wt_2_exo1d_3_sgs1d" = "#485c78",
-#             "1_Wt_2_exo1d_4_srs2d" = "#247f80",
-#             "1_Wt_2_exo1d_5_rad51d" = "#2d5a93",
-#             "1_Wt_3_sgs1d_4_srs2d" = "#507b64",
-#             "1_Wt_3_sgs1d_5_rad51d" = "#595777",
-#             "1_Wt_4_srs2d_5_rad51d" = "#357a7f",
-#             "2_exo1d_3_sgs1d_4_srs2d" = "#5e5351",
-#             "2_exo1d_3_sgs1d_5_rad51d" = "#672f63",
-#             "2_exo1d_4_srs2d_5_rad51d" = "#43526c",
-#             "3_sgs1d_4_srs2d_5_rad51d" = "#6f4f4f",
-#             "1_Wt_2_exo1d_3_sgs1d_4_srs2d" = "#476a6b",
-#             "1_Wt_2_exo1d_3_sgs1d_5_rad51d" = "#4d4f79",
-#             "1_Wt_2_exo1d_4_srs2d_5_rad51d" = "#326980",
-#             "1_Wt_3_sgs1d_4_srs2d_5_rad51d" = "#54676a",
-#             "2_exo1d_3_sgs1d_4_srs2d_5_rad51d" = "#5e495c",
-#             "1_Wt_2_exo1d_3_sgs1d_4_srs2d_5_rad51d" = "#4b5d6f"
-              
-#           )
-
-#           custom_palette_categories = c("ORF" = "#4F71BE",
-#                                         "intergenic" = "#FF051D",
-#                                         "long_terminal_repeat" = "#DE8344",
-#                                         "transposable_element_gene" = "#A5A5A5",
-#                                         "LTR_retrotransposon" = "#F5C242",
-#                                         "tRNA_gene" = "#6A99D0",
-#                                         "rRNA_gene" = "#7EAB55",
-#                                         "ncRNA_gene" = "#2D4374",
-#                                         "snRNA_gene" = "#934D20",
-#                                         "snoRNA_gene" = "#636363",
-#                                         "ARS" = "#937424",
-#                                         "centromere" = "#355D8D",
-#                                         "telomere" = "#4B6733")
-
-#           svglite::svglite(file = paste0(root_dir, "/", strain_name, "_", sample, "_Network_plot", ".svg"), width = 13, height = 13)
-#           ggraph(g, layout = "fr") +  # "fr" = Fruchterman-Reingold layout
-#             geom_edge_link(alpha = 0.2, color = "black") +
-#             geom_node_point(aes(size = Size, color = Category_A), alpha = 1) +
-#             scale_color_manual(values = custom_palette_categories) +
-#             #geom_node_text(aes(label = name), repel = TRUE, size = 2) +
-#             geom_node_text(
-#               aes(label = ifelse(Size > 10 | name %in% hotspots_counts$Feature_name_A, name, "")),
-#               repel = TRUE,
-#               size = 3
-#             ) + 
-#             scale_size_continuous(range = c(3, 15)) +
-#             theme_void() +
-#             theme(legend.position = "none") +
-#             ggtitle(paste0(strain_name, " - ", sample, " - Network"))
-
-#           dev.off()
-
-
-
-#           hotspots_matrix_summary <- hotspots_matrix %>% 
-#             group_by(sample) %>% 
-#             mutate(total_sample = n()) %>% 
-#             ungroup() %>% 
-#             group_by(sample, strain) %>% 
-#             mutate(total_sample_strain = n()) %>% 
-#             ungroup() %>% 
-#             group_by(sample, Category_A) %>% 
-#             mutate(total_sample_category_A = n()) %>%
-#             ungroup() %>% 
-#             group_by(sample, Category_A, strain) %>% 
-#             mutate(total_sample_category_A_strain = n()) %>%
-#             ungroup() %>% 
-#             group_by(sample, Category_A, Category_B) %>% 
-#             mutate(total_sample_category_A_Category_B = n()) %>%
-#             ungroup() %>% 
-#             group_by(sample, Category_A, Category_B, strain) %>% 
-#             mutate(total_sample_category_A_Category_B_strain = n()) %>%
-#             ungroup() %>% 
-#             mutate(freq_category_A_100  = 100*(total_sample_category_A_Category_B_strain/total_sample_category_A),
-#                     freq_sample_100  = 100*(total_sample_category_A_Category_B_strain/total_sample),
-#                     freq_sample_100_soloA  = 100*(total_sample_category_A_strain/total_sample)) %>% 
-#             select(Category_A, Category_B,
-#                     total_sample,
-#                     total_sample_strain, 
-#                     total_sample_category_A,
-#                     total_sample_category_A_strain,
-#                     total_sample_category_A_Category_B,
-#                     total_sample_category_A_Category_B_strain,
-#                     freq_category_A_100, freq_sample_100,
-#                     freq_sample_100_soloA,
-#                     strain, sample) %>% 
-#             unique()
-
-
-#             hotspots_matrix_summary_positions_strain_sep <- hotspots_matrix_summary %>% 
-#             mutate(position_x = ifelse(Category_B == "ORF", 1,
-#                                         ifelse(Category_B == "intergenic", 2,
-#                                                 ifelse(Category_B == "long_terminal_repeat", 3,
-#                                                     ifelse(Category_B == "transposable_element_gene", 4,
-#                                                             ifelse(Category_B == "LTR_retrotransposon", 5,
-#                                                                     ifelse(Category_B == "tRNA_gene", 6,
-#                                                                             ifelse(Category_B == "rRNA_gene", 7,
-#                                                                                 ifelse(Category_B == "ncRNA_gene", 8,
-#                                                                                         ifelse(Category_B == "snRNA_gene", 9,
-#                                                                                                 ifelse(Category_B == "snoRNA_gene", 10,
-#                                                                                                         ifelse(Category_B == "ARS", 11,
-#                                                                                                             ifelse(Category_B == "centromere", 12,
-#                                                                                                                     ifelse(Category_B == "telomere", 13,"_")))))))))))))) %>% 
-#             mutate(position_y = ifelse(Category_A == "ORF", 13,
-#                                         ifelse(Category_A == "intergenic", 12,
-#                                                 ifelse(Category_A == "long_terminal_repeat", 11,
-#                                                     ifelse(Category_A == "transposable_element_gene", 10,
-#                                                             ifelse(Category_A == "LTR_retrotransposon", 9,
-#                                                                     ifelse(Category_A == "tRNA_gene", 8,
-#                                                                             ifelse(Category_A == "rRNA_gene", 7,
-#                                                                                 ifelse(Category_A == "ncRNA_gene", 6,
-#                                                                                         ifelse(Category_A == "snRNA_gene", 5,
-#                                                                                                 ifelse(Category_A == "snoRNA_gene", 4,
-#                                                                                                         ifelse(Category_A == "ARS", 3,
-#                                                                                                             ifelse(Category_A == "centromere", 2,
-#                                                                                                                     ifelse(Category_A == "telomere", 1,"_"))))))))))))))
-
-
-#             hotspots_matrix_summary_positions_strain_sep$position_x <- as.numeric(hotspots_matrix_summary_positions_strain_sep$position_x)
-#             hotspots_matrix_summary_positions_strain_sep$position_y <- as.numeric(hotspots_matrix_summary_positions_strain_sep$position_y)
-
-#             write_tsv(hotspots_matrix_summary_positions_strain_sep, file.path(root_dir, paste0(strain_name, "_", sample, "_Network_summary_positions_strain_sep.tsv")))
-
-#             hotspots_matrix_summary_positions_strain_sep_complete <- hotspots_matrix_summary_positions_strain_sep %>%
-#                 complete(
-#                     strain,
-#                     sample,
-#                     position_x = 1:13,
-#                     position_y = 1:13,
-#                     fill = list(freq_sample_100 = NA)
-#                 )
-
-#             p <- ggplot(hotspots_matrix_summary_positions_strain_sep_complete, aes(y = position_y, x = position_x)) +
-#             geom_tile(aes(fill = freq_sample_100), size = 1)+
-#             scale_fill_gradient2(low = "white",
-#                                 mid = "#e31a1c",
-#                                 high="blue2",
-#                                 midpoint = 25,
-#                                 na.value = "white",
-#                                 limits = c(0, 50),
-#                                 oob = scales::squish) +
-#             guides (fill = guide_colourbar(barwidth = 0.5, barheight = 10,
-#                                             frame.colour = "black", frame.linewidth = 0.25,
-#                                             ticks.colour = NA)) + 
-#             labs(fill = "%") +
-#             theme_classic(base_family = "Helvetica") + theme(panel.grid = element_line(color = "black", linewidth = 0.1),
-#                                                             panel.background = element_blank(), 
-#                                                             plot.background = element_rect(fill = "transparent", colour = NA)) +
-#             theme(legend.position="right") +
-#             coord_cartesian(expand = FALSE) +
-#             geom_hline(yintercept = 0.5 + 0:13, colour = "gray7", size = 0.15) +
-#             geom_vline(xintercept = 0.5 + 0:13, colour = "gray7", size = 0.15) +
-#             scale_x_continuous(breaks = seq(1,13,1),
-#                                 labels = c("ORF","Intergenic", "LTR","TEG", "Ty", "tRNA", "rRNA", 
-#                                             "ncRNA", "snRNA", "snoRNA", "ARS", "Centromere", "Telomere")) +
-#             scale_y_continuous(breaks = seq(1,13,1),
-#                                 labels = c("Telomere", "Centromere", "ARS", "snoRNA", "snRNA", "ncRNA", "rRNA", 
-#                                             "tRNA", "Ty", "TEG", "LTR", "Intergenic", "ORF")) +
-#             theme(aspect.ratio = 1) +
-#             theme(axis.text.x=element_text(size=8, angle = 90, hjust = 1)) +
-#             theme(axis.title.x = element_text(size = 0)) +
-#             theme(axis.title.y = element_text(size = 0)) +
-#             ggtitle("Network quantification") +
-#             theme(axis.ticks.x = element_line()) +
-#             facet_grid(strain ~ sample) 
-
-#             ggsave(
-#             filename = paste0(root_dir, "/", strain_name, "_", sample, "_Network_quantification_plot", ".svg"),
-#             plot = p,
-#             #width = 8,
-#             #height = 3,
-#             device = svglite,
-#             bg = "transparent"
-#             )
-
-# EOF
-#   done
-# done
-
-# ########
-# # Calculate total elapsed time
-# elapsed_time_total=$((( SECONDS - start_time_total_R_valid )/60))
-# echo "================================" >> "$log_file"
-# echo "" >> "$log_file"
-# echo "TOTAL VALID INTER-CHROMOSOMAL DISCORDANT READ PAIRS R PROCESSING COMPLETED IN ${elapsed_time_total} MINUTES" >> "$log_file"
-# echo "" >> "$log_file"  # Adds a blank line   
-
-# ##### MODULE WHOLE GENOME ANALYSIS - DATA ORGANIZATION #####
-# # Move data into subfolders
-# for subdir in "$MYWD"*/; do
-#   mkdir -p "${subdir}/Discordant_global_analysis" 
-#   mkdir -p "${subdir}/Discordant_global_analysis/Global_Data_75nt" "${subdir}/Discordant_global_analysis/Global_Plots_75nt" 
+  done
+done
+
+########
+# Calculate total elapsed time
+elapsed_time_total=$((( SECONDS - start_time_total_R_valid )/60))
+echo "================================" >> "$log_file"
+echo "" >> "$log_file"
+echo "TOTAL VALID INTER-CHROMOSOMAL DISCORDANT READ PAIRS R PROCESSING COMPLETED IN ${elapsed_time_total} MINUTES" >> "$log_file"
+echo "" >> "$log_file"  # Adds a blank line   
+
+##### MODULE WHOLE GENOME ANALYSIS - DATA ORGANIZATION #####
+# Move data into subfolders
+for subdir in "$MYWD"*/; do
+  mkdir -p "${subdir}/Discordant_global_analysis" 
+  mkdir -p "${subdir}/Discordant_global_analysis/Global_Data_75nt" "${subdir}/Discordant_global_analysis/Global_Plots_75nt" 
   
   
-#   mv "${subdir}"/*_inter_discordant_pairs_unique_processed_blast_center.tsv "${subdir}/Discordant_alignments/SAM_75nt/" 2> /dev/null
-#   mv "${subdir}"/*_inter_discordant_pairs_unique_processed_blast_next.tsv "${subdir}/Discordant_alignments/SAM_75nt/" 2> /dev/null
-#   mv "${subdir}"/*_inter_discordant_pairs_unique_processed_blast_prev.tsv "${subdir}/Discordant_alignments/SAM_75nt/" 2> /dev/null
-#   mv "${subdir}"/*_inter_discordant_pairs_unique_processed_control.tsv "${subdir}/Discordant_alignments/SAM_75nt/" 2> /dev/null
-#   mv "${subdir}"/*_inter_discordant_pairs_unique_processed.tsv "${subdir}/Discordant_alignments/SAM_75nt/" 2> /dev/null
-#   mv "${subdir}"/*_inter_discordant_pairs_unique.sam "${subdir}/Discordant_alignments/SAM_75nt/" 2> /dev/null
-#   mv "${subdir}"/*_inter_discordant_pairs_unique.tsv "${subdir}/Discordant_alignments/SAM_75nt/" 2> /dev/null
-#   mv "${subdir}"/*_inter_discordant_pairs_unique_processed_blast_center_combined_results.tsv "${subdir}/Discordant_alignments/SAM_75nt/" 2> /dev/null
-#   mv "${subdir}"/*_inter_discordant_pairs_unique_processed_blast_next_combined_results.tsv "${subdir}/Discordant_alignments/SAM_75nt/" 2> /dev/null
-#   mv "${subdir}"/*_inter_discordant_pairs_unique_processed_blast_prev_combined_results.tsv "${subdir}/Discordant_alignments/SAM_75nt/" 2> /dev/null
+  mv "${subdir}"/*_inter_discordant_pairs_unique_processed_blast_center.tsv "${subdir}/Discordant_alignments/SAM_75nt/" 2> /dev/null
+  mv "${subdir}"/*_inter_discordant_pairs_unique_processed_blast_next.tsv "${subdir}/Discordant_alignments/SAM_75nt/" 2> /dev/null
+  mv "${subdir}"/*_inter_discordant_pairs_unique_processed_blast_prev.tsv "${subdir}/Discordant_alignments/SAM_75nt/" 2> /dev/null
+  mv "${subdir}"/*_inter_discordant_pairs_unique_processed_control.tsv "${subdir}/Discordant_alignments/SAM_75nt/" 2> /dev/null
+  mv "${subdir}"/*_inter_discordant_pairs_unique_processed.tsv "${subdir}/Discordant_alignments/SAM_75nt/" 2> /dev/null
+  mv "${subdir}"/*_inter_discordant_pairs_unique.sam "${subdir}/Discordant_alignments/SAM_75nt/" 2> /dev/null
+  mv "${subdir}"/*_inter_discordant_pairs_unique.tsv "${subdir}/Discordant_alignments/SAM_75nt/" 2> /dev/null
+  mv "${subdir}"/*_inter_discordant_pairs_unique_processed_blast_center_combined_results.tsv "${subdir}/Discordant_alignments/SAM_75nt/" 2> /dev/null
+  mv "${subdir}"/*_inter_discordant_pairs_unique_processed_blast_next_combined_results.tsv "${subdir}/Discordant_alignments/SAM_75nt/" 2> /dev/null
+  mv "${subdir}"/*_inter_discordant_pairs_unique_processed_blast_prev_combined_results.tsv "${subdir}/Discordant_alignments/SAM_75nt/" 2> /dev/null
 
 
-#   mv "${subdir}"/*_recombination_df.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
-#   mv "${subdir}"/*_recombination_summary.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
-#   mv "${subdir}"/*_valid_counts_summary_ordered.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
-#   mv "${subdir}"/*_concordant_pairs_unique_row_count.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
-#   mv "${subdir}"/*_inter_discordant_pairs_unique_processed_valid_category_distribution.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
-#   mv "${subdir}"/*_inter_discordant_pairs_unique_processed_valid_counts.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
-#   mv "${subdir}"/*_inter_discordant_pairs_unique_processed_valid_discordant_mat*.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
-#   mv "${subdir}"/*_inter_discordant_pairs_unique_processed_valid_error_rate.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
-#   mv "${subdir}"/*_inter_discordant_pairs_unique_processed_valid_global_distribution.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
-#   mv "${subdir}"/*_inter_discordant_pairs_unique_processed_valid.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
-#   mv "${subdir}"/*_inter_discordant_pairs_unique_processed.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
-#   mv "${subdir}"/*_inter_discordant_pairs_unique.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
-#   mv "${subdir}"/*_category_A_valid_counts_summary_df.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
-#   mv "${subdir}"/*_hotspots.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
+  mv "${subdir}"/*_recombination_df.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
+  mv "${subdir}"/*_recombination_summary.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
+  mv "${subdir}"/*_valid_counts_summary_ordered.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
+  mv "${subdir}"/*_concordant_pairs_unique_row_count.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
+  mv "${subdir}"/*_inter_discordant_pairs_unique_processed_valid_category_distribution.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
+  mv "${subdir}"/*_inter_discordant_pairs_unique_processed_valid_counts.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
+  mv "${subdir}"/*_inter_discordant_pairs_unique_processed_valid_discordant_mat*.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
+  mv "${subdir}"/*_inter_discordant_pairs_unique_processed_valid_error_rate.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
+  mv "${subdir}"/*_inter_discordant_pairs_unique_processed_valid_global_distribution.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
+  mv "${subdir}"/*_inter_discordant_pairs_unique_processed_valid.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
+  mv "${subdir}"/*_inter_discordant_pairs_unique_processed.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
+  mv "${subdir}"/*_inter_discordant_pairs_unique.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
+  mv "${subdir}"/*_category_A_valid_counts_summary_df.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
+  mv "${subdir}"/*_hotspots.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
   
-#   mv "${subdir}"/Discordant_reads_distribution_plot_*.svg  "${subdir}/Discordant_global_analysis/Global_Plots_75nt/" 2> /dev/null
-#   mv "${subdir}"/Inter_chromosomal_discordant_hotspots_*.svg  "${subdir}/Discordant_global_analysis/Global_Plots_75nt/" 2> /dev/null
-#   mv "${subdir}"/Inter_chromosomal_discordant_matrix_*.svg  "${subdir}/Discordant_global_analysis/Global_Plots_75nt/" 2> /dev/null
-#   mv "${subdir}"/Inter_chromosomal_discordant_pairs_*.svg  "${subdir}/Discordant_global_analysis/Global_Plots_75nt/" 2> /dev/null
-#   mv "${subdir}"/Recombination_rate_plot_*.svg  "${subdir}/Discordant_global_analysis/Global_Plots_75nt/" 2> /dev/null
-#   mv "${subdir}"/Recombination_rate_ratio_plot_*.svg  "${subdir}/Discordant_global_analysis/Global_Plots_75nt/" 2> /dev/null
-#   mv "${subdir}"/Category_A_read_number_*.svg  "${subdir}/Discordant_global_analysis/Global_Plots_75nt/" 2> /dev/null
-#   mv "${subdir}"/Radar_plot_*.svg  "${subdir}/Discordant_global_analysis/Global_Plots_75nt/" 2> /dev/null
+  mv "${subdir}"/Discordant_reads_distribution_plot_*.svg  "${subdir}/Discordant_global_analysis/Global_Plots_75nt/" 2> /dev/null
+  mv "${subdir}"/Inter_chromosomal_discordant_hotspots_*.svg  "${subdir}/Discordant_global_analysis/Global_Plots_75nt/" 2> /dev/null
+  mv "${subdir}"/Inter_chromosomal_discordant_matrix_*.svg  "${subdir}/Discordant_global_analysis/Global_Plots_75nt/" 2> /dev/null
+  mv "${subdir}"/Inter_chromosomal_discordant_pairs_*.svg  "${subdir}/Discordant_global_analysis/Global_Plots_75nt/" 2> /dev/null
+  mv "${subdir}"/Recombination_rate_plot_*.svg  "${subdir}/Discordant_global_analysis/Global_Plots_75nt/" 2> /dev/null
+  mv "${subdir}"/Recombination_rate_ratio_plot_*.svg  "${subdir}/Discordant_global_analysis/Global_Plots_75nt/" 2> /dev/null
+  mv "${subdir}"/Category_A_read_number_*.svg  "${subdir}/Discordant_global_analysis/Global_Plots_75nt/" 2> /dev/null
+  mv "${subdir}"/Radar_plot_*.svg  "${subdir}/Discordant_global_analysis/Global_Plots_75nt/" 2> /dev/null
 
-#   mv "${subdir}"/*_Network_plot.svg  "${subdir}/Discordant_global_analysis/Global_Plots_75nt/" 2> /dev/null
-#   mv "${subdir}"/*_Network_quantification_plot.svg  "${subdir}/Discordant_global_analysis/Global_Plots_75nt/" 2> /dev/null
-#   mv "${subdir}"/*_hotspots_matrix.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
-#   mv "${subdir}"/*_hotspots_processed_df.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
-#   mv "${subdir}"/*_Network_summary_positions_strain_sep.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
+  mv "${subdir}"/*_Network_plot.svg  "${subdir}/Discordant_global_analysis/Global_Plots_75nt/" 2> /dev/null
+  mv "${subdir}"/*_Network_quantification_plot.svg  "${subdir}/Discordant_global_analysis/Global_Plots_75nt/" 2> /dev/null
+  mv "${subdir}"/*_hotspots_matrix.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
+  mv "${subdir}"/*_hotspots_processed_df.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
+  mv "${subdir}"/*_Network_summary_positions_strain_sep.tsv  "${subdir}/Discordant_global_analysis/Global_Data_75nt/" 2> /dev/null
   
 
-# done
+done
 
 
-##### MODULE WHOLE GENOME ANALYSIS - END #####
+#### MODULE WHOLE GENOME ANALYSIS - END #####
 
 
 # Calculate full script total elapsed time
