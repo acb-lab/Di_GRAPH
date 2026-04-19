@@ -554,195 +554,39 @@ start_time_total_script=$SECONDS
 # done
 
 
-for subdir in "$MYWD"*/; do
-  echo "Processing directory: $subdir to calculate average coverage" >> "$log_file"
-  echo "" >> "$log_file"  # Adds a blank line
+# for strain in "$MYWD"*/; do
+#   echo "Processing directory: $strain to calculate average coverage" >> "$log_file"
+#   echo "" >> "$log_file"  # Adds a blank line
 
-  # Loop through sample prefixes (T0, T1, T2, etc.)
-    for sample in T0 TSG TLG TLR; do
-      for experiment in "${EXP_LIST[@]}"; do
-########
-      # === AFTER all experiments are processed === 
-        for chr in CHRIII CHRV; do
-          R_SCRIPT="SR_process_cov_III_V.R"
-          numeric_sample="${sample#T}"
-          
-          collect_files() {
-          suffix=$1
-          files=()
-          missing=0
-          for exp in "${EXP_LIST[@]}"; do
-              f="${subdir}/${sample}_${exp}_${suffix}"
-              files+=("$f")
-              if [[ ! -f "$f" ]]; then
-                  missing=1
-              fi
-          done
-
-          if [[ $missing -eq 1 ]]; then
-              return 1
-          else
-              printf "%s\n" "${files[@]}"
-          fi
-        }
-
-          # 75nt general
-          suffix="75nt_${chr}.tsv"
-          mapfile -t files < <(collect_files "$suffix")
-          if [[ ${#files[@]} -gt 0 ]]; then
-            Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$numeric_sample" "${subdir}/${sample}_75nt_${chr}_avg_ordered.tsv" "${files[@]}"
-          else
-            echo "Missing 75nt ${chr} files for $sample" >> "$log_file"
-          fi
-
-          # 75nt MATa
-          suffix="75nt_${chr}_MATa.tsv"
-          mapfile -t files < <(collect_files "$suffix")
-          if [[ ${#files[@]} -gt 0 ]]; then
-            Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$numeric_sample" "${subdir}/${sample}_75nt_${chr}_MATa_avg_ordered.tsv" "${files[@]}"
-          else
-            echo "Missing 75nt MATa ${chr} files for $sample" >> "$log_file"
-          fi
-
-          # 18nt MATa
-          suffix="${chr}_18nt_ordered.tsv"
-          mapfile -t files < <(collect_files "$suffix")
-          if [[ ${#files[@]} -gt 0 ]]; then
-            Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$numeric_sample" "${subdir}/${sample}_${chr}_18nt_ordered_avg_ordered.tsv" "${files[@]}"
-          else
-            echo "Missing 18nt MATa ${chr} files for $sample" >> "$log_file"
-          fi
-        
-          #################
-
-          # Bin into 1000bp
-          if [[ -f "${subdir}/${sample}_75nt_${chr}_avg_ordered.tsv" ]]; then
-            input="${subdir}/${sample}_75nt_${chr}_avg_ordered.tsv"
-            output="${subdir}/${sample}_75nt_${chr}_binned.tsv"
-            bin_size=100
-
-              gawk -v bin="$bin_size" '
-              {
-                  # force floating point by adding 0.0
-                  cov_sum += ($3 + 0.0)
-                  last_coord = $1
-                  time = $2
-                  count++
-
-                  if (count == bin) {
-                      avg_cov = cov_sum / bin
-                      printf "%d\t%s\t%.5f\n", last_coord, time, avg_cov
-                      cov_sum = 0
-                      count = 0
-                  }
-              }
-              ' "$input" > "$output"
-          else
-            echo "Warning: ${subdir}/${sample}_75nt_${chr}_avg_ordered.tsv not found! Chr Binning cannot be created" >> "$log_file"
-            echo "" >> "$log_file"
-          fi
+#   # Loop through sample prefixes (T0, T1, T2, etc.)
+#     R_SCRIPT="SR_process_cov_III_V.R"
+#     strain="${strain}"
+#     root_dir="${strain}"
+#     echo "Processing strain: $strain" >> "$log_file"
+#     if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain"; then
+#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain}" >> "$log_file"
+#             echo "Skipping ${strain} and continuing..." >> "$log_file"
+#           continue
+#         fi  
+# done
 
 
-          # Average MATa coverage (75nt reads)
-          R_SCRIPT="SR_process_cov_III_V_MATa.R"
-          numeric_sample="${sample#T}"
-
-          suffix="75nt_${chr}_MATa.tsv"
-          mapfile -t files < <(collect_files "$suffix")
-          if [[ ${#files[@]} -gt 0 ]]; then
-            Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$numeric_sample" "${subdir}/${sample}_75nt_${chr}_MATa_avg.tsv" "${files[@]}"
-          else
-            echo "Warning: One or more ChrIII/V MATa 75nt files for sample $sample are missing in $subdir!. Averaged MATa can not be calculated!" >> "$log_file"
-          fi
-
-          # Add a column with the sample name (75nt reads)
-          if [[ -f "${subdir}/${sample}_75nt_${chr}_MATa_avg.tsv" ]]; then
-            awk -F'\t' -v sample="$numeric_sample" 'BEGIN{OFS="\t"} {print sample, $0}' "${subdir}/${sample}_75nt_${chr}_MATa_avg.tsv" > "${subdir}/${sample}_75nt_${chr}_MATa_avg_ordered.tsv"
-          fi
-
-          # Reorder columns to coordinate, time and coverage (75nt reads)
-          if [[ -f "${subdir}/${sample}_75nt_${chr}_MATa_avg_ordered.tsv" ]]; then
-            awk -F'\t' 'BEGIN{OFS="\t"} {print $4, $1, $3}' "${subdir}/${sample}_75nt_${chr}_MATa_avg_ordered.tsv" > "${subdir}/${sample}_75nt_${chr}_MATa_avg_ordered.tsv.tmp" && mv "${subdir}/${sample}_75nt_${chr}_MATa_avg_ordered.tsv.tmp" "${subdir}/${sample}_75nt_${chr}_MATa_avg_ordered.tsv"
-          fi
-
-        # Average MATa coverage (18nt reads)
-        R_SCRIPT="SR_process_cov_III_V_MATa.R"
-          numeric_sample="${sample#T}"
-
-          suffix="${chr}_18nt_ordered.tsv"
-          mapfile -t files < <(collect_files "$suffix")
-          if [[ ${#files[@]} -gt 0 ]]; then
-            Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$numeric_sample" "${subdir}/${sample}_${chr}_18nt_ordered_avg.tsv" "${files[@]}"
-          else
-            echo "Warning: One or more MATa $chr 18nt files for sample $sample are missing in $subdir!. Averaged MATa ${chr} 18nt can not be calculated!" >> "$log_file"
-          fi
-          
-        
-        
-        # Add a column with the sample name (18nt reads)
-        if [[ -f "${subdir}/${sample}_${chr}_18nt_ordered_avg.tsv" ]]; then
-          awk -F'\t' -v sample="$numeric_sample" 'BEGIN{OFS="\t"} {print sample, $0}' "${subdir}/${sample}_${chr}_18nt_ordered_avg.tsv" > "${subdir}/${sample}_${chr}_18nt_ordered_avg_ordered.tsv"
-        fi
-
-        # Reorder columns to coordinate, timepoint, coverage and chromosome (18nt reads)
-        if [[ -f "${subdir}/${sample}_${chr}_18nt_ordered_avg_ordered.tsv" ]]; then
-          awk -F'\t' 'BEGIN{OFS="\t"} {print $4, $1, $3}' "${subdir}/${sample}_${chr}_18nt_ordered_avg_ordered.tsv" > "${subdir}/${chr}_MATa_${sample}_18nt_Coverage_nonHO.tsv"
-          awk -v start=-800 '{printf "%d\t%s\t%s\n", start+(NR-1), $2, $3}' "${subdir}/${chr}_MATa_${sample}_18nt_Coverage_nonHO.tsv" > "${subdir}/${chr}_MATa_${sample}_18nt_Coverage_nonCHR.tsv"
-          awk -v chr="$chr" 'BEGIN {OFS="\t"} {print $0, chr}' "${subdir}/${chr}_MATa_${sample}_18nt_Coverage_nonCHR.tsv" > "${subdir}/${chr}_MATa_${sample}_18nt_Coverage.tsv"
-        fi
-      done
-    done
-  done
-done
-
-# Concatenate all average ordered TSVs (75nt)
-for subdir in "${MYWD}"*/; do
-  # Concatenate all binned CHRIII/CHRV TSVs
-    for chr in CHRIII CHRV; do
-        output_file="${subdir}/75nt_${chr}_Coverage.tsv"
-        true > "$output_file"
-
-        for sample in T0 TSG TLG TLR; do
-            input_file="${subdir}/${sample}_75nt_${chr}_binned.tsv"
-            if [[ -f "$input_file" ]]; then
-                cat "$input_file" >> "$output_file"
-            else
-                echo "Warning: ${input_file} not found! Catenation of binned CHRIII/V failed" >> "$log_file"
-                echo "" >> "$log_file"
-            fi
-        done
-    done
-
-    # Concatenate all MATs TSVs (75nt)
-    for chr in CHRIII CHRV; do
-        output_file="${subdir}/75nt_${chr}_MATa_Coverage.tsv"
-        true > "$output_file"
-
-        for sample in T0 TSG TLG TLR; do
-            input_file="${subdir}/${sample}_75nt_${chr}_MATa_avg_ordered.tsv"
-            if [[ -f "$input_file" ]]; then
-                cat "$input_file" >> "$output_file"
-            else
-                echo "Warning: ${input_file} not found! Catenation of MATs failed" >> "$log_file"
-                echo "" >> "$log_file"
-            fi
-        done
-    done
-done
-
+##aquí
 # === R CODE GRAPHS FOR 75nt COVERAGE PROFILE AND FOR 18nt POLYMORPHISMS COVERAGE ===
 
 ### Generate 75nt plots for CHRIII/V and MATs
 R_SCRIPT="SR_plot_cov_prof_III_V.R"
 
-for subdir in "${MYWD}"*/; do
+for strain in "${MYWD}"*/; do
   for chr in CHRIII CHRV; do
     for suffix in "Coverage.tsv" "MATa_Coverage.tsv"; do
-      file="${subdir}/75nt_${chr}_${suffix}" #/
+      file="${strain}/75nt_${chr}_${suffix}"
+      strain="${strain}"
+      suffix="${suffix}"
+      chr="${chr}"
       if [[ -f "$file" ]]; then
         echo "Generating graph for $file" 
-
-        if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$file" "$chr" "$suffix" "$subdir" 2>> "$log_file"; then
+        if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$file" "$chr" "$suffix" "$strain" 2>> "$log_file"; then
         echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${file}" >> "$log_file"
         echo "Skipping ${file} and continuing..." >> "$log_file"
         continue
@@ -753,26 +597,26 @@ for subdir in "${MYWD}"*/; do
 done    
 
 
-# Generate 18nt plots for T0 and TLG with both chromosomes
-R_SCRIPT="SR_plot_cov_prof_18nt.R"
+# # Generate 18nt plots for T0 and TLG with both chromosomes
+# R_SCRIPT="SR_plot_cov_prof_18nt.R"
 
-for subdir in "${MYWD}"*/; do
-  for timepoint in T0 TSG TLG TLR; do
-    file_chrIII="${subdir}/CHRIII_MATa_${timepoint}_18nt_Coverage.tsv"
-    file_chrV="${subdir}/CHRV_MATa_${timepoint}_18nt_Coverage.tsv"
+# for subdir in "${MYWD}"*/; do
+#   for timepoint in T0 TSG TLG TLR; do
+#     file_chrIII="${subdir}/CHRIII_MATa_${timepoint}_18nt_Coverage.tsv"
+#     file_chrV="${subdir}/CHRV_MATa_${timepoint}_18nt_Coverage.tsv"
 
-    if [[ -f "$file_chrIII" && -f "$file_chrV" ]]; then
-      echo "Generating spaghetti plot for $timepoint in $subdir"
-      if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$file_chrIII" "$file_chrV" "$timepoint" "$subdir" 2>> "$log_file"; then
-        echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${file_chrIII} and ${file_chrV}" >> "$log_file"
-        echo "Skipping ${file_chrIII} and ${file_chrV} and continuing..." >> "$log_file"
-        continue
-      fi
-    else
-      echo "Missing files for $timepoint in $subdir"
-    fi
-  done
-done
+#     if [[ -f "$file_chrIII" && -f "$file_chrV" ]]; then
+#       echo "Generating spaghetti plot for $timepoint in $subdir"
+#       if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$file_chrIII" "$file_chrV" "$timepoint" "$subdir" 2>> "$log_file"; then
+#         echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${file_chrIII} and ${file_chrV}" >> "$log_file"
+#         echo "Skipping ${file_chrIII} and ${file_chrV} and continuing..." >> "$log_file"
+#         continue
+#       fi
+#     else
+#       echo "Missing files for $timepoint in $subdir"
+#     fi
+#   done
+# done
 
 
 
