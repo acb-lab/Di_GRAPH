@@ -331,8 +331,8 @@ current_time=$(date "+%d-%m-%Y %H:%M:%S")
 log_file="${MYWD}/log_file.txt"
 stats="${MYWD}/stats.txt"
 
-# Start timer for the entire script processing
-start_time_total_script=$SECONDS
+# # Start timer for the entire script processing
+# start_time_total_script=$SECONDS
 
 # echo "CONCORDANT ANALYSIS - initiated at: \"$current_time\"" > "$log_file"
 # echo "" >> "$log_file"  # Adds a blank line
@@ -554,6 +554,8 @@ start_time_total_script=$SECONDS
 # done
 
 
+
+
 # for strain in "$MYWD"*/; do
 #   echo "Processing directory: $strain to calculate average coverage" >> "$log_file"
 #   echo "" >> "$log_file"  # Adds a blank line
@@ -570,53 +572,6 @@ start_time_total_script=$SECONDS
 #         fi  
 # done
 
-
-##aquí
-# === R CODE GRAPHS FOR 75nt COVERAGE PROFILE AND FOR 18nt POLYMORPHISMS COVERAGE ===
-
-### Generate 75nt plots for CHRIII/V and MATs
-R_SCRIPT="SR_plot_cov_prof_III_V.R"
-
-for strain in "${MYWD}"*/; do
-  for chr in CHRIII CHRV; do
-    for suffix in "Coverage.tsv" "MATa_Coverage.tsv"; do
-      file="${strain}/75nt_${chr}_${suffix}"
-      strain="${strain}"
-      suffix="${suffix}"
-      chr="${chr}"
-      if [[ -f "$file" ]]; then
-        echo "Generating graph for $file" 
-        if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$file" "$chr" "$suffix" "$strain" 2>> "$log_file"; then
-        echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${file}" >> "$log_file"
-        echo "Skipping ${file} and continuing..." >> "$log_file"
-        continue
-        fi
-      fi
-    done
-  done
-done    
-
-
-# # Generate 18nt plots for T0 and TLG with both chromosomes
-# R_SCRIPT="SR_plot_cov_prof_18nt.R"
-
-# for subdir in "${MYWD}"*/; do
-#   for timepoint in T0 TSG TLG TLR; do
-#     file_chrIII="${subdir}/CHRIII_MATa_${timepoint}_18nt_Coverage.tsv"
-#     file_chrV="${subdir}/CHRV_MATa_${timepoint}_18nt_Coverage.tsv"
-
-#     if [[ -f "$file_chrIII" && -f "$file_chrV" ]]; then
-#       echo "Generating spaghetti plot for $timepoint in $subdir"
-#       if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$file_chrIII" "$file_chrV" "$timepoint" "$subdir" 2>> "$log_file"; then
-#         echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${file_chrIII} and ${file_chrV}" >> "$log_file"
-#         echo "Skipping ${file_chrIII} and ${file_chrV} and continuing..." >> "$log_file"
-#         continue
-#       fi
-#     else
-#       echo "Missing files for $timepoint in $subdir"
-#     fi
-#   done
-# done
 
 
 
@@ -659,19 +614,19 @@ done
 # find "$MYREF" -name "*.fai" -exec rm {} +
 # find "$MYREF" -name "*.txt" -exec rm {} +
 
-# # Delete all TSV files in subdir, excluding those in Alignment_data
+# Delete all TSV files in subdir, excluding those in Alignment_data
 # for subdir in "${MYWD}"*; do
 #     find "${subdir}" -maxdepth 1 -type f -name "*.tsv" ! -name "*_75nt.tsv" -exec rm {} \;
 # done
 
 
-# ##########
+
 # ### === MATs quantification for TSG, TLG and TLR ===
 # # This section calculates the difference in coverage for polymorphism between CHRIII and CHRV
 
 # # Coordinates (you can add more coordinates separated by space)
 # coordinates_CHRIII=(200119 200167 200212 200272 200326 200386 200449 200509 200542 200575 200635 200689 200753 200817 200882 200947 201012 201077 201148 201207 201272 201337 201402)
-# coordinates_CHRV=(289191 289239 289284 289344 289398 289458 289521 289581 289614 289647 289707 289761 289825 289889 289954 290019 290084 290149 290220 290279 290344 290409 290474)
+# coordinates_CHRV=(289191 289239 289284 289344 289398 289458 289521 289581 289614 289647 289707 289761 289825 289889 289954 290019 290084 290149 290220 290278 290343 290408 290473)
 
 # offset=19 
 
@@ -770,143 +725,30 @@ done
 #   done
 # done
 
-# # Combine all the diff files into one for each experiment and chromosome
-# for subdir in "$MYWD"*/MATs_quant_data/; do
-#   for sample in TSG TLG TLR; do
-#     for exp in "${EXP_LIST[@]}"; do
-#       for chr in CHRIII CHRV; do
-#         cat "${subdir}/${sample}_${exp}_${chr}_diff_"*.tsv > "${subdir}/${sample}_${exp}_${chr}_diff_allPoly.tsv" 
-#       done
-#     done
-#   done
+
+# for strain in "$MYWD"*/; do
+#   echo "Processing directory: $strain to calculate MATa coverage (r18)" >> "$log_file"
+#   echo "" >> "$log_file"  # Adds a blank line
+#   strain="${strain}"
+#   root_dir="${strain}"
+
+#   # Loop through sample prefixes (T0, T1, T2, etc.)
+#     R_SCRIPT="SR_process_cov_III_V_18nt.R"
+#     strain="${strain}"
+#     root_dir="${strain}"
+#     echo "Processing strain: $strain" >> "$log_file"
+#     if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain"; then
+#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain}" >> "$log_file"
+#             echo "Skipping ${strain} and continuing..." >> "$log_file"
+#           continue
+#         fi  
 # done
 
-# # Average E1, E2 and E3 files into one for each chromosome
-# for subdir in "$MYWD"*/MATs_quant_data/; do
-#   for sample in TSG TLG TLR; do
-#     for chr in CHRIII CHRV; do
-#       file1="${subdir}/${sample}_E1_${chr}_diff_allPoly.tsv"
-#       file2="${subdir}/${sample}_E2_${chr}_diff_allPoly.tsv"
-#       file3="${subdir}/${sample}_E3_${chr}_diff_allPoly.tsv"
-#       if [[ -f "$file1" && -f "$file2" && -f "$file3" ]]; then
-#         paste "$file1" "$file2" "$file3" | awk '{
-#           chr=$1
-#           coord=$3
-#           cov1=$2
-#           cov2=$5
-#           cov3=$8
-#           avg_cov = (cov1 + cov2 + cov3) / 3
-#           std_dev = sqrt(((cov1 - avg_cov)^2 + (cov2 - avg_cov)^2 + (cov3 - avg_cov)^2) / 3)
-#           printf "%s\t%.2f\t%.2f\t%s\n", chr, avg_cov, std_dev, coord
-#         }' > "${subdir}/${sample}_${chr}_averaged_diff_allPoly.tsv"
-#       else
-#         echo "Files not found for $sample $chr in $subdir"
-#       fi
-#     done
-#   done
-# done
-
-# # Clean up intermediate files
-# for subdir in "$MYWD"/*/MATs_quant_data/; do
-#   for sample in TSG TLG TLR; do
-#     for exp in "${EXP_LIST[@]}"; do
-#       for chr in CHRIII CHRV; do
-#         rm "${subdir}/${sample}_${exp}_${chr}_diff_"*.tsv
-#         rm "${subdir}/${sample}_${exp}_${chr}_18nt_nonRPGC_ordered.tsv"
-#       done
-#     done
-#   done
-# done
-
-# # Substitute absolute coordinates for relative to HO coordinates
-#     # Relative coordinates
-#     rel_coords=(-634 -586 -541 -481 -427 -367 -304 -244 -211 -178 -118 -64 0 64 129 194 259 324 395 454 519 584 649)
-
-# for subdir in "$MYWD"*/MATs_quant_data/; do
-#   for sample in TSG TLG TLR; do
-#     for chr in CHRIII CHRV; do
-#       input_file="${subdir}/${sample}_${chr}_averaged_diff_allPoly.tsv"
-#       output_file="${subdir}/${sample}_${chr}_averaged_diff_allPoly_newCoor.tsv"
-
-#       # Loop through the file and the array together
-#       awk -v coords="${rel_coords[*]}" '
-#         BEGIN {
-#           split(coords, rel_arr, " ")
-#         }
-#         {
-#           print $1, $2, $3, rel_arr[NR]
-#         }
-#       ' OFS="\t" "$input_file" > "$output_file"
-#       rm "$input_file"
-#     done
-#   done
-# done
-
-# # Catenate CHRIII and CHRV files from all subdirectories
-# for subdir in "$MYWD"*/MATs_quant_data/; do
-#   for sample in TSG TLG TLR; do
-#     if [[ -f "${subdir}/${sample}_CHRIII_averaged_diff_allPoly_newCoor.tsv" && -f "${subdir}/${sample}_CHRV_averaged_diff_allPoly_newCoor.tsv" ]]; then
-#       # Ensure the output file is saved in the correct MATs_quant_data folder
-#       cat "${subdir}/${sample}_CHRIII_averaged_diff_allPoly_newCoor.tsv" "${subdir}/${sample}_CHRV_averaged_diff_allPoly_newCoor.tsv" > "${subdir}/${sample}_Final_Dataset.tsv"
-#       sed 's/,/./g' "${subdir}/${sample}_Final_Dataset.tsv" > "${subdir}/${sample}_Cleaned_Final_Dataset.tsv"
-#       rm "${subdir}/${sample}_CHRIII_averaged_diff_allPoly_newCoor.tsv" "${subdir}/${sample}_CHRV_averaged_diff_allPoly_newCoor.tsv" "${subdir}/${sample}_Final_Dataset.tsv"
-#     else
-#       echo "Warning: Missing files in $subdir for $sample"
-#     fi
-#   done
-# done
-
-# #### R CODE ####
-
-# for subdir in "$MYWD"*/MATs_quant_data/; do
-#   for sample in TSG TLG TLR; do
-# Rscript - <<EOF
-#   library(ggplot2)
-#   library(extrafont)
-#   library(dplyr)
-
-#   # Load your data
-#   data <- read.table(header=FALSE, sep="\t", file="${subdir}/${sample}_Cleaned_Final_Dataset.tsv")
-
-#   # Name the columns
-#   colnames(data) <- c("Chromosome", "Coverage", "StdDev", "Coordinate")
-
-#   # Ensure Coordinate is numeric
-#   data\$Coordinate <- as.numeric(as.character(data\$Coordinate))
-
-#   # Plot
-#   p3 <- ggplot(data, aes(x=Coordinate, y=Coverage, color=Chromosome, fill=Chromosome)) +
-#     geom_ribbon(aes(ymin=Coverage - StdDev, ymax=Coverage + StdDev),
-#                 alpha=0.2, color=NA) +
-#     geom_line(size=1.2) +
-#     scale_x_continuous(breaks=unique(data\$Coordinate)) +  # Only show x-ticks for coordinates in column 4
-#     scale_y_continuous(limits = c(-125, 125)) +
-#     scale_color_manual(values = c("CHRIII" = "#2F2C7E", "CHRV" = "#A30000")) +
-#     scale_fill_manual(values = c("CHRIII" = "#2F2C7E", "CHRV" = "#A30000")) +
-#     labs(
-#         title=paste("Quant_Coverage of ChrIII and ChrV polymorphisms - ${sample}"),
-#         x="Relative Coordinate (bp)",
-#         y="Average Coverage") +
-#     theme(
-#       axis.text.x = element_text(angle=90, vjust=0.5, hjust=1),
-#       panel.grid.minor.x = element_blank(),  # Remove vertical minor grid lines
-#       panel.grid.major.y = element_line(color = "gray", size = 0.5),  # Keep horizontal grid lines
-#       panel.grid = element_line(color ="Black", linewidth =0,1),
-#       panel.background = element_blank(),
-#       plot.background = element_rect(fill = "transparent", color = NA),
-#     )
-
-#   # Save plot
-#   ggsave(filename="${subdir}/plot_${sample}_18nt_MATa_Coverage_Quant.svg", plot=p3, width=10, height=6, dpi=300, device="svg")
-
-# EOF
-#   done
-# done
 
 # # Move the plots to the Graphs_Coverage folder
-# for subdir in "$MYWD"*/; do
+# for strain in "$MYWD"*/; do
 #   for sample in TSG TLG TLR; do
-#     mv "${subdir}/MATs_quant_data/plot_${sample}_18nt_MATa_Coverage_Quant.svg" "${subdir}/Graphs_Coverage/"
+#     mv "${strain}/plot_${sample}_18nt_MATa_Coverage_Quant.svg" "${strain}/Graphs_Coverage/"
 #   done
 # done
 
@@ -916,150 +758,150 @@ done
 # echo "" >> "$log_file"  # Adds a blank line            
 
 
-# ###########################################
-# ####### GENOMIC CATEGORIES ANALYSIS #######
-# ###########################################
+###########################################
+####### GENOMIC CATEGORIES ANALYSIS #######
+###########################################
 
-# current_time=$(date "+%d-%m-%Y %H:%M:%S")
-# echo "Genomic Categories Analysis - initiated at: \"$current_time\"" >> "$log_file"
-# echo "" >> "$log_file"  # Adds a blank line 
+current_time=$(date "+%d-%m-%Y %H:%M:%S")
+echo "Genomic Categories Analysis - initiated at: \"$current_time\"" >> "$log_file"
+echo "" >> "$log_file"  # Adds a blank line 
 
-# # Start timer for the R category analysis
-# start_time_total_cat=$SECONDS
+# Start timer for the R category analysis
+start_time_total_cat=$SECONDS
 
-# # Loop through each directory inside MYWD
-# for subdir in "$MYWD"*/; do
-#   echo "Processing R analysis: $subdir"
-#   strain=$(basename "$subdir") # Extract the strain name
-#   subdir_escaped="${subdir%/}" # Remove trailing slash
-#     for time in T0 TSG TLG TLR; do
-#         for category in ORF LTR TEG Ty tRNA rRNA ncRNA snRNA snoRNA ARS Cen Tel Int; do
-#             echo "Processing category: $category"
+# Loop through each directory inside MYWD
+for subdir in "$MYWD"*/; do
+  echo "Processing R analysis: $subdir"
+  strain=$(basename "$subdir") # Extract the strain name
+  subdir_escaped="${subdir%/}" # Remove trailing slash
+    for sample in T0 TSG TLG TLR; do
+        for category in ORF LTR TEG Ty tRNA rRNA ncRNA snRNA snoRNA ARS Cen Tel Int; do
+            echo "Processing category: $category"
 
-#             shopt -s nullglob
-#             category_files=("$CATEGORY_PATH"/*.PMV."$category".tsv)
-#             shopt -u nullglob
+            shopt -s nullglob
+            category_files=("$CATEGORY_PATH"/*.PMV."$category".tsv)
+            shopt -u nullglob
 
-#             if [ ${#category_files[@]} -eq 0 ]; then
-#             echo "No files found for category $category, skipping."
-#             continue
-#             fi
+            if [ ${#category_files[@]} -eq 0 ]; then
+            echo "No files found for category $category, skipping."
+            continue
+            fi
 
-#             for category_file in "${category_files[@]}"; do
-#               if [ "$time" == "T0" ]; then
-#                 echo "Skippint T0 vs T0 comparison"
-#                 continue
-#               fi
-#             echo "Running Rscript on $category for $time in $strain"
+            for category_file in "${category_files[@]}"; do
+              if [ "$sample" == "T0" ]; then
+                echo "Skipping T0 vs T0 comparison"
+                continue
+              fi
+            echo "Running Rscript on $category for $sample in $strain"
         
-#       Rscript - <<EOF
+      Rscript - <<EOF
 
-# # Load packages
-# library(tidyverse)
+# Load packages
+library(tidyverse)
 
-# # Variables from Bash
-# cepa <- "${strain}"
-# category <- "${category}"
-# category_file <- "${category_file}"
-# subdir <- "${subdir_escaped}"
-# time <- "${time}"
+# Variables from Bash
+cepa <- "${strain}"
+category <- "${category}"
+category_file <- "${category_file}"
+subdir <- "${subdir_escaped}"
+time <- "${time}"
 
-# # File paths
-# plot_path <- file.path(subdir, paste0(cepa, "_", category, "_T0vs", time,"_plot.svg"))
-# tsv_path <- file.path(subdir, paste0(category, "_fingerprint_", cepa, "_T0vs", time,".tsv"))
-# #all_data_path <- file.path(subdir, paste0(category, "_all_data_", cepa, "_T0vs", time, ".tsv")) only to check raw data
+# File paths
+plot_path <- file.path(subdir, paste0(cepa, "_", category, "_T0vs", time,"_plot.svg"))
+tsv_path <- file.path(subdir, paste0(category, "_fingerprint_", cepa, "_T0vs", time,".tsv"))
+#all_data_path <- file.path(subdir, paste0(category, "_all_data_", cepa, "_T0vs", time, ".tsv")) only to check raw data
 
-# # Chromosome positions
-# chr_positions <- list(
-#   CHRI = 1:230218, CHRII = 1:813184, CHRIII = 1:316513,
-#   CHRIV = 1:1531933, CHRV = 1:578179, CHRVI = 1:270161,
-#   CHRVII = 1:1090940, CHRVIII = 1:562643, CHRIX = 1:439888,
-#   CHRX = 1:745751, CHRXI = 1:666816, CHRXII = 1:1078177,
-#   CHRXIII = 1:924431, CHRXIV = 1:784333, CHRXV = 1:1091291,
-#   CHRXVI = 1:948066
-# )
+# Chromosome positions
+chr_positions <- list(
+  CHRI = 1:230218, CHRII = 1:813184, CHRIII = 1:316513,
+  CHRIV = 1:1531933, CHRV = 1:578179, CHRVI = 1:270161,
+  CHRVII = 1:1090940, CHRVIII = 1:562643, CHRIX = 1:439888,
+  CHRX = 1:745751, CHRXI = 1:666816, CHRXII = 1:1078177,
+  CHRXIII = 1:924431, CHRXIV = 1:784333, CHRXV = 1:1091291,
+  CHRXVI = 1:948066
+)
 
-# # Read category regions
-# df_categorias <- read_tsv(category_file, col_names = FALSE,
-#   col_types = cols(X1 = col_character(), X2 = col_character(),
-#                    X3 = col_double(), X4 = col_double(), X5 = col_character())) %>%
-#   rename(Tipo = X1, Categoria = X2, Pos_inicio = X3, Pos_fin = X4, Cromosoma = X5) %>%
-#   mutate(Categoria = as.factor(Categoria))
+# Read category regions
+df_categorias <- read_tsv(category_file, col_names = FALSE,
+  col_types = cols(X1 = col_character(), X2 = col_character(),
+                   X3 = col_double(), X4 = col_double(), X5 = col_character())) %>%
+  rename(Tipo = X1, Categoria = X2, Pos_inicio = X3, Pos_fin = X4, Cromosoma = X5) %>%
+  mutate(Categoria = as.factor(Categoria))
 
-# # Function to process each experiment
-# process_experiment <- function(exp_num, time) {
-#   data_file <- file.path(subdir, paste0(time, "_", "E", exp_num, "_75nt.tsv"))
-#   df <- read_tsv(data_file, col_names = FALSE, col_types = cols_only(X1 = col_character(), X4 = col_double()))
+# Function to process each experiment
+process_experiment <- function(exp_num, time) {
+  data_file <- file.path(subdir, paste0(time, "_", "E", exp_num, "_75nt.tsv"))
+  df <- read_tsv(data_file, col_names = FALSE, col_types = cols_only(X1 = col_character(), X4 = col_double()))
 
-#   df_full <- tibble(
-#     Cepa = cepa,
-#     Experimento = exp_num,
-#     Tiempo = time,
-#     Cromosoma = df\$X1,
-#     Valor_real = df\$X4
-#   )
+  df_full <- tibble(
+    Cepa = cepa,
+    Experimento = exp_num,
+    Tiempo = time,
+    Cromosoma = df\$X1,
+    Valor_real = df\$X4
+  )
 
-#   map_dfr(names(chr_positions), function(chr) {
-#     chr_df <- df_full %>% filter(Cromosoma == chr) %>%
-#       mutate(Posicion = chr_positions[[chr]])
+  map_dfr(names(chr_positions), function(chr) {
+    chr_df <- df_full %>% filter(Cromosoma == chr) %>%
+      mutate(Posicion = chr_positions[[chr]])
 
-#     cat_df <- df_categorias %>% filter(Cromosoma == chr)
+    cat_df <- df_categorias %>% filter(Cromosoma == chr)
 
-#     map_dfr(unique(cat_df\$Categoria), function(cat) {
-#       regions <- cat_df %>% filter(Categoria == cat)
-#       map_dfr(1:nrow(regions), function(i) {
-#         chr_df %>%
-#           filter(Posicion >= regions\$Pos_inicio[i], Posicion <= regions\$Pos_fin[i]) %>%
-#           mutate(Nombre = cat, categoria = regions\$Tipo[i])
-#       })
-#     })
-#   })
-# }
+    map_dfr(unique(cat_df\$Categoria), function(cat) {
+      regions <- cat_df %>% filter(Categoria == cat)
+      map_dfr(1:nrow(regions), function(i) {
+        chr_df %>%
+          filter(Posicion >= regions\$Pos_inicio[i], Posicion <= regions\$Pos_fin[i]) %>%
+          mutate(Nombre = cat, categoria = regions\$Tipo[i])
+      })
+    })
+  })
+}
 
-# # Process all experiments
-# experiments <- expand.grid(exp = 1:3, time = c("T0", time))
-# all_data <- pmap_dfr(experiments, ~process_experiment(..1, ..2))
+# Process all experiments
+experiments <- expand.grid(exp = 1:3, time = c("T0", time))
+all_data <- pmap_dfr(experiments, ~process_experiment(..1, ..2))
 
-# # Export all_data(Only to check raw data)
-# # write_tsv(all_data, all_data_path)
-# # message("Raw data saved to: ", all_data_path)
+# Export all_data(Only to check raw data)
+# write_tsv(all_data, all_data_path)
+# message("Raw data saved to: ", all_data_path)
 
-# # Compute ratios
-# ratio_data <- all_data %>%
-#   group_by(Cepa, Cromosoma, categoria, Nombre, Experimento, Tiempo) %>%
-#   summarise(Valor_real = sum(Valor_real), .groups = "drop") %>%
-#   group_by(Cepa, Cromosoma, categoria, Nombre, Experimento) %>%
-#   mutate(ratio = Valor_real / Valor_real[Tiempo == "T0"]) %>%
-#   filter(Tiempo == time) %>%
-#   group_by(Cepa, Cromosoma, categoria, Nombre) %>%
-#   summarise(ratio_medio = mean(ratio), desv_est = sd(ratio), .groups = "drop")
+# Compute ratios
+ratio_data <- all_data %>%
+  group_by(Cepa, Cromosoma, categoria, Nombre, Experimento, Tiempo) %>%
+  summarise(Valor_real = sum(Valor_real), .groups = "drop") %>%
+  group_by(Cepa, Cromosoma, categoria, Nombre, Experimento) %>%
+  mutate(ratio = Valor_real / Valor_real[Tiempo == "T0"]) %>%
+  filter(Tiempo == time) %>%
+  group_by(Cepa, Cromosoma, categoria, Nombre) %>%
+  summarise(ratio_medio = mean(ratio), desv_est = sd(ratio), .groups = "drop")
 
-# # Plot
-# p <- ggplot(ratio_data) + 
-#     geom_col(aes(y = ratio_medio, x = Nombre), fill = "#2F2C7E", width = 0.7, 
-#            color = "black", linewidth = 0.1) +
-#     geom_errorbar(aes(x = Nombre, ymin = ratio_medio - desv_est, 
-#                     ymax = ratio_medio + desv_est), 
-#                 width = 0.3, color = "grey8", alpha = 1, size = 0.3) +
-#     theme_classic() +
-#     labs(title = paste0("Ratio T0vs", time), subtitle = paste0("Cepa ", cepa), 
-#        y = "Ratio", x = "Feature")
+# Plot
+p <- ggplot(ratio_data) + 
+    geom_col(aes(y = ratio_medio, x = Nombre), fill = "#2F2C7E", width = 0.7, 
+           color = "black", linewidth = 0.1) +
+    geom_errorbar(aes(x = Nombre, ymin = ratio_medio - desv_est, 
+                    ymax = ratio_medio + desv_est), 
+                width = 0.3, color = "grey8", alpha = 1, size = 0.3) +
+    theme_classic() +
+    labs(title = paste0("Ratio T0vs", time), subtitle = paste0("Cepa ", cepa), 
+       y = "Ratio", x = "Feature")
 
-#     ggsave(
-#         filename = plot_path,
-#         plot = p,
-#         width = 8,
-#         height = 6,
-#         dpi = 300,
-#         device = "svg"
-#         )
-#     write_tsv(ratio_data, file = tsv_path)
+    ggsave(
+        filename = plot_path,
+        plot = p,
+        width = 8,
+        height = 6,
+        dpi = 300,
+        device = "svg"
+        )
+    write_tsv(ratio_data, file = tsv_path)
 
-# EOF
-#             done
-#         done
-#     done
-# done
+EOF
+            done
+        done
+    done
+done
 
 # ### ORDERING CATEGORIES DATASET ###
 
