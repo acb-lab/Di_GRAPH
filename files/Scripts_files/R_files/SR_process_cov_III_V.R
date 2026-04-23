@@ -1,6 +1,6 @@
-#### R script to process SR coverage profiles from chr III and V, 75nt and 18nt, average all experiments
+#### R script to processand plot SR coverage profiles from chr III and V, 75nt and 18nt, average all experiments
 ### Loop for each subdir/timepoint file in MYWD
-### 19/04/2026 - Lydia
+### 20/04/2026 - Lydia
 
 
 
@@ -45,7 +45,8 @@ library(dplyr, warn.conflicts = FALSE)
 options(dplyr.summarise.inform = FALSE)
 
 
-# root_dir <- ("/Users/lydia/GWSt/WD_test_v0.3.2/1_Wt")
+# root_dir <- ("/Users/lab2.3/GWS3/WD_test_v0.3.2/1_Wt")
+# strain <- "1_Wt"
 # sample <- "TLR"
 
 # Define a function to process tsv files
@@ -86,6 +87,54 @@ process_coverage_files <- function(file_path) {
     )
   
   return(coverage_file)
+}
+
+# Define a function to prepare coverage files for plotting (after processing)
+prepare_for_plotting <- function(coverage_df) {
+  data <- coverage_df %>%
+    mutate(
+      Timepoint = factor(sample, levels = rev(c("T0", "TSG", "TLG", "TLR"))),
+      Coverage = as.numeric(avg_coverage_binned),
+      Position = coordinate
+    )
+  
+  t0_values <- data %>%
+    filter(Timepoint == "T0") %>%
+    select(Position, T0_Coverage = Coverage)
+  
+  data_normalized <- data %>%
+    left_join(t0_values, by = "Position") %>%
+    mutate(
+      Normalized_Coverage = ifelse(T0_Coverage == 0, NA, Coverage / T0_Coverage)
+    )
+  
+  data_normalized$Position <- as.factor(data_normalized$Position)
+  
+  return(data_normalized)
+}
+
+# Define a function to prepare coverage files for plotting (after processing)
+prepare_for_plotting_MATa <- function(coverage_df) {
+  data <- coverage_df %>%
+    mutate(
+      Timepoint = factor(sample, levels = rev(c("T0", "TSG", "TLG", "TLR"))),
+      Coverage = as.numeric(avg_coverage),
+      Position = coordinate
+    )
+  
+  t0_values <- data %>%
+    filter(Timepoint == "T0") %>%
+    select(Position, T0_Coverage = Coverage)
+  
+  data_normalized <- data %>%
+    left_join(t0_values, by = "Position") %>%
+    mutate(
+      Normalized_Coverage = ifelse(T0_Coverage == 0, NA, Coverage / T0_Coverage)
+    )
+  
+  data_normalized$Position <- as.factor(data_normalized$Position)
+  
+  return(data_normalized)
 }
 
 
@@ -165,6 +214,98 @@ write_tsv(CHRV_avg_coverage_binned, file.path(root_dir, paste0("75nt_CHRV_Covera
 
 ######
 
+processed_75nt_CHRIII_Coverage <- prepare_for_plotting(CHRIII_avg_coverage_binned)
+processed_75nt_CHRV_Coverage <- prepare_for_plotting(CHRV_avg_coverage_binned)
+
+###
+#Plotting
+
+log_step("Plotting...")
+
+chromosome_plot <- ggplot(
+  processed_75nt_CHRIII_Coverage,
+  aes(x = bin, y = Timepoint, fill = Normalized_Coverage)
+) +
+  geom_raster() +
+  scale_fill_gradientn(
+    colors = rev(c("#AF2418", "#E1AC40", "#EFD24D", "#5D8B27", "#4EACE9", "#4573A1", "#4C1F8E")),
+    values = scales::rescale(c(0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2)),
+    na.value = "gray90",
+    name = "Normalized Coverage",
+    limits = c(0, 2),
+    oob = scales::squish
+  ) +
+  scale_x_continuous(
+    breaks = c(0, 1000, 2000, 3000),
+    labels = scales::comma(c(1, 100000, 200000, 300000))) +
+  labs(
+    title = "Normalized 75nt CHRIII Coverage",
+    x = "Genomic Position",
+    y = "Timepoint"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(hjust = 0.5),
+    panel.grid = element_line(color ="Black", linewidth =0,1),
+    panel.background = element_blank(),
+    plot.background = element_rect(fill = "transparent", color = NA),
+  )
+
+
+ggsave(
+  filename = paste0(root_dir,"/", "plot_CHRIII_75nt_Coverage",".svg"),
+  plot = chromosome_plot,
+  width = 10,
+  height = 6,
+  dpi = 300, 
+  device = svglite,
+  bg = "transparent"
+)
+
+chromosome_plot <- ggplot(
+  processed_75nt_CHRV_Coverage,
+  aes(x = bin, y = Timepoint, fill = Normalized_Coverage)
+) +
+  geom_raster() +
+  scale_fill_gradientn(
+    colors = rev(c("#AF2418", "#E1AC40", "#EFD24D", "#5D8B27", "#4EACE9", "#4573A1", "#4C1F8E")),
+    values = scales::rescale(c(0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2)),
+    na.value = "gray90",
+    name = "Normalized Coverage",
+    limits = c(0, 2),
+    oob = scales::squish
+  ) +
+  scale_x_continuous(
+    breaks = c(0, 2000, 4000, 6000),
+    labels = scales::comma(c(1, 200000, 400000, 600000))) +
+  labs(
+    title = "Normalized 75nt CHRV Coverage",
+    x = "Genomic Position",
+    y = "Timepoint"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(hjust = 0.5),
+    panel.grid = element_line(color ="Black", linewidth =0,1),
+    panel.background = element_blank(),
+    plot.background = element_rect(fill = "transparent", color = NA),
+  )
+
+
+ggsave(
+  filename = paste0(root_dir,"/", "plot_CHRV_75nt_Coverage",".svg"),
+  plot = chromosome_plot,
+  width = 10,
+  height = 6,
+  dpi = 300, 
+  device = svglite,
+  bg = "transparent"
+)
+
+####
+
 log_step("Finding CHRIII MATa coverage files...")
 # Get all coverage.tsv files recursively in root folder
 CHRIII_MATa_coverage_files <- list.files(
@@ -204,6 +345,99 @@ CHRV_MATa_avg_coverage <-  purrr::map_dfr(CHRV_MATa_coverage_files, process_cove
 
 write_tsv(CHRV_MATa_avg_coverage, file.path(root_dir, paste0("75nt_CHRV_MATa_Coverage.tsv")))
 
+####
+
+processed_CHRIII_MATa_avg_coverage <- prepare_for_plotting_MATa(CHRIII_MATa_avg_coverage)
+processed_CHRV_MATa_avg_coverage <- prepare_for_plotting_MATa(CHRV_MATa_avg_coverage)
+
+###
+#Plotting
+
+log_step("Plotting...")
+
+chromosome_plot <- ggplot(
+  processed_CHRIII_MATa_avg_coverage,
+  aes(x = coordinate, y = Timepoint, fill = Normalized_Coverage)
+) +
+  geom_raster() +
+  scale_fill_gradientn(
+    colors = rev(c("#AF2418", "#E1AC40", "#EFD24D", "#5D8B27", "#4EACE9", "#4573A1", "#4C1F8E")),
+    values = scales::rescale(c(0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2)),
+    na.value = "gray90",
+    name = "Normalized Coverage",
+    limits = c(0, 2),
+    oob = scales::squish
+  ) +
+  # scale_x_continuous(
+  #   breaks = c(0, 1000, 2000, 3000),
+  #   labels = scales::comma(c(1, 100000, 200000, 300000))) +
+  labs(
+    title = "Normalized 75nt CHRIII MATa_Coverage",
+    x = "Genomic Position",
+    y = "Timepoint"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(hjust = 0.5),
+    panel.grid = element_line(color ="Black", linewidth =0,1),
+    panel.background = element_blank(),
+    plot.background = element_rect(fill = "transparent", color = NA),
+  )
+
+
+ggsave(
+  filename = paste0(root_dir,"/", "plot_CHRIII_75nt_MATa_Coverage",".svg"),
+  plot = chromosome_plot,
+  width = 10,
+  height = 6,
+  dpi = 300, 
+  device = svglite,
+  bg = "transparent"
+)
+
+chromosome_plot <- ggplot(
+  processed_CHRV_MATa_avg_coverage,
+  aes(x = coordinate, y = Timepoint, fill = Normalized_Coverage)
+) +
+  geom_raster() +
+  scale_fill_gradientn(
+    colors = rev(c("#AF2418", "#E1AC40", "#EFD24D", "#5D8B27", "#4EACE9", "#4573A1", "#4C1F8E")),
+    values = scales::rescale(c(0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2)),
+    na.value = "gray90",
+    name = "Normalized Coverage",
+    limits = c(0, 2),
+    oob = scales::squish
+  ) +
+  # scale_x_continuous(
+  #   breaks = c(0, 1000, 2000, 3000),
+  #   labels = scales::comma(c(1, 100000, 200000, 300000))) +
+  labs(
+    title = "Normalized 75nt CHRV MATa_Coverage",
+    x = "Genomic Position",
+    y = "Timepoint"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(hjust = 0.5),
+    panel.grid = element_line(color ="Black", linewidth =0,1),
+    panel.background = element_blank(),
+    plot.background = element_rect(fill = "transparent", color = NA),
+  )
+
+
+ggsave(
+  filename = paste0(root_dir,"/", "plot_CHRV_75nt_MATa_Coverage",".svg"),
+  plot = chromosome_plot,
+  width = 10,
+  height = 6,
+  dpi = 300, 
+  device = svglite,
+  bg = "transparent"
+)
+####
+
 log_step("Finding CHRIII 18nt MATa coverage files...")
 # Get all coverage.tsv files recursively in root folder
 CHRIII_18nt_MATa_coverage_files <- list.files(
@@ -241,3 +475,43 @@ CHRV_18nt_MATa_avg_coverage <-  purrr::map_dfr(CHRV_18nt_MATa_coverage_files, pr
   mutate(coordinate_corrected = coordinate - 289825)
 
 write_tsv(CHRV_18nt_MATa_avg_coverage, file.path(root_dir, paste0("CHRV_MATa_18nt_Coverage.tsv")))
+
+
+####
+log_step("Plotting...")
+all_data <- bind_rows(CHRIII_18nt_MATa_avg_coverage, CHRV_18nt_MATa_avg_coverage)
+
+for (s in unique(all_data$sample)) {
+  df <- subset(all_data, sample == s)
+  
+  p <- ggplot(df, aes(x = coordinate_corrected, y = avg_coverage, color = chromosome)) +
+    geom_line(linewidth = 0.8) +
+    labs(
+      title = paste("Coverage of ChrIII and ChrV - Timepoint", s),
+      x = "Coordinate (relative to MAT locus)",
+      y = "Coverage"
+    ) +
+    scale_color_manual(values = c("CHRIII" = "#2F2C7E", "CHRV" = "#A30000")) +
+    scale_x_continuous(breaks = seq(-800, 800, by = 200)) +
+    coord_cartesian(ylim = c(0, 3)) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(hjust = 0.5),
+      legend.position = "right",
+      panel.grid = element_blank(),
+      panel.background = element_blank(),
+      plot.background = element_rect(fill = "transparent", color = NA)
+    )
+  
+  
+  ggsave(
+    filename = paste0(root_dir,"/", "plot_", s,"_18nt_MATa_Coverage.svg"),
+    plot = p,
+    width = 10,
+    height = 6,
+    dpi = 300, 
+    device = svglite,
+    bg = "transparent"
+  )
+ 
+}
