@@ -1,7 +1,7 @@
 #!/bin/bash
 
 AUTHORS="Lydia Iglesias, Narciso M. Quijada, Andrés Clemente-Blanco"
-LASTMODIF="2026-04-15"
+LASTMODIF="2026-04-23"
 VERSION="0.3.2"
 MODIFICATIONS="experiment name dynamically set, SR"
 
@@ -331,431 +331,431 @@ current_time=$(date "+%d-%m-%Y %H:%M:%S")
 log_file="${MYWD}/log_file.txt"
 stats="${MYWD}/stats.txt"
 
-# # Start timer for the entire script processing
-# start_time_total_script=$SECONDS
+# Start timer for the entire script processing
+start_time_total_script=$SECONDS
 
-# echo "CONCORDANT ANALYSIS - initiated at: \"$current_time\"" > "$log_file"
-# echo "" >> "$log_file"  # Adds a blank line
+echo "CONCORDANT ANALYSIS - initiated at: \"$current_time\"" > "$log_file"
+echo "" >> "$log_file"  # Adds a blank line
 
-# echo "=========  Bowtie Alignment ==========" >> "$stats"
-
-
-# # Index RG
-# bowtie-build "${MYREF}/RG_PMV_v9.fasta" "${MYREF}/S_cerevisiae_indexed" #NMQ --> MOVE TO INSTALL!
+echo "=========  Bowtie Alignment ==========" >> "$stats"
 
 
-# ###########################################
-# ### COVERAGE AND POLYMORPHISMS ANALYSIS ###
-# ###########################################
+# Index RG
+bowtie-build "${MYREF}/RG_PMV_v9.fasta" "${MYREF}/S_cerevisiae_indexed" #NMQ --> MOVE TO INSTALL!
 
-# echo "Coverage and Polymorphisms Analysis - initiated at: \"$current_time\"" >> "$log_file"
-# echo "" >> "$log_file"  # Adds a blank line
 
-# # Start timers for Coverage and Polymorphism Analysis processing
+###########################################
+### COVERAGE AND POLYMORPHISMS ANALYSIS ###
+###########################################
 
-# start_time_total_cov=$SECONDS
+echo "Coverage and Polymorphisms Analysis - initiated at: \"$current_time\"" >> "$log_file"
+echo "" >> "$log_file"  # Adds a blank line
 
-# # Loop through each directory inside MYWD
-# for subdir in "$MYWD"*/; do
-#   echo "Processing directory: $subdir" >> "$log_file"
-#   echo "" >> "$log_file"  # Adds a blank line
+# Start timers for Coverage and Polymorphism Analysis processing
 
-#   # Loop through sample prefixes (T0, T1, T2, etc.)
-#     for sample in T0 TSG TLG TLR; do
-#       for experiment in "${EXP_LIST[@]}"; do
-#         file1_gz="${subdir}/${sample}_${experiment}_R1.fastq.gz"
-#         file2_gz="${subdir}/${sample}_${experiment}_R2.fastq.gz"
+start_time_total_cov=$SECONDS
+
+# Loop through each directory inside MYWD
+for subdir in "$MYWD"*/; do
+  echo "Processing directory: $subdir" >> "$log_file"
+  echo "" >> "$log_file"  # Adds a blank line
+
+  # Loop through sample prefixes (T0, T1, T2, etc.)
+    for sample in T0 TSG TLG TLR; do
+      for experiment in "${EXP_LIST[@]}"; do
+        file1_gz="${subdir}/${sample}_${experiment}_R1.fastq.gz"
+        file2_gz="${subdir}/${sample}_${experiment}_R2.fastq.gz"
        
-#         # Check if both compressed files exist
-#         if [[ -f "$file1_gz" && -f "$file2_gz" ]]; then
-#           echo "Processing files: $file1_gz, $file2_gz" >> "$log_file"
-#           echo "" >> "$log_file"  # Adds a blank line
+        # Check if both compressed files exist
+        if [[ -f "$file1_gz" && -f "$file2_gz" ]]; then
+          echo "Processing files: $file1_gz, $file2_gz" >> "$log_file"
+          echo "" >> "$log_file"  # Adds a blank line
 
-#           # Decompress the current pair
-#           gunzip -k "$file1_gz" "$file2_gz"
-#           file1_path="${subdir}/${sample}_${experiment}_R1.fastq"
-#           file2_path="${subdir}/${sample}_${experiment}_R2.fastq"
+          # Decompress the current pair
+          gunzip -k "$file1_gz" "$file2_gz"
+          file1_path="${subdir}/${sample}_${experiment}_R1.fastq"
+          file2_path="${subdir}/${sample}_${experiment}_R2.fastq"
           
-#           # Concatenate the two fastq files
-#           cat "$file1_path" "$file2_path" > "${subdir}/${sample}_${experiment}.fastq"
+          # Concatenate the two fastq files
+          cat "$file1_path" "$file2_path" > "${subdir}/${sample}_${experiment}.fastq"
                 
-#           # Remove original fastq files
-#           rm "$file1_path" "$file2_path"
+          # Remove original fastq files
+          rm "$file1_path" "$file2_path"
 
-#           if [[ -f "${subdir}/${sample}_${experiment}.fastq" ]]; then
+          if [[ -f "${subdir}/${sample}_${experiment}.fastq" ]]; then
     
-#             # Trim reads using cutadapt
-#             cutadapt -j "$N_CPU" --cut -75 -o "${subdir}/${sample}_${experiment}_1.fastq" "${subdir}/${sample}_${experiment}.fastq"
-#             cutadapt -j "$N_CPU" --cut 75 -o "${subdir}/${sample}_${experiment}_2.fastq" "${subdir}/${sample}_${experiment}.fastq"
+            # Trim reads using cutadapt
+            cutadapt -j "$N_CPU" --cut -75 -o "${subdir}/${sample}_${experiment}_1.fastq" "${subdir}/${sample}_${experiment}.fastq"
+            cutadapt -j "$N_CPU" --cut 75 -o "${subdir}/${sample}_${experiment}_2.fastq" "${subdir}/${sample}_${experiment}.fastq"
                     
-#             # Cut 38nt from the beginning and 38nt from the end
-#             cutadapt -j "$N_CPU" --cut -38 -o "${subdir}/${sample}_${experiment}_1_1.fastq" "${subdir}/${sample}_${experiment}_1.fastq"
-#             cutadapt -j "$N_CPU" --cut 38 -o "${subdir}/${sample}_${experiment}_1_2.fastq" "${subdir}/${sample}_${experiment}_1.fastq"
-#             cutadapt -j "$N_CPU" --cut -38 -o "${subdir}/${sample}_${experiment}_2_1.fastq" "${subdir}/${sample}_${experiment}_2.fastq"
-#             cutadapt -j "$N_CPU" --cut 38 -o "${subdir}/${sample}_${experiment}_2_2.fastq" "${subdir}/${sample}_${experiment}_2.fastq"
+            # Cut 38nt from the beginning and 38nt from the end
+            cutadapt -j "$N_CPU" --cut -38 -o "${subdir}/${sample}_${experiment}_1_1.fastq" "${subdir}/${sample}_${experiment}_1.fastq"
+            cutadapt -j "$N_CPU" --cut 38 -o "${subdir}/${sample}_${experiment}_1_2.fastq" "${subdir}/${sample}_${experiment}_1.fastq"
+            cutadapt -j "$N_CPU" --cut -38 -o "${subdir}/${sample}_${experiment}_2_1.fastq" "${subdir}/${sample}_${experiment}_2.fastq"
+            cutadapt -j "$N_CPU" --cut 38 -o "${subdir}/${sample}_${experiment}_2_2.fastq" "${subdir}/${sample}_${experiment}_2.fastq"
             
-#             # Cut 19nt from the beginning and 19nt from the end
-#             cutadapt -j "$N_CPU" --cut -19 -o "${subdir}/${sample}_${experiment}_18nts_1_1_1.fastq" "${subdir}/${sample}_${experiment}_1_1.fastq"
-#             cutadapt -j "$N_CPU" --cut 19 -o "${subdir}/${sample}_${experiment}_18nts_1_1_2.fastq" "${subdir}/${sample}_${experiment}_1_1.fastq"
-#             cutadapt -j "$N_CPU" --cut -19 -o "${subdir}/${sample}_${experiment}_18nts_1_2_1.fastq" "${subdir}/${sample}_${experiment}_1_2.fastq"
-#             cutadapt -j "$N_CPU" --cut 19 -o "${subdir}/${sample}_${experiment}_18nts_1_2_2.fastq" "${subdir}/${sample}_${experiment}_1_2.fastq"
-#             cutadapt -j "$N_CPU" --cut -19 -o "${subdir}/${sample}_${experiment}_18nts_2_1_1.fastq" "${subdir}/${sample}_${experiment}_2_1.fastq"
-#             cutadapt -j "$N_CPU" --cut 19 -o "${subdir}/${sample}_${experiment}_18nts_2_1_2.fastq" "${subdir}/${sample}_${experiment}_2_1.fastq"
-#             cutadapt -j "$N_CPU" --cut -19 -o "${subdir}/${sample}_${experiment}_18nts_2_2_1.fastq" "${subdir}/${sample}_${experiment}_2_2.fastq"
-#             cutadapt -j "$N_CPU" --cut 19 -o "${subdir}/${sample}_${experiment}_18nts_2_2_2.fastq" "${subdir}/${sample}_${experiment}_2_2.fastq"
+            # Cut 19nt from the beginning and 19nt from the end
+            cutadapt -j "$N_CPU" --cut -19 -o "${subdir}/${sample}_${experiment}_18nts_1_1_1.fastq" "${subdir}/${sample}_${experiment}_1_1.fastq"
+            cutadapt -j "$N_CPU" --cut 19 -o "${subdir}/${sample}_${experiment}_18nts_1_1_2.fastq" "${subdir}/${sample}_${experiment}_1_1.fastq"
+            cutadapt -j "$N_CPU" --cut -19 -o "${subdir}/${sample}_${experiment}_18nts_1_2_1.fastq" "${subdir}/${sample}_${experiment}_1_2.fastq"
+            cutadapt -j "$N_CPU" --cut 19 -o "${subdir}/${sample}_${experiment}_18nts_1_2_2.fastq" "${subdir}/${sample}_${experiment}_1_2.fastq"
+            cutadapt -j "$N_CPU" --cut -19 -o "${subdir}/${sample}_${experiment}_18nts_2_1_1.fastq" "${subdir}/${sample}_${experiment}_2_1.fastq"
+            cutadapt -j "$N_CPU" --cut 19 -o "${subdir}/${sample}_${experiment}_18nts_2_1_2.fastq" "${subdir}/${sample}_${experiment}_2_1.fastq"
+            cutadapt -j "$N_CPU" --cut -19 -o "${subdir}/${sample}_${experiment}_18nts_2_2_1.fastq" "${subdir}/${sample}_${experiment}_2_2.fastq"
+            cutadapt -j "$N_CPU" --cut 19 -o "${subdir}/${sample}_${experiment}_18nts_2_2_2.fastq" "${subdir}/${sample}_${experiment}_2_2.fastq"
             
-#             # Remove intermediate files
-#             rm "${subdir}/${sample}_${experiment}_1_1.fastq" "${subdir}/${sample}_${experiment}_1_2.fastq" "${subdir}/${sample}_${experiment}_2_1.fastq" "${subdir}/${sample}_${experiment}_2_2.fastq"
+            # Remove intermediate files
+            rm "${subdir}/${sample}_${experiment}_1_1.fastq" "${subdir}/${sample}_${experiment}_1_2.fastq" "${subdir}/${sample}_${experiment}_2_1.fastq" "${subdir}/${sample}_${experiment}_2_2.fastq"
             
-#             # Catenate processed reads into a single fastq file
-#             cat "${subdir}/${sample}_${experiment}_18nts"*".fastq" > "${subdir}/${sample}_${experiment}_18nt_nonfiltered.fastq"
+            # Catenate processed reads into a single fastq file
+            cat "${subdir}/${sample}_${experiment}_18nts"*".fastq" > "${subdir}/${sample}_${experiment}_18nt_nonfiltered.fastq"
             
-#                 # Filter 18nt reads Q30
-#                 fastp \
-#                   -i "${subdir}/${sample}_${experiment}_18nt_nonfiltered.fastq" \
-#                   -o "${subdir}/${sample}_${experiment}_18nt.fastq" \
-#                   -q 30 -u 0 -e 30 \
-#                   --thread "$N_CPU" \
-#                   --html "${subdir}/${sample}_${experiment}_18nt.fastq.html" \
-#                   --json "${subdir}/${sample}_${experiment}_18nt.fastq.json" 
-#                 rm "${subdir}/${sample}_${experiment}_18nt_nonfiltered.fastq" # Remove intermediate 18nt fastq files
+                # Filter 18nt reads Q30
+                fastp \
+                  -i "${subdir}/${sample}_${experiment}_18nt_nonfiltered.fastq" \
+                  -o "${subdir}/${sample}_${experiment}_18nt.fastq" \
+                  -q 30 -u 0 -e 30 \
+                  --thread "$N_CPU" \
+                  --html "${subdir}/${sample}_${experiment}_18nt.fastq.html" \
+                  --json "${subdir}/${sample}_${experiment}_18nt.fastq.json" 
+                rm "${subdir}/${sample}_${experiment}_18nt_nonfiltered.fastq" # Remove intermediate 18nt fastq files
             
-#             # Remove intermediate 18nt fastq files
-#             rm "${subdir}/${sample}_${experiment}_18nts"*".fastq"
+            # Remove intermediate 18nt fastq files
+            rm "${subdir}/${sample}_${experiment}_18nts"*".fastq"
 
-#             # Remove intermediate fastq files
-#             rm "${subdir}/${sample}_${experiment}.fastq"
+            # Remove intermediate fastq files
+            rm "${subdir}/${sample}_${experiment}.fastq"
 
-#             # Concatenate processed 75nt reads into a single fastq file
-#             cat "${subdir}/${sample}_${experiment}_1.fastq" \
-#                 "${subdir}/${sample}_${experiment}_2.fastq" \
-#               > "${subdir}/${sample}_${experiment}_75nt_nonfiltered.fastq"
+            # Concatenate processed 75nt reads into a single fastq file
+            cat "${subdir}/${sample}_${experiment}_1.fastq" \
+                "${subdir}/${sample}_${experiment}_2.fastq" \
+              > "${subdir}/${sample}_${experiment}_75nt_nonfiltered.fastq"
                     
-#                 # Filter 75nt reads Q30
-#                 fastp \
-#                   -i "${subdir}/${sample}_${experiment}_75nt_nonfiltered.fastq" \
-#                   -o "${subdir}/${sample}_${experiment}_75nt.fastq" \
-#                   -q 30 -u 0 -e 30 \
-#                   --thread "$N_CPU" \
-#                   --html "${subdir}/${sample}_${experiment}_75nt.fastq.html" \
-#                   --json "${subdir}/${sample}_${experiment}_75nt.fastq.json"
-#                 rm "${subdir}/${sample}_${experiment}_75nt_nonfiltered.fastq" # Remove intermediate 75nt fastq files
+                # Filter 75nt reads Q30
+                fastp \
+                  -i "${subdir}/${sample}_${experiment}_75nt_nonfiltered.fastq" \
+                  -o "${subdir}/${sample}_${experiment}_75nt.fastq" \
+                  -q 30 -u 0 -e 30 \
+                  --thread "$N_CPU" \
+                  --html "${subdir}/${sample}_${experiment}_75nt.fastq.html" \
+                  --json "${subdir}/${sample}_${experiment}_75nt.fastq.json"
+                rm "${subdir}/${sample}_${experiment}_75nt_nonfiltered.fastq" # Remove intermediate 75nt fastq files
                 
-#             # Remove intermediate 75nt fastq files
-#             rm "${subdir}/${sample}_${experiment}_1.fastq" "${subdir}/${sample}_${experiment}_2.fastq"
+            # Remove intermediate 75nt fastq files
+            rm "${subdir}/${sample}_${experiment}_1.fastq" "${subdir}/${sample}_${experiment}_2.fastq"
             
-#             # Bowtie mapping
-#             echo "### $(basename "$subdir")/${sample}/${experiment} 75nt ###" >> "$stats"
-#             bowtie -p "$N_CPU" -m 1 -v 0 -S -x "${MYREF}/S_cerevisiae_indexed" "${subdir}/${sample}_${experiment}_75nt.fastq" > "${subdir}/${sample}_${experiment}_75nt.sam" 2>> "$stats"
-#             echo "" >> "$stats"
+            # Bowtie mapping
+            echo "### $(basename "$subdir")/${sample}/${experiment} 75nt ###" >> "$stats"
+            bowtie -p "$N_CPU" -m 1 -v 0 -S -x "${MYREF}/S_cerevisiae_indexed" "${subdir}/${sample}_${experiment}_75nt.fastq" > "${subdir}/${sample}_${experiment}_75nt.sam" 2>> "$stats"
+            echo "" >> "$stats"
                     
-#             # Aligning using 18nt reads, in -k mode
-#             echo "### $(basename "$subdir")/${sample}/${experiment} 18nt ###" >> "$stats"
-#             bowtie -p "$N_CPU" -k 1 -v 0 -S -x "${MYREF}/S_cerevisiae_indexed" "${subdir}/${sample}_${experiment}_18nt.fastq" > "${subdir}/${sample}_${experiment}_18nt.sam" 2>> "$stats"
-#             echo "" >> "$stats"
+            # Aligning using 18nt reads, in -k mode
+            echo "### $(basename "$subdir")/${sample}/${experiment} 18nt ###" >> "$stats"
+            bowtie -p "$N_CPU" -k 1 -v 0 -S -x "${MYREF}/S_cerevisiae_indexed" "${subdir}/${sample}_${experiment}_18nt.fastq" > "${subdir}/${sample}_${experiment}_18nt.sam" 2>> "$stats"
+            echo "" >> "$stats"
 
-#             # Convert SAM to sorted BAM (75nt)
-#             samtools sort -@ "$N_CPU" -o "${subdir}/${sample}_${experiment}_75nt.bam" "${subdir}/${sample}_${experiment}_75nt.sam"
-#             samtools index "${subdir}/${sample}_${experiment}_75nt.bam" "${subdir}/${sample}_${experiment}_75nt.bai"
+            # Convert SAM to sorted BAM (75nt)
+            samtools sort -@ "$N_CPU" -o "${subdir}/${sample}_${experiment}_75nt.bam" "${subdir}/${sample}_${experiment}_75nt.sam"
+            samtools index "${subdir}/${sample}_${experiment}_75nt.bam" "${subdir}/${sample}_${experiment}_75nt.bai"
                     
-#             # Convert SAM to sorted BAM (18nt)
-#             samtools sort -@ "$N_CPU" -o "${subdir}/${sample}_${experiment}_18nt.bam" "${subdir}/${sample}_${experiment}_18nt.sam"
-#             samtools index "${subdir}/${sample}_${experiment}_18nt.bam" "${subdir}/${sample}_${experiment}_18nt.bai"
+            # Convert SAM to sorted BAM (18nt)
+            samtools sort -@ "$N_CPU" -o "${subdir}/${sample}_${experiment}_18nt.bam" "${subdir}/${sample}_${experiment}_18nt.sam"
+            samtools index "${subdir}/${sample}_${experiment}_18nt.bam" "${subdir}/${sample}_${experiment}_18nt.bai"
                     
-#             # Generate BedGraphs coverage files (75nt)
-#             bamCoverage -b "${subdir}/${sample}_${experiment}_75nt.bam" -o "${subdir}/${sample}_${experiment}_75nt.bedgraph" -of bedgraph -p "$N_CPU" -bs 1 --normalizeUsing RPGC --effectiveGenomeSize 14272230
+            # Generate BedGraphs coverage files (75nt)
+            bamCoverage -b "${subdir}/${sample}_${experiment}_75nt.bam" -o "${subdir}/${sample}_${experiment}_75nt.bedgraph" -of bedgraph -p "$N_CPU" -bs 1 --normalizeUsing RPGC --effectiveGenomeSize 14272230
 
-#             # Sorting Bedgraphs files (75nt)
-#             samtools faidx "${MYREF}/RG_PMV_v9.fasta" # Create index file
-#             cut -f1,2 "${MYREF}/RG_PMV_v9.fasta.fai" > "${MYREF}/chrom_order.txt"
-#             bedtools sort -i "${subdir}/${sample}_${experiment}_75nt.bedgraph" -g "${MYREF}/chrom_order.txt" > "${subdir}/${sample}_${experiment}_75nt_sorted.bedgraph"
+            # Sorting Bedgraphs files (75nt)
+            samtools faidx "${MYREF}/RG_PMV_v9.fasta" # Create index file
+            cut -f1,2 "${MYREF}/RG_PMV_v9.fasta.fai" > "${MYREF}/chrom_order.txt"
+            bedtools sort -i "${subdir}/${sample}_${experiment}_75nt.bedgraph" -g "${MYREF}/chrom_order.txt" > "${subdir}/${sample}_${experiment}_75nt_sorted.bedgraph"
                     
-#             # Generate BedGraphs coverage files (18nt)
-#             bamCoverage -b "${subdir}/${sample}_${experiment}_18nt.bam" -o "${subdir}/${sample}_${experiment}_CHRIII_18nt.bedgraph" -of bedgraph -p "$N_CPU" -bs 1 --normalizeUsing RPGC --effectiveGenomeSize 14272230 -r CHRIII:199953:201553
-#             bamCoverage -b "${subdir}/${sample}_${experiment}_18nt.bam" -o "${subdir}/${sample}_${experiment}_CHRV_18nt.bedgraph" -of bedgraph -p "$N_CPU" -bs 1 --normalizeUsing RPGC --effectiveGenomeSize 14272230 -r CHRV:289025:290625
+            # Generate BedGraphs coverage files (18nt)
+            bamCoverage -b "${subdir}/${sample}_${experiment}_18nt.bam" -o "${subdir}/${sample}_${experiment}_CHRIII_18nt.bedgraph" -of bedgraph -p "$N_CPU" -bs 1 --normalizeUsing RPGC --effectiveGenomeSize 14272230 -r CHRIII:199953:201553
+            bamCoverage -b "${subdir}/${sample}_${experiment}_18nt.bam" -o "${subdir}/${sample}_${experiment}_CHRV_18nt.bedgraph" -of bedgraph -p "$N_CPU" -bs 1 --normalizeUsing RPGC --effectiveGenomeSize 14272230 -r CHRV:289025:290625
 
-#             # Sorting Bedgraphs files (18nt)            
-#             bedtools sort -i "${subdir}/${sample}_${experiment}_CHRIII_18nt.bedgraph" -g "${MYREF}/chrom_order.txt" > "${subdir}/${sample}_${experiment}_CHRIII_18nt_sorted.bedgraph"
-#             bedtools sort -i "${subdir}/${sample}_${experiment}_CHRV_18nt.bedgraph" -g "${MYREF}/chrom_order.txt" > "${subdir}/${sample}_${experiment}_CHRV_18nt_sorted.bedgraph"
+            # Sorting Bedgraphs files (18nt)            
+            bedtools sort -i "${subdir}/${sample}_${experiment}_CHRIII_18nt.bedgraph" -g "${MYREF}/chrom_order.txt" > "${subdir}/${sample}_${experiment}_CHRIII_18nt_sorted.bedgraph"
+            bedtools sort -i "${subdir}/${sample}_${experiment}_CHRV_18nt.bedgraph" -g "${MYREF}/chrom_order.txt" > "${subdir}/${sample}_${experiment}_CHRV_18nt_sorted.bedgraph"
 
-#             # For TSG, TLG and TLR, generate BedGraphs coverage files (18nt) nonRPGC for quantifications
-#             if [[ "$sample" == "TSG" || "$sample" == "TLG" || "$sample" == "TLR" ]]; then
-#               bamCoverage -b "${subdir}/${sample}_${experiment}_18nt.bam" -o "${subdir}/${sample}_${experiment}_CHRIII_18nt_nonRPGC.bedgraph" -of bedgraph -p "$N_CPU" -bs 1 --effectiveGenomeSize 14272230 -r CHRIII:199953:201553
-#               bamCoverage -b "${subdir}/${sample}_${experiment}_18nt.bam" -o "${subdir}/${sample}_${experiment}_CHRV_18nt_nonRPGC.bedgraph" -of bedgraph -p "$N_CPU" -bs 1 --effectiveGenomeSize 14272230 -r CHRV:289025:290625
+            # For TSG, TLG and TLR, generate BedGraphs coverage files (18nt) nonRPGC for quantifications
+            if [[ "$sample" == "TSG" || "$sample" == "TLG" || "$sample" == "TLR" ]]; then
+              bamCoverage -b "${subdir}/${sample}_${experiment}_18nt.bam" -o "${subdir}/${sample}_${experiment}_CHRIII_18nt_nonRPGC.bedgraph" -of bedgraph -p "$N_CPU" -bs 1 --effectiveGenomeSize 14272230 -r CHRIII:199953:201553
+              bamCoverage -b "${subdir}/${sample}_${experiment}_18nt.bam" -o "${subdir}/${sample}_${experiment}_CHRV_18nt_nonRPGC.bedgraph" -of bedgraph -p "$N_CPU" -bs 1 --effectiveGenomeSize 14272230 -r CHRV:289025:290625
 
-#               # Sorting Bedgraphs files (18nt_nonRPGC)
-#               bedtools sort -i "${subdir}/${sample}_${experiment}_CHRIII_18nt_nonRPGC.bedgraph" -g "${MYREF}/chrom_order.txt" > "${subdir}/${sample}_${experiment}_CHRIII_18nt_nonRPGC_sorted.bedgraph"
-#               bedtools sort -i "${subdir}/${sample}_${experiment}_CHRV_18nt_nonRPGC.bedgraph" -g "${MYREF}/chrom_order.txt"> "${subdir}/${sample}_${experiment}_CHRV_18nt_nonRPGC_sorted.bedgraph"
-#             fi
+              # Sorting Bedgraphs files (18nt_nonRPGC)
+              bedtools sort -i "${subdir}/${sample}_${experiment}_CHRIII_18nt_nonRPGC.bedgraph" -g "${MYREF}/chrom_order.txt" > "${subdir}/${sample}_${experiment}_CHRIII_18nt_nonRPGC_sorted.bedgraph"
+              bedtools sort -i "${subdir}/${sample}_${experiment}_CHRV_18nt_nonRPGC.bedgraph" -g "${MYREF}/chrom_order.txt"> "${subdir}/${sample}_${experiment}_CHRV_18nt_nonRPGC_sorted.bedgraph"
+            fi
 
-#             # Generate TSV files (75nt)
-#             bedtools coverage -a "${subdir}/${sample}_${experiment}_75nt_sorted.bedgraph" -b "${subdir}/${sample}_${experiment}_75nt.bam" -sorted -g "${MYREF}/chrom_order.txt" -d > "${subdir}/${sample}_${experiment}_75nt.tsv"
+            # Generate TSV files (75nt)
+            bedtools coverage -a "${subdir}/${sample}_${experiment}_75nt_sorted.bedgraph" -b "${subdir}/${sample}_${experiment}_75nt.bam" -sorted -g "${MYREF}/chrom_order.txt" -d > "${subdir}/${sample}_${experiment}_75nt.tsv"
             
-#             # Generate TSV files (18nt)
-#             bedtools coverage -a "${subdir}/${sample}_${experiment}_CHRIII_18nt_sorted.bedgraph" -b "${subdir}/${sample}_${experiment}_18nt.bam" -sorted -g "${MYREF}/chrom_order.txt" -d > "${subdir}/${sample}_${experiment}_CHRIII_18nt.tsv"
-#             bedtools coverage -a "${subdir}/${sample}_${experiment}_CHRV_18nt_sorted.bedgraph" -b "${subdir}/${sample}_${experiment}_18nt.bam" -sorted -g "${MYREF}/chrom_order.txt" -d > "${subdir}/${sample}_${experiment}_CHRV_18nt.tsv"
+            # Generate TSV files (18nt)
+            bedtools coverage -a "${subdir}/${sample}_${experiment}_CHRIII_18nt_sorted.bedgraph" -b "${subdir}/${sample}_${experiment}_18nt.bam" -sorted -g "${MYREF}/chrom_order.txt" -d > "${subdir}/${sample}_${experiment}_CHRIII_18nt.tsv"
+            bedtools coverage -a "${subdir}/${sample}_${experiment}_CHRV_18nt_sorted.bedgraph" -b "${subdir}/${sample}_${experiment}_18nt.bam" -sorted -g "${MYREF}/chrom_order.txt" -d > "${subdir}/${sample}_${experiment}_CHRV_18nt.tsv"
 
-#             # For TSG, TLG and TLR, generate TSV files (18nt) nonRPGC for quantifications
-#             if [[ "$sample" == "TSG" || "$sample" == "TLG" || "$sample" == "TLR" ]]; then
-#               bedtools coverage -a "${subdir}/${sample}_${experiment}_CHRIII_18nt_nonRPGC_sorted.bedgraph" -b "${subdir}/${sample}_${experiment}_18nt.bam" -sorted -g "${MYREF}/chrom_order.txt" -d > "${subdir}/${sample}_${experiment}_CHRIII_18nt_nonRPGC.tsv"
-#               bedtools coverage -a "${subdir}/${sample}_${experiment}_CHRV_18nt_nonRPGC_sorted.bedgraph" -b "${subdir}/${sample}_${experiment}_18nt.bam" -sorted -g "${MYREF}/chrom_order.txt" -d > "${subdir}/${sample}_${experiment}_CHRV_18nt_nonRPGC.tsv"
-#             fi
+            # For TSG, TLG and TLR, generate TSV files (18nt) nonRPGC for quantifications
+            if [[ "$sample" == "TSG" || "$sample" == "TLG" || "$sample" == "TLR" ]]; then
+              bedtools coverage -a "${subdir}/${sample}_${experiment}_CHRIII_18nt_nonRPGC_sorted.bedgraph" -b "${subdir}/${sample}_${experiment}_18nt.bam" -sorted -g "${MYREF}/chrom_order.txt" -d > "${subdir}/${sample}_${experiment}_CHRIII_18nt_nonRPGC.tsv"
+              bedtools coverage -a "${subdir}/${sample}_${experiment}_CHRV_18nt_nonRPGC_sorted.bedgraph" -b "${subdir}/${sample}_${experiment}_18nt.bam" -sorted -g "${MYREF}/chrom_order.txt" -d > "${subdir}/${sample}_${experiment}_CHRV_18nt_nonRPGC.tsv"
+            fi
                     
-#             # Reduced decimals in coverage column (4th) (75nt) # Link this file for next blocks!!
-#             awk -F'\t' 'BEGIN{OFS=FS} {split($4,a,"."); if(length(a)>1) $4=a[1]"."substr(a[2],1,5); print}' "${subdir}/${sample}_${experiment}_75nt.tsv" > "${subdir}/${sample}_${experiment}_75nt.tmp" && mv "${subdir}/${sample}_${experiment}_75nt.tmp" "${subdir}/${sample}_${experiment}_75nt.tsv" # Linking file for next blocks!!!
+            # Reduced decimals in coverage column (4th) (75nt) # Link this file for next blocks!!
+            awk -F'\t' 'BEGIN{OFS=FS} {split($4,a,"."); if(length(a)>1) $4=a[1]"."substr(a[2],1,5); print}' "${subdir}/${sample}_${experiment}_75nt.tsv" > "${subdir}/${sample}_${experiment}_75nt.tmp" && mv "${subdir}/${sample}_${experiment}_75nt.tmp" "${subdir}/${sample}_${experiment}_75nt.tsv" # Linking file for next blocks!!!
 
-#             # Reduced decimals in coverage column (4th) (18nt)
-#             awk -F'\t' 'BEGIN{OFS=FS} {split($4,a,"."); if(length(a)>1) $4=a[1]"."substr(a[2],1,5); print}' "${subdir}/${sample}_${experiment}_CHRIII_18nt.tsv" > "${subdir}/${sample}_${experiment}_CHRIII_18nt.tmp" && mv "${subdir}/${sample}_${experiment}_CHRIII_18nt.tmp" "${subdir}/${sample}_${experiment}_CHRIII_18nt.tsv"
-#             awk -F'\t' 'BEGIN{OFS=FS} {split($4,a,"."); if(length(a)>1) $4=a[1]"."substr(a[2],1,5); print}' "${subdir}/${sample}_${experiment}_CHRV_18nt.tsv" > "${subdir}/${sample}_${experiment}_CHRV_18nt.tmp" && mv "${subdir}/${sample}_${experiment}_CHRV_18nt.tmp" "${subdir}/${sample}_${experiment}_CHRV_18nt.tsv"
+            # Reduced decimals in coverage column (4th) (18nt)
+            awk -F'\t' 'BEGIN{OFS=FS} {split($4,a,"."); if(length(a)>1) $4=a[1]"."substr(a[2],1,5); print}' "${subdir}/${sample}_${experiment}_CHRIII_18nt.tsv" > "${subdir}/${sample}_${experiment}_CHRIII_18nt.tmp" && mv "${subdir}/${sample}_${experiment}_CHRIII_18nt.tmp" "${subdir}/${sample}_${experiment}_CHRIII_18nt.tsv"
+            awk -F'\t' 'BEGIN{OFS=FS} {split($4,a,"."); if(length(a)>1) $4=a[1]"."substr(a[2],1,5); print}' "${subdir}/${sample}_${experiment}_CHRV_18nt.tsv" > "${subdir}/${sample}_${experiment}_CHRV_18nt.tmp" && mv "${subdir}/${sample}_${experiment}_CHRV_18nt.tmp" "${subdir}/${sample}_${experiment}_CHRV_18nt.tsv"
             
-#             # For TSG, TLG and TLR reduced decimals in coverage column (4th) nonRPGC for quantifications
-#             if [[ "$sample" == "TSG" || "$sample" == "TLG" || "$sample" == "TLR" ]]; then
-#               awk -F'\t' 'BEGIN{OFS=FS} {split($4,a,"."); if(length(a)>1) $4=a[1]"."substr(a[2],1,5); print}' "${subdir}/${sample}_${experiment}_CHRIII_18nt_nonRPGC.tsv" > "${subdir}/${sample}_${experiment}_CHRIII_18nt_nonRPGC.tmp" && mv "${subdir}/${sample}_${experiment}_CHRIII_18nt_nonRPGC.tmp" "${subdir}/${sample}_${experiment}_CHRIII_18nt_nonRPGC.tsv"
-#               awk -F'\t' 'BEGIN{OFS=FS} {split($4,a,"."); if(length(a)>1) $4=a[1]"."substr(a[2],1,5); print}' "${subdir}/${sample}_${experiment}_CHRV_18nt_nonRPGC.tsv" > "${subdir}/${sample}_${experiment}_CHRV_18nt_nonRPGC.tmp" && mv "${subdir}/${sample}_${experiment}_CHRV_18nt_nonRPGC.tmp" "${subdir}/${sample}_${experiment}_CHRV_18nt_nonRPGC.tsv"
-#             fi
+            # For TSG, TLG and TLR reduced decimals in coverage column (4th) nonRPGC for quantifications
+            if [[ "$sample" == "TSG" || "$sample" == "TLG" || "$sample" == "TLR" ]]; then
+              awk -F'\t' 'BEGIN{OFS=FS} {split($4,a,"."); if(length(a)>1) $4=a[1]"."substr(a[2],1,5); print}' "${subdir}/${sample}_${experiment}_CHRIII_18nt_nonRPGC.tsv" > "${subdir}/${sample}_${experiment}_CHRIII_18nt_nonRPGC.tmp" && mv "${subdir}/${sample}_${experiment}_CHRIII_18nt_nonRPGC.tmp" "${subdir}/${sample}_${experiment}_CHRIII_18nt_nonRPGC.tsv"
+              awk -F'\t' 'BEGIN{OFS=FS} {split($4,a,"."); if(length(a)>1) $4=a[1]"."substr(a[2],1,5); print}' "${subdir}/${sample}_${experiment}_CHRV_18nt_nonRPGC.tsv" > "${subdir}/${sample}_${experiment}_CHRV_18nt_nonRPGC.tmp" && mv "${subdir}/${sample}_${experiment}_CHRV_18nt_nonRPGC.tmp" "${subdir}/${sample}_${experiment}_CHRV_18nt_nonRPGC.tsv"
+            fi
 
-#             # Extract CHRIII and CHRV, remove columnes 2, 3, 5, 6, and add coordinates to the last column (75nt)
-#             for chr in CHRIII CHRV; do
-#               awk -F'\t' -v chr="$chr" '$1 == chr {print $1, $4}' OFS='\t' "${subdir}/${sample}_${experiment}_75nt.tsv" | awk 'BEGIN {OFS="\t"} {print $0, NR}' > "${subdir}/${sample}_${experiment}_75nt_${chr}.tsv"
+            # Extract CHRIII and CHRV, remove columnes 2, 3, 5, 6, and add coordinates to the last column (75nt)
+            for chr in CHRIII CHRV; do
+              awk -F'\t' -v chr="$chr" '$1 == chr {print $1, $4}' OFS='\t' "${subdir}/${sample}_${experiment}_75nt.tsv" | awk 'BEGIN {OFS="\t"} {print $0, NR}' > "${subdir}/${sample}_${experiment}_75nt_${chr}.tsv"
                         
-#               # Extract MATs
-#               if [[ $chr == "CHRIII" ]]; then
-#                 awk -F'\t' '$3 >= 199953 && $3 <= 201553' "${subdir}/${sample}_${experiment}_75nt_CHRIII.tsv" > "${subdir}/${sample}_${experiment}_75nt_CHRIII_MATa.tsv"
-#               elif [[ $chr == "CHRV" ]]; then
-#                 awk -F'\t' '$3 >= 289025 && $3 <= 290625' "${subdir}/${sample}_${experiment}_75nt_CHRV.tsv" > "${subdir}/${sample}_${experiment}_75nt_CHRV_MATa.tsv"
-#               fi
-#             done
+              # Extract MATs
+              if [[ $chr == "CHRIII" ]]; then
+                awk -F'\t' '$3 >= 199953 && $3 <= 201553' "${subdir}/${sample}_${experiment}_75nt_CHRIII.tsv" > "${subdir}/${sample}_${experiment}_75nt_CHRIII_MATa.tsv"
+              elif [[ $chr == "CHRV" ]]; then
+                awk -F'\t' '$3 >= 289025 && $3 <= 290625' "${subdir}/${sample}_${experiment}_75nt_CHRV.tsv" > "${subdir}/${sample}_${experiment}_75nt_CHRV_MATa.tsv"
+              fi
+            done
 
-#             # Remove columnes 2, 3, 5, 6, and add coordinates to the last column (18nt)
+            # Remove columnes 2, 3, 5, 6, and add coordinates to the last column (18nt)
 
-#             awk -F'\t' 'BEGIN {OFS="\t"} {coord=199953+NR-1; print $1, $4, coord}' "${subdir}/${sample}_${experiment}_CHRIII_18nt.tsv" > "${subdir}/${sample}_${experiment}_CHRIII_18nt_ordered.tsv"
-#             awk -F'\t' 'BEGIN {OFS="\t"} {coord=289025+NR-1; print $1, $4, coord}' "${subdir}/${sample}_${experiment}_CHRV_18nt.tsv" > "${subdir}/${sample}_${experiment}_CHRV_18nt_ordered.tsv"
+            awk -F'\t' 'BEGIN {OFS="\t"} {coord=199953+NR-1; print $1, $4, coord}' "${subdir}/${sample}_${experiment}_CHRIII_18nt.tsv" > "${subdir}/${sample}_${experiment}_CHRIII_18nt_ordered.tsv"
+            awk -F'\t' 'BEGIN {OFS="\t"} {coord=289025+NR-1; print $1, $4, coord}' "${subdir}/${sample}_${experiment}_CHRV_18nt.tsv" > "${subdir}/${sample}_${experiment}_CHRV_18nt_ordered.tsv"
 
-#             # For TSG, TLG and TLR, remove columnes 2, 3, 5, 6, and add coordinates to the last column (nonRPGC for quantifications)
-#             if [[ "$sample" == "TSG" || "$sample" == "TLG" || "$sample" == "TLR" ]]; then
-#               awk -F'\t' 'BEGIN {OFS="\t"} {coord=199953+NR-1; print $1, $4, coord}' "${subdir}/${sample}_${experiment}_CHRIII_18nt_nonRPGC.tsv" > "${subdir}/${sample}_${experiment}_CHRIII_18nt_nonRPGC_ordered.tsv"
-#               awk -F'\t' 'BEGIN {OFS="\t"} {coord=289025+NR-1; print $1, $4, coord}' "${subdir}/${sample}_${experiment}_CHRV_18nt_nonRPGC.tsv" > "${subdir}/${sample}_${experiment}_CHRV_18nt_nonRPGC_ordered.tsv"
-#             fi
+            # For TSG, TLG and TLR, remove columnes 2, 3, 5, 6, and add coordinates to the last column (nonRPGC for quantifications)
+            if [[ "$sample" == "TSG" || "$sample" == "TLG" || "$sample" == "TLR" ]]; then
+              awk -F'\t' 'BEGIN {OFS="\t"} {coord=199953+NR-1; print $1, $4, coord}' "${subdir}/${sample}_${experiment}_CHRIII_18nt_nonRPGC.tsv" > "${subdir}/${sample}_${experiment}_CHRIII_18nt_nonRPGC_ordered.tsv"
+              awk -F'\t' 'BEGIN {OFS="\t"} {coord=289025+NR-1; print $1, $4, coord}' "${subdir}/${sample}_${experiment}_CHRV_18nt_nonRPGC.tsv" > "${subdir}/${sample}_${experiment}_CHRV_18nt_nonRPGC_ordered.tsv"
+            fi
                     
-#             # Clean intermediate files
-#             rm "${subdir}/${sample}_${experiment}_75nt.fastq" "${subdir}/${sample}_${experiment}_75nt.bam" "${subdir}/${sample}_${experiment}_75nt.bai" "${subdir}/${sample}_${experiment}_75nt.sam"
-#             rm "${subdir}/${sample}_${experiment}_18nt.fastq" "${subdir}/${sample}_${experiment}_18nt.bam" "${subdir}/${sample}_${experiment}_18nt.bai" "${subdir}/${sample}_${experiment}_18nt.sam"
+            # Clean intermediate files
+            rm "${subdir}/${sample}_${experiment}_75nt.fastq" "${subdir}/${sample}_${experiment}_75nt.bam" "${subdir}/${sample}_${experiment}_75nt.bai" "${subdir}/${sample}_${experiment}_75nt.sam"
+            rm "${subdir}/${sample}_${experiment}_18nt.fastq" "${subdir}/${sample}_${experiment}_18nt.bam" "${subdir}/${sample}_${experiment}_18nt.bai" "${subdir}/${sample}_${experiment}_18nt.sam"
 
-#           else
-#           echo "Warning: Decompressed files missing for sample $sample in $subdir!" >> "$log_file"
-#           echo "" >> "$log_file"
-#           fi
-#         else
-#         echo "Warning: One or both compressed files for sample $sample are missing in $subdir!" >> "$log_file"
-#         echo "" >> "$log_file"
-#         fi
-#       done
-#     done
-# done
-
-
-
-
-# for strain in "$MYWD"*/; do
-#   echo "Processing directory: $strain to calculate average coverage" >> "$log_file"
-#   echo "" >> "$log_file"  # Adds a blank line
-
-#   # Loop through sample prefixes (T0, T1, T2, etc.)
-#     R_SCRIPT="SR_process_cov_III_V.R"
-#     strain="${strain}"
-#     root_dir="${strain}"
-#     echo "Processing strain: $strain" >> "$log_file"
-#     if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain"; then
-#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain}" >> "$log_file"
-#             echo "Skipping ${strain} and continuing..." >> "$log_file"
-#           continue
-#         fi  
-# done
+          else
+          echo "Warning: Decompressed files missing for sample $sample in $subdir!" >> "$log_file"
+          echo "" >> "$log_file"
+          fi
+        else
+        echo "Warning: One or both compressed files for sample $sample are missing in $subdir!" >> "$log_file"
+        echo "" >> "$log_file"
+        fi
+      done
+    done
+done
 
 
 
 
-# ### === DATA ORGANIZATION ===
+for strain in "$MYWD"*/; do
+  echo "Processing directory: $strain to calculate average coverage" >> "$log_file"
+  echo "" >> "$log_file"  # Adds a blank line
 
-# #Crate folder for the Alignment output files
-# for subdir in "${MYWD}"*/; do
-#     mkdir -p "${subdir}/Alignment_data"
-#     mv "${subdir}"/*.bedgraph "${subdir}/Alignment_data/"
-# done
-
-# # Create a folder for the Coverage TSV files
-# for subdir in "${MYWD}"*/; do
-#     mkdir -p "${subdir}/Coverage_data"
-#     mv "${subdir}"/*_Coverage.tsv "${subdir}/Coverage_data/"
-# done
-
-# for subdir in "${MYWD}"*/; do
-#     mkdir -p "${subdir}/MATs_quant_data"
-#     for chr in CHRIII CHRV; do
-#         mv "${subdir}"/*_"${chr}"_18nt_nonRPGC_ordered.tsv "${subdir}/MATs_quant_data/"
-#     done
-# done
-
-# # Create a folder for the graphs
-# for subdir in "$MYWD"*/; do
-#   mkdir -p "${subdir}/Graphs_Coverage"
-#   mv "${subdir}/plot_"*".svg" "${subdir}/Graphs_Coverage/"
-# done
-
-# # Create a folder for FASTQP files
-# for subdir in "$MYWD"*/; do
-#   mkdir -p "${subdir}/FASTQP"
-#   mv "${subdir}"/*.fastq.html "${subdir}/FASTQP/"
-#   mv "${subdir}"/*.fastq.json "${subdir}/FASTQP/"
-# done
-
-# # Remove index files
-# find "$MYREF" -name "*.ebwt" -exec rm {} +
-# find "$MYREF" -name "*.fai" -exec rm {} +
-# find "$MYREF" -name "*.txt" -exec rm {} +
-
-# Delete all TSV files in subdir, excluding those in Alignment_data
-# for subdir in "${MYWD}"*; do
-#     find "${subdir}" -maxdepth 1 -type f -name "*.tsv" ! -name "*_75nt.tsv" -exec rm {} \;
-# done
+  # Loop through sample prefixes (T0, T1, T2, etc.)
+    R_SCRIPT="SR_process_cov_III_V.R"
+    strain="${strain}"
+    root_dir="${strain}"
+    echo "Processing strain: $strain" >> "$log_file"
+    if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain"; then
+            echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain}" >> "$log_file"
+            echo "Skipping ${strain} and continuing..." >> "$log_file"
+          continue
+        fi  
+done
 
 
 
-# ### === MATs quantification for TSG, TLG and TLR ===
-# # This section calculates the difference in coverage for polymorphism between CHRIII and CHRV
 
-# # Coordinates (you can add more coordinates separated by space)
-# coordinates_CHRIII=(200119 200167 200212 200272 200326 200386 200449 200509 200542 200575 200635 200689 200753 200817 200882 200947 201012 201077 201148 201207 201272 201337 201402)
-# coordinates_CHRV=(289191 289239 289284 289344 289398 289458 289521 289581 289614 289647 289707 289761 289825 289889 289954 290019 290084 290149 290220 290278 290343 290408 290473)
+### === DATA ORGANIZATION ===
 
-# offset=19 
+#Crate folder for the Alignment output files
+for subdir in "${MYWD}"*/; do
+    mkdir -p "${subdir}/Alignment_data"
+    mv "${subdir}"/*.bedgraph "${subdir}/Alignment_data/"
+done
 
-# for subdir in "$MYWD"*/MATs_quant_data/; do
-#   for sample in TSG TLG TLR; do
-#     for exp in "${EXP_LIST[@]}"; do
-#       input_file_CHRIII="${subdir}/${sample}_${exp}_CHRIII_18nt_nonRPGC_ordered.tsv"
-#       input_file_CHRV="${subdir}/${sample}_${exp}_CHRV_18nt_nonRPGC_ordered.tsv"
+# Create a folder for the Coverage TSV files
+for subdir in "${MYWD}"*/; do
+    mkdir -p "${subdir}/Coverage_data"
+    mv "${subdir}"/*_Coverage.tsv "${subdir}/Coverage_data/"
+done
 
-#       if [[ -f "$input_file_CHRIII" && -f "$input_file_CHRV" ]]; then
-#         echo "Processing files in $subdir for $sample _ $exp..."
+for subdir in "${MYWD}"*/; do
+    mkdir -p "${subdir}/MATs_quant_data"
+    for chr in CHRIII CHRV; do
+        mv "${subdir}"/*_"${chr}"_18nt_nonRPGC_ordered.tsv "${subdir}/MATs_quant_data/"
+    done
+done
 
-#         # Loop through CHRIII coordinates
-#         for coordinate_CHRIII in "${coordinates_CHRIII[@]}"; do
-#           line_number_CHRIII=$(awk -v coord="$coordinate_CHRIII" '$3 == coord {print NR}' "$input_file_CHRIII")
+# Create a folder for the graphs
+for subdir in "$MYWD"*/; do
+  mkdir -p "${subdir}/Graphs_Coverage"
+  mv "${subdir}/plot_"*".svg" "${subdir}/Graphs_Coverage/"
+done
 
-#           if [[ -n "$line_number_CHRIII" ]]; then
-#             top_line_CHRIII=$((line_number_CHRIII - offset))
-#             bottom_line_CHRIII=$((line_number_CHRIII + offset))
-#             [[ "$top_line_CHRIII" -lt 1 ]] && top_line_CHRIII=1
+# Create a folder for FASTQP files
+for subdir in "$MYWD"*/; do
+  mkdir -p "${subdir}/FASTQP"
+  mv "${subdir}"/*.fastq.html "${subdir}/FASTQP/"
+  mv "${subdir}"/*.fastq.json "${subdir}/FASTQP/"
+done
 
-#             top_line_content=$(sed -n "${top_line_CHRIII}p" "$input_file_CHRIII")
-#             mid_line_content=$(sed -n "${line_number_CHRIII}p" "$input_file_CHRIII")
-#             bottom_line_content=$(sed -n "${bottom_line_CHRIII}p" "$input_file_CHRIII")
+# Remove index files
+find "$MYREF" -name "*.ebwt" -exec rm {} +
+find "$MYREF" -name "*.fai" -exec rm {} +
+find "$MYREF" -name "*.txt" -exec rm {} +
 
-#             top_coverage=$(echo "$top_line_content" | awk '{print $2}')
-#             bottom_coverage=$(echo "$bottom_line_content" | awk '{print $2}')
-#             baseline_coverage=$(awk -v top="$top_coverage" -v bottom="$bottom_coverage" 'BEGIN {print top + (bottom - top)/2}')
+Delete all TSV files in subdir, excluding those in Alignment_data
+for subdir in "${MYWD}"*; do
+    find "${subdir}" -maxdepth 1 -type f -name "*.tsv" ! -name "*_75nt.tsv" -exec rm {} \;
+done
 
-#             # Extract fields from mid_line_content
-#             mid_chr=$(echo "$mid_line_content" | awk '{print $1}')
-#             mid_coverage=$(echo "$mid_line_content" | awk '{print $2}')
-#             mid_coordinate=$(echo "$mid_line_content" | awk '{print $3}')
 
-#             # Calculate coverage difference (mid - baseline)
-#             coverage_diff=$(awk -v mid="$mid_coverage" -v base="$baseline_coverage" 'BEGIN {print mid - base}')
 
-#             # Build new line with: original chr, diff coverage, and coordinate (tab-separated)
-#             diff_line=$(echo -e "$mid_chr\t$coverage_diff\t$mid_coordinate")
+### === MATs quantification for TSG, TLG and TLR ===
+# This section calculates the difference in coverage for polymorphism between CHRIII and CHRV
 
-#             echo "CHRIII Coord: $coordinate_CHRIII — Coverage Diff: $coverage_diff"
+# Coordinates (you can add more coordinates separated by space)
+coordinates_CHRIII=(200119 200167 200212 200272 200326 200386 200449 200509 200542 200575 200635 200689 200753 200817 200882 200947 201012 201077 201148 201207 201272 201337 201402)
+coordinates_CHRV=(289191 289239 289284 289344 289398 289458 289521 289581 289614 289647 289707 289761 289825 289889 289954 290019 290084 290149 290220 290278 290343 290408 290473)
 
-#             output_file_CHRIII="${subdir}/${sample}_${exp}_CHRIII_diff_${coordinate_CHRIII}.tsv"
-#             {
-#               echo "$diff_line"
-#             } > "$output_file_CHRIII"
+offset=19 
 
-#           else
-#           echo "Coordinate $coordinate_CHRIII not found in $input_file_CHRIII for $sample $exp."
-#           fi
-#         done
+for subdir in "$MYWD"*/MATs_quant_data/; do
+  for sample in TSG TLG TLR; do
+    for exp in "${EXP_LIST[@]}"; do
+      input_file_CHRIII="${subdir}/${sample}_${exp}_CHRIII_18nt_nonRPGC_ordered.tsv"
+      input_file_CHRV="${subdir}/${sample}_${exp}_CHRV_18nt_nonRPGC_ordered.tsv"
+
+      if [[ -f "$input_file_CHRIII" && -f "$input_file_CHRV" ]]; then
+        echo "Processing files in $subdir for $sample _ $exp..."
+
+        # Loop through CHRIII coordinates
+        for coordinate_CHRIII in "${coordinates_CHRIII[@]}"; do
+          line_number_CHRIII=$(awk -v coord="$coordinate_CHRIII" '$3 == coord {print NR}' "$input_file_CHRIII")
+
+          if [[ -n "$line_number_CHRIII" ]]; then
+            top_line_CHRIII=$((line_number_CHRIII - offset))
+            bottom_line_CHRIII=$((line_number_CHRIII + offset))
+            [[ "$top_line_CHRIII" -lt 1 ]] && top_line_CHRIII=1
+
+            top_line_content=$(sed -n "${top_line_CHRIII}p" "$input_file_CHRIII")
+            mid_line_content=$(sed -n "${line_number_CHRIII}p" "$input_file_CHRIII")
+            bottom_line_content=$(sed -n "${bottom_line_CHRIII}p" "$input_file_CHRIII")
+
+            top_coverage=$(echo "$top_line_content" | awk '{print $2}')
+            bottom_coverage=$(echo "$bottom_line_content" | awk '{print $2}')
+            baseline_coverage=$(awk -v top="$top_coverage" -v bottom="$bottom_coverage" 'BEGIN {print top + (bottom - top)/2}')
+
+            # Extract fields from mid_line_content
+            mid_chr=$(echo "$mid_line_content" | awk '{print $1}')
+            mid_coverage=$(echo "$mid_line_content" | awk '{print $2}')
+            mid_coordinate=$(echo "$mid_line_content" | awk '{print $3}')
+
+            # Calculate coverage difference (mid - baseline)
+            coverage_diff=$(awk -v mid="$mid_coverage" -v base="$baseline_coverage" 'BEGIN {print mid - base}')
+
+            # Build new line with: original chr, diff coverage, and coordinate (tab-separated)
+            diff_line=$(echo -e "$mid_chr\t$coverage_diff\t$mid_coordinate")
+
+            echo "CHRIII Coord: $coordinate_CHRIII — Coverage Diff: $coverage_diff"
+
+            output_file_CHRIII="${subdir}/${sample}_${exp}_CHRIII_diff_${coordinate_CHRIII}.tsv"
+            {
+              echo "$diff_line"
+            } > "$output_file_CHRIII"
+
+          else
+          echo "Coordinate $coordinate_CHRIII not found in $input_file_CHRIII for $sample $exp."
+          fi
+        done
     
-#         # Loop through CHRV coordinates
-#         for coordinate_CHRV in "${coordinates_CHRV[@]}"; do
-#           line_number_CHRV=$(awk -v coord="$coordinate_CHRV" '$3 == coord {print NR}' "$input_file_CHRV")
+        # Loop through CHRV coordinates
+        for coordinate_CHRV in "${coordinates_CHRV[@]}"; do
+          line_number_CHRV=$(awk -v coord="$coordinate_CHRV" '$3 == coord {print NR}' "$input_file_CHRV")
 
-#           if [[ -n "$line_number_CHRV" ]]; then
-#             top_line_CHRV=$((line_number_CHRV - offset))
-#             bottom_line_CHRV=$((line_number_CHRV + offset))
-#             [[ "$top_line_CHRV" -lt 1 ]] && top_line_CHRV=1
+          if [[ -n "$line_number_CHRV" ]]; then
+            top_line_CHRV=$((line_number_CHRV - offset))
+            bottom_line_CHRV=$((line_number_CHRV + offset))
+            [[ "$top_line_CHRV" -lt 1 ]] && top_line_CHRV=1
 
-#             top_line_content=$(sed -n "${top_line_CHRV}p" "$input_file_CHRV")
-#             mid_line_content=$(sed -n "${line_number_CHRV}p" "$input_file_CHRV")
-#             bottom_line_content=$(sed -n "${bottom_line_CHRV}p" "$input_file_CHRV")
+            top_line_content=$(sed -n "${top_line_CHRV}p" "$input_file_CHRV")
+            mid_line_content=$(sed -n "${line_number_CHRV}p" "$input_file_CHRV")
+            bottom_line_content=$(sed -n "${bottom_line_CHRV}p" "$input_file_CHRV")
 
-#             top_coverage=$(echo "$top_line_content" | awk '{print $2}')
-#             bottom_coverage=$(echo "$bottom_line_content" | awk '{print $2}')
-#             baseline_coverage=$(awk -v top="$top_coverage" -v bottom="$bottom_coverage" 'BEGIN {print top + (bottom - top)/2}')
+            top_coverage=$(echo "$top_line_content" | awk '{print $2}')
+            bottom_coverage=$(echo "$bottom_line_content" | awk '{print $2}')
+            baseline_coverage=$(awk -v top="$top_coverage" -v bottom="$bottom_coverage" 'BEGIN {print top + (bottom - top)/2}')
 
-#             # Extract fields from mid_line_content
-#             mid_chr=$(echo "$mid_line_content" | awk '{print $1}')
-#             mid_coverage=$(echo "$mid_line_content" | awk '{print $2}')
-#             mid_coordinate=$(echo "$mid_line_content" | awk '{print $3}')
+            # Extract fields from mid_line_content
+            mid_chr=$(echo "$mid_line_content" | awk '{print $1}')
+            mid_coverage=$(echo "$mid_line_content" | awk '{print $2}')
+            mid_coordinate=$(echo "$mid_line_content" | awk '{print $3}')
 
-#             # Calculate coverage difference (mid - baseline)
-#             coverage_diff=$(awk -v mid="$mid_coverage" -v base="$baseline_coverage" 'BEGIN {print mid - base}')
+            # Calculate coverage difference (mid - baseline)
+            coverage_diff=$(awk -v mid="$mid_coverage" -v base="$baseline_coverage" 'BEGIN {print mid - base}')
 
-#             # Build new line with: original chr, diff coverage, and coordinate (tab-separated)
-#             diff_line=$(echo -e "$mid_chr\t$coverage_diff\t$mid_coordinate")
+            # Build new line with: original chr, diff coverage, and coordinate (tab-separated)
+            diff_line=$(echo -e "$mid_chr\t$coverage_diff\t$mid_coordinate")
 
-#             echo "CHRV Coord: $coordinate_CHRV — Coverage Diff: $coverage_diff"
+            echo "CHRV Coord: $coordinate_CHRV — Coverage Diff: $coverage_diff"
 
-#             output_file_CHRV="${subdir}/${sample}_${exp}_CHRV_diff_${coordinate_CHRV}.tsv"
-#             {
-#               echo "$diff_line"
-#             } > "$output_file_CHRV"
+            output_file_CHRV="${subdir}/${sample}_${exp}_CHRV_diff_${coordinate_CHRV}.tsv"
+            {
+              echo "$diff_line"
+            } > "$output_file_CHRV"
 
-#           else
-#           echo "Coordinate $coordinate_CHRV not found in $input_file_CHRV for $sample $exp."
-#           fi
-#         done
-#       else
-#       echo "Files not found for $sample $exp in $subdir"
-#       fi
-#     done
-#   done
-# done
-
-
-# for strain in "$MYWD"*/; do
-#   echo "Processing directory: $strain to calculate MATa coverage (r18)" >> "$log_file"
-#   echo "" >> "$log_file"  # Adds a blank line
-#   strain="${strain}"
-#   root_dir="${strain}"
-
-#   # Loop through sample prefixes (T0, T1, T2, etc.)
-#     R_SCRIPT="SR_process_cov_III_V_18nt.R"
-#     strain="${strain}"
-#     root_dir="${strain}"
-#     echo "Processing strain: $strain" >> "$log_file"
-#     if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain"; then
-#             echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain}" >> "$log_file"
-#             echo "Skipping ${strain} and continuing..." >> "$log_file"
-#           continue
-#         fi  
-# done
+          else
+          echo "Coordinate $coordinate_CHRV not found in $input_file_CHRV for $sample $exp."
+          fi
+        done
+      else
+      echo "Files not found for $sample $exp in $subdir"
+      fi
+    done
+  done
+done
 
 
-# # Move the plots to the Graphs_Coverage folder
-# for strain in "$MYWD"*/; do
-#   for sample in TSG TLG TLR; do
-#     mv "${strain}/plot_${sample}_18nt_MATa_Coverage_Quant.svg" "${strain}/Graphs_Coverage/"
-#   done
-# done
+for strain in "$MYWD"*/; do
+  echo "Processing directory: $strain to calculate MATa coverage (r18)" >> "$log_file"
+  echo "" >> "$log_file"  # Adds a blank line
+  strain="${strain}"
+  root_dir="${strain}"
 
-# # Calulate total elapsed time
-# elapsed_time_total_cov=$((( SECONDS - start_time_total_cov )/60))
-# echo "Coverage and Polymorphisms Analysis completed in ${elapsed_time_total_cov} minutes" >> "$log_file"
-# echo "" >> "$log_file"  # Adds a blank line            
+  # Loop through sample prefixes (T0, T1, T2, etc.)
+    R_SCRIPT="SR_process_cov_III_V_18nt.R"
+    strain="${strain}"
+    root_dir="${strain}"
+    echo "Processing strain: $strain" >> "$log_file"
+    if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain"; then
+            echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain}" >> "$log_file"
+            echo "Skipping ${strain} and continuing..." >> "$log_file"
+          continue
+        fi  
+done
+
+
+# Move the plots to the Graphs_Coverage folder
+for strain in "$MYWD"*/; do
+  for sample in TSG TLG TLR; do
+    mv "${strain}/plot_${sample}_18nt_MATa_Coverage_Quant.svg" "${strain}/Graphs_Coverage/"
+  done
+done
+
+# Calulate total elapsed time
+elapsed_time_total_cov=$((( SECONDS - start_time_total_cov )/60))
+echo "Coverage and Polymorphisms Analysis completed in ${elapsed_time_total_cov} minutes" >> "$log_file"
+echo "" >> "$log_file"  # Adds a blank line            
 
 
 ###########################################
@@ -770,929 +770,114 @@ echo "" >> "$log_file"  # Adds a blank line
 start_time_total_cat=$SECONDS
 
 # Loop through each directory inside MYWD
-for subdir in "$MYWD"*/; do
-  echo "Processing R analysis: $subdir"
-  strain=$(basename "$subdir") # Extract the strain name
-  subdir_escaped="${subdir%/}" # Remove trailing slash
-    for sample in T0 TSG TLG TLR; do
-        for category in ORF LTR TEG Ty tRNA rRNA ncRNA snRNA snoRNA ARS Cen Tel Int; do
-            echo "Processing category: $category"
+R_SCRIPT="SR_process_categories.R"
+for strain in "$MYWD"*/; do
+    for category in ORF LTR TEG Ty tRNA rRNA ncRNA snRNA snoRNA ARS Cen Tel Int; do
+        echo "Processing category: $category" >> "$log_file"
+        root_dir="${strain}"
+        strain="${strain}"
+        category="${category}"
+        category_path="${CATEGORY_PATH}"
 
-            shopt -s nullglob
-            category_files=("$CATEGORY_PATH"/*.PMV."$category".tsv)
-            shopt -u nullglob
+        if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$category" "$category_path"; then
+        echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} and ${category}" >> "$log_file"
+        echo "Skipping ${strain} and ${category} and continuing..." >> "$log_file"
+        continue
+    fi  
 
-            if [ ${#category_files[@]} -eq 0 ]; then
-            echo "No files found for category $category, skipping."
-            continue
-            fi
-
-            for category_file in "${category_files[@]}"; do
-              if [ "$sample" == "T0" ]; then
-                echo "Skipping T0 vs T0 comparison"
-                continue
-              fi
-            echo "Running Rscript on $category for $sample in $strain"
-        
-      Rscript - <<EOF
-
-# Load packages
-library(tidyverse)
-
-# Variables from Bash
-cepa <- "${strain}"
-category <- "${category}"
-category_file <- "${category_file}"
-subdir <- "${subdir_escaped}"
-time <- "${time}"
-
-# File paths
-plot_path <- file.path(subdir, paste0(cepa, "_", category, "_T0vs", time,"_plot.svg"))
-tsv_path <- file.path(subdir, paste0(category, "_fingerprint_", cepa, "_T0vs", time,".tsv"))
-#all_data_path <- file.path(subdir, paste0(category, "_all_data_", cepa, "_T0vs", time, ".tsv")) only to check raw data
-
-# Chromosome positions
-chr_positions <- list(
-  CHRI = 1:230218, CHRII = 1:813184, CHRIII = 1:316513,
-  CHRIV = 1:1531933, CHRV = 1:578179, CHRVI = 1:270161,
-  CHRVII = 1:1090940, CHRVIII = 1:562643, CHRIX = 1:439888,
-  CHRX = 1:745751, CHRXI = 1:666816, CHRXII = 1:1078177,
-  CHRXIII = 1:924431, CHRXIV = 1:784333, CHRXV = 1:1091291,
-  CHRXVI = 1:948066
-)
-
-# Read category regions
-df_categorias <- read_tsv(category_file, col_names = FALSE,
-  col_types = cols(X1 = col_character(), X2 = col_character(),
-                   X3 = col_double(), X4 = col_double(), X5 = col_character())) %>%
-  rename(Tipo = X1, Categoria = X2, Pos_inicio = X3, Pos_fin = X4, Cromosoma = X5) %>%
-  mutate(Categoria = as.factor(Categoria))
-
-# Function to process each experiment
-process_experiment <- function(exp_num, time) {
-  data_file <- file.path(subdir, paste0(time, "_", "E", exp_num, "_75nt.tsv"))
-  df <- read_tsv(data_file, col_names = FALSE, col_types = cols_only(X1 = col_character(), X4 = col_double()))
-
-  df_full <- tibble(
-    Cepa = cepa,
-    Experimento = exp_num,
-    Tiempo = time,
-    Cromosoma = df\$X1,
-    Valor_real = df\$X4
-  )
-
-  map_dfr(names(chr_positions), function(chr) {
-    chr_df <- df_full %>% filter(Cromosoma == chr) %>%
-      mutate(Posicion = chr_positions[[chr]])
-
-    cat_df <- df_categorias %>% filter(Cromosoma == chr)
-
-    map_dfr(unique(cat_df\$Categoria), function(cat) {
-      regions <- cat_df %>% filter(Categoria == cat)
-      map_dfr(1:nrow(regions), function(i) {
-        chr_df %>%
-          filter(Posicion >= regions\$Pos_inicio[i], Posicion <= regions\$Pos_fin[i]) %>%
-          mutate(Nombre = cat, categoria = regions\$Tipo[i])
-      })
-    })
-  })
-}
-
-# Process all experiments
-experiments <- expand.grid(exp = 1:3, time = c("T0", time))
-all_data <- pmap_dfr(experiments, ~process_experiment(..1, ..2))
-
-# Export all_data(Only to check raw data)
-# write_tsv(all_data, all_data_path)
-# message("Raw data saved to: ", all_data_path)
-
-# Compute ratios
-ratio_data <- all_data %>%
-  group_by(Cepa, Cromosoma, categoria, Nombre, Experimento, Tiempo) %>%
-  summarise(Valor_real = sum(Valor_real), .groups = "drop") %>%
-  group_by(Cepa, Cromosoma, categoria, Nombre, Experimento) %>%
-  mutate(ratio = Valor_real / Valor_real[Tiempo == "T0"]) %>%
-  filter(Tiempo == time) %>%
-  group_by(Cepa, Cromosoma, categoria, Nombre) %>%
-  summarise(ratio_medio = mean(ratio), desv_est = sd(ratio), .groups = "drop")
-
-# Plot
-p <- ggplot(ratio_data) + 
-    geom_col(aes(y = ratio_medio, x = Nombre), fill = "#2F2C7E", width = 0.7, 
-           color = "black", linewidth = 0.1) +
-    geom_errorbar(aes(x = Nombre, ymin = ratio_medio - desv_est, 
-                    ymax = ratio_medio + desv_est), 
-                width = 0.3, color = "grey8", alpha = 1, size = 0.3) +
-    theme_classic() +
-    labs(title = paste0("Ratio T0vs", time), subtitle = paste0("Cepa ", cepa), 
-       y = "Ratio", x = "Feature")
-
-    ggsave(
-        filename = plot_path,
-        plot = p,
-        width = 8,
-        height = 6,
-        dpi = 300,
-        device = "svg"
-        )
-    write_tsv(ratio_data, file = tsv_path)
-
-EOF
-            done
-        done
     done
 done
 
-# ### ORDERING CATEGORIES DATASET ###
 
-# # Loop through each directory inside MYWD
-# for subdir in "${MYWD}"*/; do
-#   echo "Processing directory: $subdir"
-#   for time in "T0vsTSG" "T0vsTLG" "T0vsTLR"; do
-
-#     Rscript - <<EOF
-
-# library(tidyverse)
-
-# # Variables from Bash
-# category_path <- "${CATEGORY_PATH}"
-# subdir <- "${subdir}"
-# time <- "${time}"
-# subdir <- sub("/\$", "", subdir)  # Remove trailing slash
-
-# # Define all categories
-# categories <- c("ORF", "LTR", "TEG", "Ty", "tRNA", "rRNA", "ncRNA", "snRNA", "snoRNA", "ARS", "Cen", "Tel", "Int")
-# combined <- list()
-
-# # Read the order file
-# orden_path <- file.path(category_path, "Nombre_ordenado_MATanoalpha_INTERGENICA.tsv")
-# orden <- read_tsv(orden_path, show_col_types = FALSE)
-
-# # Loop through all categories
-# for (category in categories) {
-#   file_path <- file.path(subdir, paste0(category, "_fingerprint_", basename(subdir), "_", time, ".tsv"))
-
-#   if (file.exists(file_path)) {
-#     message("Reading: ", file_path)
-#     df <- read_tsv(file_path, show_col_types = FALSE)
-#     df_analisis <- data.frame(Analisis = rep(time, nrow(df)))
-#     completo <- bind_cols(df, df_analisis)
-#     completo_ordenado <- merge(completo, orden, by = "Nombre")
-#     combined[[category]] <- completo_ordenado
-#   }
-# }
-
-# # Combine and write final output
-# if (length(combined) > 0) {
-#   all_combined <- bind_rows(combined)
-
-#   # Sort by the first letter and number in 'Nombre_ordenado'
-#   df_sorted <- all_combined %>%
-#     mutate(
-#       Initial = substr(Nombre_ordenado, 1, 1),
-#       Number = as.numeric(gsub("_.*", "", substr(Nombre_ordenado, 2, nchar(Nombre_ordenado))))
-#     ) %>%
-#     arrange(Initial, Number)
-
-#   # Save the sorted file
-#   sorted_output <- file.path(subdir, paste0("Genomic_sorted_", basename(subdir), "_", gsub(" ", "", time), ".tsv"))
-#   write_tsv(df_sorted, sorted_output)
-#   message("Sorted file written to: ", sorted_output)
-# } else {
-#   warning("No data found for time: ", time)
-# }
-# EOF
-
-#   done
-# done
-
-# # Move tsv category files into a category data folder
-# for subdir in "${MYWD}"*/; do
-#   mkdir -p "${subdir}/Category_Data_TSV_and_Plots"
-#   mv "${subdir}"/*"fingerprint"* "${subdir}/Category_Data_TSV_and_Plots/"
-#   mv "${subdir}"/*"all_data"* "${subdir}/Category_Data_TSV_and_Plots/"
-#   mv "${subdir}"/*".svg" "${subdir}/Category_Data_TSV_and_Plots/"
-# done
-
-# ### PLOTTING CATEGORIES DATA ###
-
-# for subdir in "$MYWD"*/; do
-#   for time in "T0vsTSG.tsv" "T0vsTLG.tsv" "T0vsTLR.tsv"; do
-#   echo "Processing time point: $time"
-
-# # Run R inline to process and plot
-
-# Rscript - <<EOF
-
-# # Load libraries
-# library(tidyverse)
-# library(ggplot2)
-# library(dplyr)
-# library(tidyr)
-# library(extrafont)
-# library(plotrix)
-
-# # Bash variables injected as strings
-# mydir <- "${MYWD}"
-# time <- "${time}"
-# subdir <- "${subdir}"
-
-# # Normalize subdir path and extract strain (folder name)
-# strain <- basename(normalizePath(subdir))
-
-# # Set working directory
-# setwd(subdir)
-
-# # REORDER THE DATASET BY CATEGORIES
-# # Define the order of categories
-# categoria_order <- c("ORF", "intergenic", "long_terminal_repeat", "transposable_element_gene", 
-#                      "LTR_retrotransposon", "tRNA_gene", "rRNA_gene", "ncRNA_gene", 
-#                      "snRNA_gene", "snoRNA_gene", "ARS", "centromere", "telomere")
-
-# # Define the file pattern to search for
-# file_gen <- paste0("Genomic_sorted_", strain, "_", time)
-
-# # Check if the file exists
-# if (!file.exists(file_gen)) {
-#   stop("File not found: ", file_gen)
-# }
-
-# # Read the file
-# df_gen <- read_tsv(file_gen, show_col_types = FALSE)
-
-# # Factor and sort by category
-# df_gen <- df_gen %>%
-#   mutate(categoria = factor(categoria, levels = categoria_order, ordered = TRUE)) %>%
-#   arrange(categoria)
-
-# # Remove ".tsv" from time for cleaner output name
-# time_clean <- str_remove(time, "\\\\.tsv$")
-# out_name <- paste0("Category_sorted_", strain, "_", time_clean, ".tsv")
-
-# # Write Output
-# write_tsv(df_gen, out_name)
-# message("Written: ", out_name)
-
-# # PLOT VIOLIN PLOTS WITH THE DISTRIBUTION OF THE DATA FOR EACH GENOMIC CATEGORY
-
-# # Match tsvs with the timepoint
-# file_cat <- paste0("Category_sorted_", strain, "_", time)
-# # Check if the file exists
-# if (!file.exists(file_cat)) {
-#   stop("File not found: ", file_cat)
-# }
-
-# # Read the file
-# df_cat <- read_tsv(file_cat, show_col_types = FALSE)
-
-# # Convert categoria to factor
-# df_cat <- df_cat %>%
-#   mutate(categoria = factor(categoria, levels = categoria_order, ordered = TRUE))
-
-# # Define the transformation function # for better visualization
-# transform_y <- function(y) {
-#   ifelse(y <= 2, 
-#          y * (0.75 / 2),                     # scale 0-2 to 0-0.75
-#          0.75 + ((y - 2) * (0.25 / (10 - 2))) # scale 2-10 to 0.75-1
-#   )
-# }
-
-# # Transformed ratio_medio column
-# df_cat\$ratio_medio_trans <- transform_y(df_cat\$ratio_medio)
-
-# # Create output folder
-# out_dir <- file.path(subdir, "Plots_Analysis")
-# dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
-
-# # Define the color palette with your specific color codes
-# categoria_colors <- c(
-#   "ORF" = "#4F71BE", 
-#   "intergenic" = "#FF051D", 
-#   "long_terminal_repeat" = "#DE8344", 
-#   "transposable_element_gene" = "#A5A5A5", 
-#   "LTR_retrotransposon" = "#F5C242", 
-#   "tRNA_gene" = "#6A99D0", 
-#   "rRNA_gene" = "#7EAB55", 
-#   "ncRNA_gene" = "#2D4374", 
-#   "snRNA_gene" = "#934D20", 
-#   "snoRNA_gene" = "#636363", 
-#   "ARS" = "#937424", 
-#   "centromere" = "#355D8D", 
-#   "telomere" = "#4B6733"
-# )
-
-# p1 <- ggplot(df_cat, aes(x = categoria, y = ratio_medio_trans, fill = categoria)) +
-#   geom_jitter(aes(color = categoria), width = 0.1, size = 0.1, alpha = 0.2) +
-#   geom_violin(trim = FALSE, size = 0.1, width = 0.8, alpha = 0.8, scale = "width") +
-#   geom_boxplot(width = 0.1, alpha = 1, size = 0.1, outlier.shape = NA) +
-#   theme_minimal() +
-#   labs(title = paste("Strain:", strain, "-", time),
-#        x = "Category", y = "Coverage", fill = "Category") +
-#   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-#   scale_fill_manual(values = categoria_colors) +
-#   scale_color_manual(values = categoria_colors, guide = "none") + 
-#   scale_x_discrete(labels = c(
-#   "ORF" = "ORF",
-#   "intergenic" = "Intergenic",
-#   "long_terminal_repeat" = "LTR",
-#   "transposable_element_gene" = "TEG",
-#   "LTR_retrotransposon" = "Ty",
-#   "tRNA_gene" = "tRNA",
-#   "rRNA_gene" = "rRNA",
-#   "ncRNA_gene" = "ncRNA",
-#   "snRNA_gene" = "snRNA",
-#   "snoRNA_gene" = "snoRNA",
-#   "ARS" = "ARS",
-#   "centromere" = "Centromere",
-#   "telomere" = "Telomere"
-#   )) +
-#   coord_cartesian(ylim = c(0, 1.02), expand = FALSE) +
-#   scale_y_continuous(
-#     name = "Coverage",
-#     breaks = c(0, 0.1875, 0.375, 0.5625, 0.75, 0.8125, 0.875, 0.9375, 1),
-#     labels = c("0", "0.5", "1", "1.5", "2", "4", "6", "8", "10")
-#   )
-
-#   # Save the plot
-#   formats <- c("svg", "png")
-#   for (fmt in formats) {
-#     ggsave(
-#       filename = file.path(out_dir, paste0("Violin_", strain, "_", time_clean, ".", fmt)),
-#       plot = p1,
-#       device = fmt,
-#       width = 8,
-#       height = 5,
-#       dpi = 300
-#     )
-#   }
-
-# # PLOTTING GENOMIC COVERAGE
-
-# # Prepare the template dataframe: Generate column1, total number of rows in the dataframe
-# total_rows <- nrow(df_cat)
-
-# # First segment: 0.5 increments
-# first_part <- seq(1, 6597.5, by = 0.5)
-
-# # Number of remaining positions
-# remaining <- total_rows - length(first_part)
-
-# # Second segment: 1 increments starting from 6599
-# second_part <- seq(6598.5, by = 1, length.out = remaining)
-
-# # Combine both parts
-# position_vector <- c(first_part, second_part)
-
-# # Create the final dataframe
-# Cov_df <- data.frame(
-#   Position = position_vector,
-#   Coverage = df_cat\$ratio_medio,
-#   Coverage_eje = df_cat\$ratio_medio - 1,
-#   SD = df_cat\$desv_est,
-#   Series = df_cat\$categoria
-#   )
-
-# # Output filename
-# cov_out_name <- paste0("Coverage_Template_Data_", strain, "_", time_clean, ".tsv")
-
-# # Write the new TSV
-# write_tsv(Cov_df, file = cov_out_name)
-# message("Written: ", cov_out_name)
-
-# # Plot genomic coverage
-# p2 <- ggplot(Cov_df, aes(x = Position, y = Coverage_eje)) +
-#   geom_col(size = 0.1, linewidth = 0.1, color = "darkblue") +
-#   theme_classic(base_family = "Arial") +
-#   theme(panel.grid = element_line(color = "black", linewidth = 0.1),
-#                                   panel.background = element_blank(), 
-#                                   plot.background = element_rect(fill = "transparent", colour = NA)) +
-#   theme(legend.position="none") +
-#   labs(title = paste("Strain:", strain, "-", time),
-#        x = "Position", y = "Coverage (ratio_medio)") +
-#   coord_cartesian(xlim = c(1,7921.5), ylim = c(-1, 1), expand=FALSE) +
-#   theme(aspect.ratio = 0.08) + 
-#   scale_x_continuous(breaks = c(1, 3285.5, 6598.5, 6981.5, 7072.5, 7122.5, 7397.5,
-#                                 7422.5, 7439.5, 7445.5, 7522.5, 7874.5, 7890.5)) +
-#   scale_y_continuous(breaks = seq(-1, 1, 0.5),
-#                     labels = c("0", "0.5", "1", "1.5", "2")) +
-#   geom_vline(xintercept=c(1, 59.5, 287.5, 378, 796, 957.5, 1027, 1318.5, 1479,
-#                           1599.5, 1798.5, 1972.5, 2261.5, 2514, 2731.5, 3030),
-#             linetype="dashed", color = "black", linewidth=0.1) +
-#   geom_vline(xintercept=c(3285.5, 3342, 3567.5, 3669, 4081, 4247, 4319.5, 4623, 4781.5,
-#                           4899.5, 5101.5, 5284.5, 5564.5, 5824.5, 6040.5, 6343.5),
-#             linetype="dashed", color = "black", linewidth=0.1) +
-#   geom_vline(xintercept=c(3285.5, 6598.5, 6981.5, 7072.5, 7122.5, 7397.5,
-#                           7422.5, 7439.5, 7445.5, 7522.5, 7874.5, 7890.5),
-#             linetype="dashed", color = "black", linewidth=0.15) +
-#   theme(axis.title.x = element_text(hjust = 1, vjust = 0, size = 10),
-#         axis.title.y = element_text(vjust = 1, size = 10)) +
-#   theme(axis.text.x = element_text(vjust = 0, size = 0),
-#         axis.text.y = element_text(vjust = 0, size = 5))
-  
-#   # Save the plot
-#   formats <- c("svg", "png")
-#   for (fmt in formats) {
-#     ggsave(
-#       filename = file.path(out_dir, paste0("Genomic_Coverage_", strain, "_", time_clean, ".", fmt)),
-#       plot = p2,
-#       device = fmt,
-#       width = 8,
-#       height = 5,
-#       dpi = 300
-#     )
-#   }
-
-# # QUANTIFICATION OF COVERAGE >1.2 AND <0.8
-
-# Cov_summary <- Cov_df %>%
-#   group_by(Series) %>%
-#   summarise(
-#     total_non_na = sum(!is.na(Coverage)),
-#     perc_above_1.2 = (sum(Coverage > 1.2, na.rm = TRUE) / total_non_na) * 100,
-#     perc_below_0.8 = (sum(Coverage < 0.8, na.rm = TRUE) / total_non_na) * 100,
-#     sd_above_1.2 = mean(SD[Coverage > 1.2], na.rm = TRUE),
-#     sd_below_0.8 = mean(SD[Coverage < 0.8], na.rm = TRUE)
-#   )
-
-# # Pivot to long format for plotting
-# Cov_summary_long <- Cov_summary %>%
-#   select(Series, perc_above_1.2, perc_below_0.8, sd_above_1.2, sd_below_0.8) %>%
-#   pivot_longer(cols = starts_with("perc_"), names_to = "Category", values_to = "Percentage") %>%
-#   mutate(
-#     Category = recode(Category,
-#                       "perc_above_1.2" = "> 1.2",
-#                       "perc_below_0.8" = "< 0.8"),
-#     Percentage = ifelse(Category == "< 0.8", -Percentage, Percentage)
-#   )
-
-# # Add SDs in same long format
-# Cov_sd_long <- Cov_summary %>%
-#   select(Series, sd_above_1.2, sd_below_0.8) %>%
-#   pivot_longer(cols = starts_with("sd_"), names_to = "Category", values_to = "SD") %>%
-#   mutate(
-#     Category = recode(Category,
-#                       "sd_above_1.2" = "> 1.2",
-#                       "sd_below_0.8" = "< 0.8")
-#   )
-
-# # Merge percentages and SDs
-# Cov_summary <- left_join(Cov_summary_long, Cov_sd_long, by = c("Series", "Category"))
-
-# # Plot the results
-# # Define the order for the y-axis categories
-#   category_order <- c(
-#     "ORF", "intergenic", "long_terminal_repeat", "transposable_element_gene",
-#     "LTR_retrotransposon", "tRNA_gene", "rRNA_gene", "ncRNA_gene",
-#     "snRNA_gene", "snoRNA_gene", "ARS", "centromere", "telomere"
-#   )
-# # Relevel Series factor in the summary dataframe
-#   Cov_summary\$Series <- factor(Cov_summary\$Series, levels = rev(category_order))
-
-# p3 <- ggplot(Cov_summary, aes(x = Percentage, y = Series, fill = Category)) +
-#   geom_col(width = 0.6) +
-#   geom_errorbarh(aes(xmin = Percentage - SD, xmax = Percentage + SD, color = Category),
-#                  height = 0.3, linewidth = 0.25) +
-#   geom_vline(xintercept = 0, color = "black", linewidth = 0.5) +
-#   scale_color_manual(values = c("> 1.2" = "#A30000", "< 0.8" = "#2F2C7E")) +
-#   scale_fill_manual(values = c("> 1.2" = "#A30000", "< 0.8" = "#2F2C7E")) +
-#   scale_x_continuous(labels = abs,
-#                      name = "Percentage",
-#                      limits = c(-75, 75)) +
-#   scale_y_discrete(labels = c(
-#     "ORF" = "ORF",
-#     "intergenic" = "Intergenic",
-#     "long_terminal_repeat" = "LTR",
-#     "transposable_element_gene" = "TEG",
-#     "LTR_retrotransposon" = "Ty",
-#     "tRNA_gene" = "tRNA",
-#     "rRNA_gene" = "rRNA",
-#     "ncRNA_gene" = "ncRNA",
-#     "snRNA_gene" = "snRNA",
-#     "snoRNA_gene" = "snoRNA",
-#     "ARS" = "ARS",
-#     "centromere" = "Centromere",
-#     "telomere" = "Telomere"
-#   )) +
-#   labs(title = paste("Strain:", strain, "-", time),
-#        x = "Percentage",
-#        y = "Category") +
-#   theme_minimal() +
-#   theme(
-#     panel.grid.major.y = element_blank(),
-#     axis.title.y = element_text(margin = margin(r = 10)),
-#     axis.title.x = element_text(margin = margin(t = 10))
-#   )
-
-#   # Save the plot
-#   formats <- c("svg", "png")
-#   for (fmt in formats) {
-#     ggsave(
-#       filename = file.path(out_dir, paste0("Percentages <0.8 and >1.2_", strain, "_", time_clean, ".", fmt)),
-#       plot = p3,
-#       device = fmt,
-#       width = 8,
-#       height = 5,
-#       dpi = 300
-#     )
-#   }
-
-# # QUANTIFICATION OF COVERAGE >1.2 AND <0.8 BY CHROMOSOME
-
-# # Reorder the dataset by chromosome
-#   # Define the order of chromosomes
-#   chromosome_order <- c("CHRI", "CHRII", "CHRIII", "CHRIV", "CHRV", "CHRVI", 
-#                        "CHRVII", "CHRVIII", "CHRIX", "CHRX", "CHRXI", 
-#                        "CHRXII", "CHRXIII", "CHRXIV", "CHRXV", "CHRXVI")
-
-# # Sort Coverage file by chromosme
-# df_gen_chr <- df_gen %>%
-#   mutate(Cromosoma = factor(Cromosoma, levels = chromosome_order, ordered = TRUE)) %>%
-#   arrange(Cromosoma)
-
-# # Otuput file
-# chr_name <- paste0("Chromosome_sorted_", strain, "_", time_clean, ".tsv")
-
-# # Write Output
-# write_tsv(df_gen_chr, chr_name)
-# message("Written: ", chr_name)
-
-# # Filtering the data (cov >1.2 and <0.8), determine their percentage against the total values per chromosome
-# Chr_summary <- df_gen_chr %>%
-#   group_by(Cromosoma) %>%
-#   summarise(
-#     total_non_na = sum(!is.na(ratio_medio)),
-#     above_1.2 = sum(ratio_medio > 1.2, na.rm = TRUE),
-#     below_0.8 = sum(ratio_medio < 0.8, na.rm = TRUE),
-#     perc_above = (above_1.2 / total_non_na) * 100,
-#     perc_below = (below_0.8 / total_non_na) * 100,
-#     sd_above = mean(desv_est[ratio_medio > 1.2], na.rm = TRUE),
-#     sd_below = mean(desv_est[ratio_medio < 0.8], na.rm = TRUE)
-#   ) %>%
-#   pivot_longer(
-#     cols = c(perc_above, perc_below),
-#     names_to = "Category",
-#     values_to = "Percentage"
-#   ) %>%
-#   mutate(
-#     SD = ifelse(Category == "perc_above", sd_above, sd_below),
-#     Category = ifelse(Category == "perc_above", "> 1.2", "< 0.8"),
-#   ) %>%
-#   select(Cromosoma, Category, Percentage, SD)
-
-# # Apply negation to the <0.8 values only for p4
-#   Chr_summary_p4 <- Chr_summary %>%
-#     mutate(Percentage = ifelse(Category == "< 0.8", -Percentage, Percentage))
-
-# # Plot the results
-# # Relevel Chromosome factor in the summary dataframe
-# Chr_summary_p4\$Cromosoma <- factor(Chr_summary\$Cromosoma, levels = (chromosome_order))
-
-# p4 <- ggplot(Chr_summary_p4, aes(x = Cromosoma, y = Percentage, fill = Category)) +
-#   geom_col(width = 0.6) +
-#   geom_errorbar(aes(ymin = Percentage - SD, ymax = Percentage + SD, color = Category),
-#                 width = 0.2, linewidth = 0.3) +
-#   geom_hline(yintercept = 0, color = "black", linewidth = 0.5) +
-#   scale_fill_manual(values = c("> 1.2" = "#A30000", "< 0.8" = "#2F2C7E")) +
-#   scale_color_manual(values = c("> 1.2" = "#A30000", "< 0.8" = "#2F2C7E")) +
-#   scale_y_continuous(labels = abs,
-#                      name = "Percentage",
-#                      limits = c(-5, 15),
-#                      breaks = seq(-5, 15, 2.5)) +
-#   scale_x_discrete(
-#     name = "Chromosome",
-#     labels = c("I", "II", "III", "IV", "V", "VI", 
-#                "VII", "VIII", "IX", "X", "XI", 
-#                "XII", "XIII", "XIV", "XV", "XVI")
-#   ) +
-#   labs(title = paste("Strain:", strain, "-", time)) +
-#   theme_minimal() +
-#   theme(
-#     axis.title.y = element_text(margin = margin(r = 10)),
-#     axis.title.x = element_text(margin = margin(t = 10)),
-#     legend.position = "right"
-#   )
-
-#   # Save the plot
-#   formats <- c("svg", "png")
-#   for (fmt in formats) {
-#     ggsave(
-#       filename = file.path(out_dir, paste0("Chr_Percentages <0.8 and >1.2_", strain, "_", time_clean, ".", fmt)),
-#       plot = p4,
-#       device = fmt,
-#       width = 8,
-#       height = 5,
-#       dpi = 300
-#     )
-#   }
-
-# # Plot the results in a circular format
-# # Relevel Chromosome factor in the summary dataframe
-# Chr_summary\$Cromosoma <- factor(Chr_summary\$Cromosoma, levels = chromosome_order)
-
-# p5 <- ggplot(Chr_summary, aes(x = Cromosoma, y = Percentage, fill = Category)) +
-#   geom_bar(stat = "identity", position = position_dodge(1), width = 1, alpha = 1) +
-#   coord_polar(start = -pi / 16) +
-#   scale_y_continuous(limits = c(-1.66, 10), breaks = c(0, 3.3, 6.6, 10), expand = c(0, 0)) +
-#   scale_x_discrete(
-#     name = "Chromosome",
-#     labels = c("I", "II", "III", "IV", "V", "VI", 
-#                "VII", "VIII", "IX", "X", "XI", 
-#                "XII", "XIII", "XIV", "XV", "XVI")
-#   ) +
-#   geom_vline(xintercept = seq(0.5, length(unique(Chr_summary\$Cromosoma)) + 1.5, by = 1), color = "gray", linewidth = 0.1) +
-#   geom_errorbar(aes(ymin = Percentage - SD, ymax = Percentage + SD, color = Category),
-#                 width = 0.2, linewidth = 0.3,
-#                 position = position_dodge (1)
-#                 ) +
-#   scale_color_manual(values = c("> 1.2" = "#BE1823", "< 0.8" = "#2F2C7E")) +  
-#   scale_fill_manual(values = c("> 1.2" = "#BE1823", "< 0.8" = "#2F2C7E")) +  
-#   theme_minimal() +
-#   theme(
-#     panel.grid.major.y = element_line(linewidth = 0.2),
-#     panel.grid.minor.y = element_line(linewidth = 0.2),
-#     panel.grid.major.x = element_blank(),
-#     panel.grid.minor.x = element_line(linewidth = 0.2),
-#     axis.text.x = element_text(size = 12),
-#     axis.text.y = element_text(size = 12),
-#     plot.title = element_text(size = 12)
-#   ) +
-#     labs(title = paste("Strain:", strain, "-", time),
-#       x = "Percentage",
-#       y = "Crhomosome"
-#       )
-
-#   # Save the plot
-#   formats <- c("svg", "png")
-#   for (fmt in formats) {
-#     ggsave(
-#       filename = file.path(out_dir, paste0("Chr_Percentages_Circular_<0.8_and_>1.2_", strain, "_", time_clean, ".", fmt)),
-#       plot = p5,
-#       device = fmt,
-#       width = 8,
-#       height = 5,
-#       dpi = 300
-#     )
-#   }
-
-# EOF
-
-#   done
-# done
-
-# # R plots for gal vs raf coverage
-# # Start timer for R processing
-
-# # Loop inside each subdirectory of MYWD
-# for strain in "${MYWD}"*/; do
-#   echo "Processing directory: ${strain}" >> "$log_file"
-#       root_dir="${strain}"
-#       #echo "$root_dir"
-#         echo "$(basename "$strain")" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line
-#         echo "Plotting gal vs raf coverage" >> "$log_file"
-#         start_time=$SECONDS
-#         # Export variables for R access
-#         export ROOT_DIR="$root_dir"
-#         export STRAIN="$strain"
-#         #echo "ROOT_DIR: $ROOT_DIR"
-#         #echo "STRAIN: $STRAIN"
-#         Rscript - <<'EOF'
-#           # load libraries
-
-#           library(ggplot2)
-#           library(svglite)
-#           library(purrr)
-#           library(stringr)
-#           library(readr)
-#           library(tidyverse, warn.conflicts = FALSE)
-#           library(tidyr, warn.conflicts = FALSE)
-#           library(dplyr, warn.conflicts = FALSE)
-#           options(dplyr.summarise.inform = FALSE)
-#           library(ggrepel)
-
-#           # Read environment variables
-#           root_dir <- Sys.getenv("ROOT_DIR")
-#           strain <- Sys.getenv("STRAIN")
-#           strain <- sub("/$", "", strain)  # Remove trailing slash
-#           strain_name <- basename(strain)
-
-#           print(paste("ROOT_DIR:", root_dir))
-
-#           log_step <- function(message) {
-#             timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-#             message(sprintf("[%s] %s", timestamp, message))
-#           }
-
-
-        
-
-#           # Define a function to process tsv files
-#           process_coverage_files <- function(file_path) {
-#             # Extract filename and directory parts
-#             file_base <- basename(file_path)
-#             strain_name <- basename(dirname(file_path))  # directory name above the file
-            
-#             # Read file
-#             temp_file <- read_tsv(file_path, col_names = TRUE, show_col_types = FALSE) 
-#             # Skip if empty
-#             if (nrow(temp_file) == 0) {
-#               return(NULL)
-#             }
-            
-#             # Prepare coverage dataframe
-#             coverage_file <- temp_file %>%  select(Nombre, categoria, ratio_medio, desv_est, Analisis) %>% 
-#               mutate(
-#                 strain = strain_name
-#               )
-#             coverage_file_renamed <- coverage_file %>%  
-#               rename_with(~ paste0("ratio_medio_", unique(coverage_file$Analisis)), .cols = "ratio_medio") %>%
-#               rename_with(~ paste0("desv_est_", unique(coverage_file$Analisis)), .cols = "desv_est") %>%  select(!c(Analisis))
-            
-#             return(coverage_file_renamed)
-#           }
-
-
-#           log_step("Finding coverage files...")
-#           # Get all coverage.tsv files recursively in root folder
-#           TLG_coverage_files <- list.files(
-#             path = root_dir,
-#             pattern = "Genomic_sorted_.*_T0vsTLG\\.tsv$",
-#             recursive = TRUE,
-#             full.names = TRUE
-#           )
-
-#           # Get all coverage.tsv files recursively in root folder
-#           TLR_coverage_files <- list.files(
-#             path = root_dir,
-#             pattern = "Genomic_sorted_.*_T0vsTLR\\.tsv$",
-#             recursive = TRUE,
-#             full.names = TRUE
-#           )
-
-#           # Get all coverage.tsv files recursively in root folder
-#           TSG_coverage_files <- list.files(
-#             path = root_dir,
-#             pattern = "Genomic_sorted_.*_T0vsTSG\\.tsv$",
-#             recursive = TRUE,
-#             full.names = TRUE
-#           )
-
-#           log_step("Processing coverage files...")
-#           TLG_processed_df <- purrr::map_dfr(TLG_coverage_files, process_coverage_files)
-#           TLR_processed_df <- purrr::map_dfr(TLR_coverage_files, process_coverage_files)
-#           TSG_processed_df <- purrr::map_dfr(TSG_coverage_files, process_coverage_files)
-
-#           complete_df <- left_join(TLG_processed_df, TLR_processed_df) %>% 
-#             left_join(., TSG_processed_df)
-
-#           # complete_df 
-#           # write_tsv(complete_df, file.path(root_dir, paste0(strain_name, "_complete_df.tsv")))
-
-#           complete_df_ratio <- complete_df %>% select(strain, Nombre, categoria, 
-#                                             ratio_medio_T0vsTLG, ratio_medio_T0vsTLR, ratio_medio_T0vsTSG) %>% 
-#             filter(if_all(starts_with("ratio_medio"), ~ !is.na(.) & is.finite(.))) %>%
-#             mutate(UP_DOWN_TLG = ifelse(ratio_medio_T0vsTLG > 1.2 & (ratio_medio_T0vsTLR > 0.8 & ratio_medio_T0vsTLR <1.2), "UP", 
-#                                         ifelse(ratio_medio_T0vsTLG < 0.8 & (ratio_medio_T0vsTLR > 0.8 & ratio_medio_T0vsTLR <1.2), "DOWN", "NO_CHANGE"))) %>% 
-#             mutate(UP_DOWN_TSG = ifelse(ratio_medio_T0vsTSG > 1.2 & (ratio_medio_T0vsTLR > 0.8 & ratio_medio_T0vsTLR <1.2), "UP", 
-#                                         ifelse(ratio_medio_T0vsTSG < 0.8 & (ratio_medio_T0vsTLR > 0.8 & ratio_medio_T0vsTLR <1.2), "DOWN", "NO_CHANGE")))
-
-#           # write_tsv(complete_df_ratio, file.path(root_dir, paste0(strain_name, "_complete_df_ratio.tsv")))
-
-#           n_features <- nrow(complete_df_ratio)
-
-#           UP_DOWN_summary <- complete_df_ratio %>% group_by(strain) %>% 
-#             summarise(UP_TLG = sum(UP_DOWN_TLG == "UP"),
-#                       DOWN_TLG = sum(UP_DOWN_TLG == "DOWN"),
-#                       UP_TSG = sum(UP_DOWN_TSG == "UP"),
-#                       DOWN_TSG = sum(UP_DOWN_TSG == "DOWN")) %>% 
-#             mutate(UP_TLG_perc = UP_TLG/n_features*100,
-#                   DOWN_TLG_perc = DOWN_TLG/n_features*100,
-#                   UP_TSG_perc = UP_TSG/n_features*100,
-#                   DOWN_TSG_perc = DOWN_TSG/n_features*100) %>% 
-#             select(strain, ends_with("_perc"))
-
-          
-
-#           write_tsv(UP_DOWN_summary, file.path(root_dir, paste0(strain_name, "_UP_DOWN_summary.tsv")))
-
-#           # 
-#           categoria_colors <- c(
-#             "ORF" = "#4F71BE", 
-#             "intergenic" = "#FF051D", 
-#             "long_terminal_repeat" = "#DE8344", 
-#             "transposable_element_gene" = "#A5A5A5", 
-#             "LTR_retrotransposon" = "#F5C242", 
-#             "tRNA_gene" = "#6A99D0", 
-#             "rRNA_gene" = "#7EAB55", 
-#             "ncRNA_gene" = "#2D4374", 
-#             "snRNA_gene" = "#934D20", 
-#             "snoRNA_gene" = "#636363", 
-#             "ARS" = "#937424", 
-#             "centromere" = "#355D8D", 
-#             "telomere" = "#4B6733"
-#           )
-#           log_step("Plotting...")
-#           plot_TLG<- ggplot(complete_df_ratio, aes(x = ratio_medio_T0vsTLG, y = ratio_medio_T0vsTLR)) +
-#             geom_point(aes(colour = categoria, alpha = UP_DOWN_TLG),size = 2, shape = 16) + #0.5
-#             scale_colour_manual(values=categoria_colors) +
-#             scale_alpha_manual(values = c("NO_CHANGE" = 0.8, "UP" = 0.8, "DOWN" = 0.8)) +
-#             theme_classic(base_family = "Helvetica") + theme(panel.grid = element_line(color = "black", linewidth = 0.1),
-#                                                             panel.background = element_blank(), 
-#                                                             plot.background = element_rect(fill = "transparent", colour = NA)) +
-#             # geom_text_repel(data = subset(complete_df_ratio, UP_DOWN_TLG == "UP" & ratio_medio_T0vsTLG > 2),
-#             #               aes(label = Nombre, color = categoria),
-#             #               size = 3, show.legend = FALSE, max.overlaps = Inf) +
-#             # geom_text_repel(data = subset(complete_df_ratio, UP_DOWN_TLG == "DOWN" & ratio_medio_T0vsTLG < 0.5),
-#             #                 aes(label = Nombre, color = categoria),
-#             #                 size = 3, show.legend = FALSE, max.overlaps = Inf) +
-#             theme(legend.position="none") + 
-#             coord_cartesian(xlim = c(0,5.3), ylim = c(0, 5.3), expand=FALSE) +
-#             theme(aspect.ratio = 0.8) +
-#             geom_vline(xintercept=c(0.75, 1.25),
-#                       linetype="dashed", color = "black", linewidth=0.3) +
-#             geom_hline(yintercept=c(0.75, 1.25),
-#                       linetype="dashed", color = "black", linewidth=0.3) +
-#             theme(axis.title.x = element_text(hjust = 1, vjust = 0, size = 20), #25
-#                   axis.title.y = element_text(vjust = 1, size = 20)) + #25
-#             theme(axis.text.x = element_text(vjust = 0, size = 15), #20
-#                   axis.text.y = element_text(vjust = 0, size = 15)) +
-#             labs(
-#                 title = paste0("Gal vs Raf coverage - ", strain_name, " - ", "TLG"),
-#                 x = "Gal_coverage",
-#                 y = "Raf_coverage"
-#               )
-            
-#             # Save SVG
-#             ggsave(
-#               filename = file.path(root_dir, paste0("Gal_vs_raf_coverage_", strain_name, "_","TLG", ".svg")),
-#               plot = plot_TLG,
-#               #width = 8,
-#               #height = 3.6,
-#               device = svglite,
-#               bg = "transparent"
-#             )
-
-#             plot_TSG <- ggplot(complete_df_ratio, aes(x = ratio_medio_T0vsTSG, y = ratio_medio_T0vsTLR)) +
-#             geom_point(aes(colour = categoria, alpha = UP_DOWN_TSG),size = 2, shape = 16) + #0.5
-#             scale_colour_manual(values=categoria_colors) +
-#             scale_alpha_manual(values = c("NO_CHANGE" = 0.8, "UP" = 0.8, "DOWN" = 0.8)) +
-#             theme_classic(base_family = "Helvetica") + theme(panel.grid = element_line(color = "black", linewidth = 0.1),
-#                                                             panel.background = element_blank(), 
-#                                                             plot.background = element_rect(fill = "transparent", colour = NA)) +
-#             # geom_text_repel(data = subset(complete_df_ratio, UP_DOWN_TSG == "UP" & ratio_medio_T0vsTSG > 2),
-#             #               aes(label = Nombre, color = categoria),
-#             #               size = 3, show.legend = FALSE, max.overlaps = Inf) +
-#             # geom_text_repel(data = subset(complete_df_ratio, UP_DOWN_TSG == "DOWN" & ratio_medio_T0vsTSG < 0.5),
-#             #                 aes(label = Nombre, color = categoria),
-#             #                 size = 3, show.legend = FALSE, max.overlaps = Inf) +
-#             theme(legend.position="none") + 
-#             coord_cartesian(xlim = c(0,5.3), ylim = c(0, 5.3), expand=FALSE) +
-#             theme(aspect.ratio = 0.8) +
-#             geom_vline(xintercept=c(0.75, 1.25),
-#                       linetype="dashed", color = "black", linewidth=0.3) +
-#             geom_hline(yintercept=c(0.75, 1.25),
-#                       linetype="dashed", color = "black", linewidth=0.3) +
-#             theme(axis.title.x = element_text(hjust = 1, vjust = 0, size = 20), #25
-#                   axis.title.y = element_text(vjust = 1, size = 20)) + #25
-#             theme(axis.text.x = element_text(vjust = 0, size = 15), #20
-#                   axis.text.y = element_text(vjust = 0, size = 15)) +
-#             labs(
-#                 title = paste0("Gal vs Raf coverage - ", strain_name, " - ", "TSG"),
-#                 x = "Gal_coverage",
-#                 y = "Raf_coverage"
-#               )
-            
-#             # Save SVG
-#             ggsave(
-#               filename = file.path(root_dir, paste0("Gal_vs_raf_coverage_", strain_name, "_TSG", ".svg")),
-#               plot = plot_TSG,
-#               #width = 8,
-#               #height = 3.6,
-#               device = svglite,
-#               bg = "transparent"
-#             )
-
-
-          
-# EOF
-#       # Calculate elapsed time
-#         elapsed_time=$((( SECONDS - start_time )))
-#         echo "Total gal vs raf plotting completed in ${elapsed_time} seconds" >> "$log_file"
-#         echo "" >> "$log_file"  # Adds a blank line 
-
-# done
-
-
-# # Move tsv category files into a category data folder
-# for subdir in "${MYWD}"*/; do
-#   mkdir -p "${subdir}/Sorted_datasets"
-#   mv "${subdir}"/*"sorted"* "${subdir}/Sorted_datasets"
-#   mv "${subdir}"/*"Template"* "${subdir}/Sorted_datasets"
-#   mv "${subdir}"/*"UP_DOWN"* "${subdir}/Sorted_datasets"
-#   mv "${subdir}"/*".svg" "${subdir}/Plots_Analysis/"
-# done
-
-# # Calulate total elapsed time
-# elapsed_time_total_cat=$((( SECONDS - start_time_total_cat )/60))
-# echo "Genomic Categories Analysis completed in ${elapsed_time_total_cat} minutes" >> "$log_file"
-# echo "" >> "$log_file"  # Adds a blank line
+### ORDERING CATEGORIES DATASET ###
+
+# Loop through each directory inside MYWD
+R_SCRIPT="SR_order_categories.R"
+for strain in "${MYWD}"*/; do
+  echo "Processing directory: $strain"
+  for analysis_suffix in "T0vsTSG" "T0vsTLG" "T0vsTLR"; do
+    echo "Processing analysis: $analysis_suffix"
+    root_dir="${strain}"
+    strain="${strain}"
+    category_path="${CATEGORY_PATH}"
+    analysis_suffix="${analysis_suffix}"
+
+    if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$category_path" "$analysis_suffix"; then
+    echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain}, ${category} and ${analysis_suffix}" >> "$log_file"
+    echo "Skipping ${strain}, ${category} and ${analysis_suffix} and continuing..." >> "$log_file"
+    continue
+    fi  
+  done
+done
+
+# Move tsv category files into a category data folder
+for strain in "${MYWD}"*/; do
+  mkdir -p "${strain}/Category_Data_TSV_and_Plots"
+  mv "${strain}"/*"fingerprint"* "${strain}/Category_Data_TSV_and_Plots/"
+  #mv "${strain}"/*"all_data"* "${strain}/Category_Data_TSV_and_Plots/"
+  mv "${strain}"/*".svg" "${strain}/Category_Data_TSV_and_Plots/"
+done
+
+### PLOTTING CATEGORIES DATA ###
+ R_SCRIPT="SR_plot_categories.R"
+for strain in "$MYWD"*/; do
+  for analysis_suffix in "T0vsTSG" "T0vsTLG" "T0vsTLR"; do
+    echo "Processing analysis: $analysis_suffix"
+    root_dir="${strain}"
+    strain="${strain}"
+    analysis_suffix="${analysis_suffix}"
+    echo "Processing time point: $analysis_suffix"
+    if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$analysis_suffix"; then
+    echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain} and ${analysis_suffix}" >> "$log_file"
+    echo "Skipping ${strain} and ${analysis_suffix} and continuing..." >> "$log_file"
+    continue
+    fi  
+
+  done
+done
+
+R plots for gal vs raf coverage
+Start timer for R processing
+
+# Loop inside each subdirectory of MYWD
+R_SCRIPT="SR_plot_gal_vs_raf.R"
+for strain in "${MYWD}"*/; do
+  echo "Processing directory: ${strain}" >> "$log_file"
+      root_dir="${strain}"
+      strain="${strain}"
+        echo "$(basename "$strain")" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line
+        echo "Plotting gal vs raf coverage" >> "$log_file"
+        start_time=$SECONDS
+        if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain"; then
+        echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain}" >> "$log_file"
+        echo "Skipping ${strain} and continuing..." >> "$log_file"
+        continue
+        fi
+      # Calculate elapsed time
+        elapsed_time=$((( SECONDS - start_time )))
+        echo "Total gal vs raf plotting completed in ${elapsed_time} seconds" >> "$log_file"
+        echo "" >> "$log_file"  # Adds a blank line 
+
+done
+
+
+# Move tsv category files into a category data folder
+for subdir in "${MYWD}"*/; do
+  mkdir -p "${subdir}/Sorted_datasets"
+  mv "${subdir}"/*"sorted"* "${subdir}/Sorted_datasets"
+  mv "${subdir}"/*"Template"* "${subdir}/Sorted_datasets"
+  mv "${subdir}"/*"UP_DOWN"* "${subdir}/Sorted_datasets"
+  mv "${subdir}"/*".svg" "${subdir}/Plots_Analysis/"
+done
+
+# Move tsv files into a alignmentfolder
+for subdir in "${MYWD}"*/; do
+  mkdir -p "${subdir}/Alignment_data/TSV_files"
+  mv "${subdir}"/*".tsv" "${subdir}/Alignment_data/TSV_files"
+done
+
+# Calulate total elapsed time
+elapsed_time_total_cat=$((( SECONDS - start_time_total_cat )/60))
+echo "Genomic Categories Analysis completed in ${elapsed_time_total_cat} minutes" >> "$log_file"
+echo "" >> "$log_file"  # Adds a blank line
