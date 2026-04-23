@@ -1,6 +1,6 @@
-#### R script to processand plot SR coverage profiles from chr III and V, 75nt and 18nt, average all experiments
-### Loop for each subdir/timepoint file in MYWD
-### 21/04/2026 - Lydia
+#### R script to process and plot SR coverage profiles from for genomic categories, 75nt, average all experiments
+### Loop for each subdir/category file in MYWD
+### 23/04/2026 - Lydia
 
 
 
@@ -14,9 +14,9 @@ log_step <- function(message) {
 # -------------------------
 args <- commandArgs(trailingOnly = TRUE)
 
-if (length(args) != 2) {
+if (length(args) != 4) {
   log_step("ERROR: Incorrect number of arguments")
-  log_step("Usage: script.R <root_dir> <strain>")
+  log_step("Usage: script.R <root_dir> <strain> <category> <category_path>")
   log_step(paste("Received:", paste(args, collapse=" ")))
   quit(status = 1)
 }
@@ -24,8 +24,8 @@ if (length(args) != 2) {
 root_dir <- args[1]
 strain <- args[2]
 category <- args[3]
-category_file <- args[4]
-sample <- args[5]
+category_path <- args[4]
+
 
 strain <- sub("/$", "", strain)
 strain_name <- basename(strain)
@@ -33,32 +33,28 @@ strain_name <- basename(strain)
 
 
 log_step(paste("STRAIN:", strain))
+log_step(paste("CATEGORY:", category))
 
 
 
-# Load packages
-library(tidyverse)
+# load libraries
 
-# Variables from Bash
-cepa <- "${strain}"
-category <- "${category}"
-category_file <- "${category_file}"
-subdir <- "${subdir_escaped}"
-time <- "${time}"
-
-
-
-root_dir <- "/Users/lab2.3/GWS3/WD_test_v0.3.2/1_Wt"
-strain <- "1_Wt"
-category <- "Cen"
-category_file <- "/Users/lab2.3/Documents/Di_GRAPH/files/Categories/11.PMV.Cen.tsv"
-sample <-"TSG"
+library(ggplot2)
+library(extrafont)
+library(svglite)
+library(purrr)
+library(stringr)
+library(readr)
+library(tidyverse, warn.conflicts = FALSE)
+library(tidyr, warn.conflicts = FALSE)
+library(dplyr, warn.conflicts = FALSE)
+options(dplyr.summarise.inform = FALSE)
 
 
-# File paths
-plot_path <- file.path(subdir, paste0(cepa, "_", category, "_T0vs", time,"_plot.svg"))
-tsv_path <- file.path(subdir, paste0(category, "_fingerprint_", cepa, "_T0vs", time,".tsv"))
-#all_data_path <- file.path(subdir, paste0(category, "_all_data_", cepa, "_T0vs", time, ".tsv")) only to check raw data
+
+
+
+
 
 # Chromosome positions
 chr_positions <- list(
@@ -70,6 +66,14 @@ chr_positions <- list(
   CHRXVI = 1:948066
 )
 
+log_step("Finding category file...")
+category_file <- list.files(
+  path = category_path,
+  pattern = paste0(category, ".*\\.tsv$"),
+  recursive = TRUE,
+  full.names = TRUE
+)
+
 # Read category regions
 df_categories <- read_tsv(category_file, col_names = FALSE,
                           col_types = cols(X1 = col_character(), X2 = col_character(),
@@ -77,35 +81,7 @@ df_categories <- read_tsv(category_file, col_names = FALSE,
   rename(Tipo = X1, Categoria = X2, Pos_inicio = X3, Pos_fin = X4, Cromosoma = X5) %>%
   mutate(Categoria = as.factor(Categoria))
 
-# # Function to process each experiment
-# process_experiment <- function(exp_num, time) {
-#   data_file <- file.path(root_dir, paste0(time, "_", "E", exp_num, "_75nt.tsv"))
-#   df <- read_tsv(data_file, col_names = FALSE, col_types = cols_only(X1 = col_character(), X4 = col_double()))
-#   
-#   df_full <- tibble(
-#     Cepa = cepa,
-#     Experimento = exp_num,
-#     Tiempo = time,
-#     Cromosoma = df$X1,
-#     Valor_real = df$X4
-#   )
-#   
-#   map_dfr(names(chr_positions), function(chr) {
-#     chr_df <- df_full %>% filter(Cromosoma == chr) %>%
-#       mutate(Posicion = chr_positions[[chr]])
-#     
-#     cat_df <- df_categorias %>% filter(Cromosoma == chr)
-#     
-#     map_dfr(unique(cat_df\$Categoria), function(cat) {
-#       regions <- cat_df %>% filter(Categoria == cat)
-#       map_dfr(1:nrow(regions), function(i) {
-#         chr_df %>%
-#           filter(Posicion >= regions\$Pos_inicio[i], Posicion <= regions\$Pos_fin[i]) %>%
-#           mutate(Nombre = cat, categoria = regions\$Tipo[i])
-#       })
-#     })
-#   })
-# }
+
 
 process_coverage_files <- function(file_path, categories_df) {
   # Extract filename and directory parts
@@ -158,38 +134,11 @@ process_coverage_files <- function(file_path, categories_df) {
     })
   })
   
+  processed_df <- processed_df %>% 
+    select(strain, sample, experiment, chromosome, coverage, Feature_name_A, Category_A)
   return(processed_df)
 }
 
-# # Function to process each experiment
-# process_experiment <- function(exp_num, time) {
-#   data_file <- file.path(root_dir, paste0(time, "_", "E", exp_num, "_75nt.tsv"))
-#   df <- read_tsv(data_file, col_names = FALSE, col_types = cols_only(X1 = col_character(), X4 = col_double()))
-#   
-#   df_full <- tibble(
-#     Cepa = cepa,
-#     Experimento = exp_num,
-#     Tiempo = time,
-#     Cromosoma = df$X1,
-#     Valor_real = df$X4
-#   )
-#   
-#   map_dfr(names(chr_positions), function(chr) {
-#     chr_df <- df_full %>% filter(Cromosoma == chr) %>%
-#       mutate(Posicion = chr_positions[[chr]])
-#     
-#     cat_df <- df_categorias %>% filter(Cromosoma == chr)
-#     
-#     map_dfr(unique(cat_df\$Categoria), function(cat) {
-#       regions <- cat_df %>% filter(Categoria == cat)
-#       map_dfr(1:nrow(regions), function(i) {
-#         chr_df %>%
-#           filter(Posicion >= regions\$Pos_inicio[i], Posicion <= regions\$Pos_fin[i]) %>%
-#           mutate(Nombre = cat, categoria = regions\$Tipo[i])
-#       })
-#     })
-#   })
-# }
 
 
 log_step("Finding _75nt coverage files...")
@@ -201,52 +150,65 @@ coverage_files <- list.files(
   full.names = TRUE
 )
 
+log_step("Processing _75nt coverage files...")
+coverage_processed_df <-  purrr::map_dfr(coverage_files, process_coverage_files, categories_df = df_categories)
 
-df <-  purrr::map_dfr(coverage_files, process_coverage_files, categories_df = df_categories)
+log_step("Processing _75nt coverage files summary...")
+coverage_processed_summary_df <- coverage_processed_df %>% 
+  group_by(strain, sample, experiment, chromosome, Feature_name_A, Category_A) %>% 
+  summarise(avg_coverage_feature = mean(coverage),
+            sd_coverage_feature = sd(coverage)) %>% 
+  ungroup() %>% 
+  mutate(ratio_coverage_feature = avg_coverage_feature / avg_coverage_feature[sample == "T0"]) %>%
+  ungroup() %>% 
+  group_by(strain, sample, chromosome, Feature_name_A, Category_A) %>% 
+  summarise(avg_ratio_coverage_feature = mean(ratio_coverage_feature),
+            sd_ratio_coverage_feature = sd(ratio_coverage_feature)) %>% 
+  ungroup() %>% 
+  filter(sample != "T0")
 
+## Save tsv file for each sample
 
-df %>% 
-  group_by(strain, sample, chromosome, coordinate) %>% 
-  summarise(avg_coverage = mean(coverage),
-            sd_coverage = sd(coverage)) %>% 
-  ungroup()
+for (s in unique(coverage_processed_summary_df$sample)) {
+  df <- subset(coverage_processed_summary_df, sample == s)
+  
+  write_tsv(df, paste0(root_dir,"/", category, "_fingerprint_", strain_name,"_T0vs", s,".tsv"))
+  
+}
+####
+log_step("Plotting...")
+## Save svg plot for each sample
+for (s in unique(coverage_processed_summary_df$sample)) {
+  df <- subset(coverage_processed_summary_df, sample == s)
+  
+  p <- ggplot(df) + 
+    geom_col(aes(y = avg_ratio_coverage_feature, x = Feature_name_A), fill = "#2F2C7E", width = 0.7, 
+             color = "black", linewidth = 0.1) +
+    geom_errorbar(aes(x = Feature_name_A, ymin = avg_ratio_coverage_feature - sd_ratio_coverage_feature, 
+                      ymax = avg_ratio_coverage_feature + sd_ratio_coverage_feature), 
+                  width = 0.3, color = "grey8", alpha = 1, size = 0.3) +
+    theme_classic() +
+    theme(
+      panel.grid = element_blank(),
+      panel.background = element_blank(),
+      plot.background = element_rect(fill = "transparent", color = NA)
+    ) +
+    labs(title = paste0("Ratio T0vs", s), subtitle = paste0("Strain ", strain_name), 
+         y = "Ratio", x = "Feature")
+  
 
+  
+  
+  ggsave(
+    filename = paste0(root_dir,"/", strain_name, "_", category, "_T0vs", s,"_plot.svg"),
+    plot = p,
+    width = 8,
+    height = 6,
+    dpi = 300,
+    device = svglite,
+    bg = "transparent"
+  )
+  
+}
+###
 
-# Process all experiments
-experiments <- expand.grid(exp = 1:3, time = c("T0", time))
-all_data <- pmap_dfr(experiments, ~process_experiment(..1, ..2))
-
-# Export all_data(Only to check raw data)
-# write_tsv(all_data, all_data_path)
-# message("Raw data saved to: ", all_data_path)
-
-# Compute ratios
-ratio_data <- all_data %>%
-  group_by(Cepa, Cromosoma, categoria, Nombre, Experimento, Tiempo) %>%
-  summarise(Valor_real = sum(Valor_real), .groups = "drop") %>%
-  group_by(Cepa, Cromosoma, categoria, Nombre, Experimento) %>%
-  mutate(ratio = Valor_real / Valor_real[Tiempo == "T0"]) %>%
-  filter(Tiempo == time) %>%
-  group_by(Cepa, Cromosoma, categoria, Nombre) %>%
-  summarise(ratio_medio = mean(ratio), desv_est = sd(ratio), .groups = "drop")
-
-# Plot
-p <- ggplot(ratio_data) + 
-  geom_col(aes(y = ratio_medio, x = Nombre), fill = "#2F2C7E", width = 0.7, 
-           color = "black", linewidth = 0.1) +
-  geom_errorbar(aes(x = Nombre, ymin = ratio_medio - desv_est, 
-                    ymax = ratio_medio + desv_est), 
-                width = 0.3, color = "grey8", alpha = 1, size = 0.3) +
-  theme_classic() +
-  labs(title = paste0("Ratio T0vs", time), subtitle = paste0("Cepa ", cepa), 
-       y = "Ratio", x = "Feature")
-
-ggsave(
-  filename = plot_path,
-  plot = p,
-  width = 8,
-  height = 6,
-  dpi = 300,
-  device = "svg"
-)
-write_tsv(ratio_data, file = tsv_path)
