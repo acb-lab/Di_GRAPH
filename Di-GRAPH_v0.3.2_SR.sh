@@ -836,8 +836,8 @@ for strain in "$MYWD"*/; do
   done
 done
 
-R plots for gal vs raf coverage
-Start timer for R processing
+# R plots for gal vs raf coverage
+# Start timer for R processing
 
 # Loop inside each subdirectory of MYWD
 R_SCRIPT="SR_plot_gal_vs_raf.R"
