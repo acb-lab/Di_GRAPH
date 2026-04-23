@@ -452,8 +452,8 @@ p5 <- ggplot(Chr_summary, aes(x = chromosome, y = Percentage, fill = Category)) 
     plot.title = element_text(size = 12)
   ) +
   labs(title = paste("Strain:", strain_name, "-", analysis_suffix),
-       x = "Percentage",
-       y = "Chromosome"
+       y = "Percentage",
+       x = "Chromosome"
   )
 
 # Save the plot
