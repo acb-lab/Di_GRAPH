@@ -1706,7 +1706,7 @@ for strain in "$MYWD"*/; do
   echo "Processing directory: $strain" >> "$log_file"
 
   # Loop through sample prefixes (TLG)
-    for sample in TLG; do
+    for sample in TSG TLG; do
       for experiment in "${EXP_LIST[@]}"; do
         file1_gz="${strain}/${sample}_${experiment}_R1.fastq.gz"
         file2_gz="${strain}/${sample}_${experiment}_R2.fastq.gz"
@@ -2020,7 +2020,7 @@ done
 
 # Loop inside each subdirectory of MYWD
 for strain in "${MYWD}"*/; do
-  for sample in TLG; do
+  for sample in TSG TLG; do
     for experiment in "${EXP_LIST[@]}"; do
       file_alignment="${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18.sam"
       if [[ -f "$file_alignment"  ]]; then
