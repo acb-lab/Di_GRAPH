@@ -183,7 +183,7 @@ prepare_for_blast <- function(df_chr_AB_filtered_file_X_ID) {
     filter (Category_B != "control") %>% 
     filter(Category_B != "control_norm") %>% 
     mutate(Read_name_ID = with(., paste0(Read_name, "_", pair_group))) %>% 
-    select(Read_name_ID, Sequence, Feature_name_B, Feature_name_B_prev, Feature_name_B_next)
+    select(Read_name_ID, Sequence, Chromosome_B, Feature_name_B, Feature_name_B_prev, Feature_name_B_next)
   return(blast_df)
 }
 
