@@ -614,7 +614,7 @@ find "$MYREF" -name "*.ebwt" -exec rm {} +
 find "$MYREF" -name "*.fai" -exec rm {} +
 find "$MYREF" -name "*.txt" -exec rm {} +
 
-Delete all TSV files in subdir, excluding those in Alignment_data
+#Delete all TSV files in subdir, excluding those in Alignment_data
 for subdir in "${MYWD}"*; do
     find "${subdir}" -maxdepth 1 -type f -name "*.tsv" ! -name "*_75nt.tsv" -exec rm {} \;
 done
