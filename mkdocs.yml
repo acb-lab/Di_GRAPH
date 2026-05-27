@@ -1,0 +1,100 @@
+site_name: Di-GRAPH
+site_description: >-
+  DSB-induced Genome-wide Repair Analysis and Profiling of Homologous Recombination —
+  a Snakemake pipeline for yeast DSB repair analysis.
+site_author: Andrés Clemente-Blanco Lab
+repo_url: https://github.com/acb-lab/Di_GRAPH
+repo_name: acb-lab/Di_GRAPH
+docs_dir: docs
+site_dir: site
+copyright: Copyright &copy; 2024 Andrés Clemente-Blanco Lab
+
+theme:
+  name: material
+  custom_dir: docs/overrides
+  font:
+    text: Inter
+    code: JetBrains Mono
+  palette:
+    - scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - toc.follow
+
+extra_css:
+  - stylesheets/extra.css
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: google
+            show_source: true
+            show_root_heading: true
+            show_root_full_path: false
+            merge_init_into_class: true
+            show_signature_annotations: true
+            separate_signature: true
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - User Guide:
+    - Installation: installation.md
+    - Configuration: configuration.md
+    - Usage: usage.md
+  - Pipeline:
+    - Stage 1 — Coverage: pipeline/stage1-coverage.md
+    - Stage 2 — Categories: pipeline/stage2-categories.md
+    - Stage 3 — Mutagenic: pipeline/stage3-mutagenic.md
+    - Stage 4 — Discordant: pipeline/stage4-discordant.md
+    - Stage 5 — Report: pipeline/stage5-report.md
+  - API Reference:
+    - Config models: api/config.md
+    - CLI commands: api/cli.md
+    - Runner: api/runner.md
+    - Utilities: api/utils.md

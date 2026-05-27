@@ -1,0 +1,28 @@
+{% extends "main.html" %}
+
+{% block content %}
+<div class="dg-hero">
+  <div class="dg-hero__title">Di-GRAPH</div>
+  <div class="dg-hero__abbr">
+    DSB-induced &nbsp;·&nbsp; Genome-wide &nbsp;·&nbsp; Repair Analysis &nbsp;·&nbsp; Profiling of HR
+  </div>
+  <p class="dg-hero__tagline">
+    A Snakemake pipeline that quantifies frequency, directionality, and mutagenic
+    profile of gene conversion events upon HO-induced DSB repair in
+    <em>S. cerevisiae</em>.
+  </p>
+  <div class="dg-hero__actions">
+    <a href="{{ 'installation/' | url }}" class="md-button md-button--primary">
+      Get started
+    </a>
+    <a href="{{ 'usage/' | url }}" class="md-button">
+      CLI reference
+    </a>
+    <a href="{{ 'pipeline/stage1-coverage/' | url }}" class="md-button">
+      View pipeline
+    </a>
+  </div>
+</div>
+
+{{ page.content }}
+{% endblock %}

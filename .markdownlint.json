@@ -1,0 +1,11 @@
+{
+  "default": true,
+
+  "MD013": false,
+
+  "MD033": {
+    "allowed_elements": ["br", "ins", "sub", "sup", "kbd", "img", "div", "a", "span", "pre", "section"]
+  },
+
+  "MD041": false
+}
