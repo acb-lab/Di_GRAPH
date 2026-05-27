@@ -1,0 +1,163 @@
+# =============================================================================
+# Di-GRAPH configuration file
+# =============================================================================
+# Relative paths are resolved from the directory that contains this file.
+# Absolute paths work too (useful when data lives outside the repo).
+#
+# Usage:
+#   digraph validate --config config/config.yaml
+#   digraph run      --config config/config.yaml --cores 8
+#   digraph stage    coverage --config config/config.yaml --dry-run
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Paths
+# All path values below can be absolute or relative to this file's location.
+# ---------------------------------------------------------------------------
+paths:
+  # Root directory that contains per-strain subdirectories with FASTQ.gz files.
+  working_dir: /path/to/your/experiment_directory
+
+  # Reference genome directory (ships with the repo under files/RG/).
+  genome_dir: ../files/RG
+
+  # Genomic category annotation TSV files (13 categories).
+  categories_dir: ../files/Categories
+
+  # BLAST cross-validation FASTA files.
+  blast_dir: ../files/BLAST/features_extraction
+
+  # RMarkdown report template and renderer.
+  report_dir: ../files/Report_files
+
+  # Analysis scripts (R/ and python/ sub-directories).
+  scripts_dir: ../scripts
+
+  # Where final outputs are written; defaults to working_dir if omitted.
+  # output_dir: /path/to/output
+
+
+# ---------------------------------------------------------------------------
+# Reference genome
+# ---------------------------------------------------------------------------
+genome:
+  genome_fasta:        ../files/RG/RG_PMV_v9.fasta
+  genome_fasta_chriii: ../files/RG/RG_PMV_v9_CHRIII.fasta
+  bowtie_index_prefix: ../files/RG/S_cerevisiae_indexed
+  chrom_order:         ../files/RG/chrom_order.txt
+
+  # Effective genome size (bp) for RPGC normalisation (S. cerevisiae PMV strain).
+  genome_size: 14272230
+
+
+# ---------------------------------------------------------------------------
+# MAT locus coordinates
+# Adjust these only if adapting the pipeline to a different genetic background.
+# ---------------------------------------------------------------------------
+mat_coordinates:
+  chriii_start:      199953
+  chriii_end:        201553
+  chrv_start:        289025
+  chrv_end:          290625
+  ho_site:           200753   # HO endonuclease cut site on CHRIII
+  ho_site_upstream:  200689   # Upstream polymorphic position (repair-pathway marker)
+
+
+# ---------------------------------------------------------------------------
+# Polymorphic positions for MAT quantification
+# Each chriii_positions[i] is paired with chrv_positions[i].
+# baseline_offset controls the flanking window used to compute local baseline.
+# ---------------------------------------------------------------------------
+polymorphisms:
+  chriii_positions:
+    - 200119
+    - 200167
+    - 200212
+    - 200272
+    - 200326
+    - 200386
+    - 200449
+    - 200509
+    - 200542
+    - 200575
+    - 200635
+    - 200689
+    - 200753
+    - 200817
+    - 200882
+    - 200947
+    - 201012
+    - 201077
+    - 201148
+    - 201207
+    - 201272
+    - 201337
+    - 201402
+  chrv_positions:
+    - 289191
+    - 289239
+    - 289284
+    - 289344
+    - 289398
+    - 289458
+    - 289521
+    - 289581
+    - 289614
+    - 289647
+    - 289707
+    - 289761
+    - 289825
+    - 289889
+    - 289954
+    - 290019
+    - 290084
+    - 290149
+    - 290220
+    - 290278
+    - 290343
+    - 290408
+    - 290473
+  baseline_offset: 19
+
+
+# ---------------------------------------------------------------------------
+# Read trimming & quality filtering parameters
+# ---------------------------------------------------------------------------
+trimming:
+  read_length_75:    75   # Length of 75nt fragments for coverage/discordant analysis
+  read_length_18:    18   # Length of 18nt fragments for MAT locus quantification
+  quality_threshold: 30   # Minimum Phred score (fastp -q flag)
+
+
+# ---------------------------------------------------------------------------
+# Experiments (replicates and timepoints)
+# ---------------------------------------------------------------------------
+experiments:
+  # Replicate identifiers — must match the FASTQ file names
+  # (e.g. T0_E1_R1.fastq.gz → name E1).
+  names: [E1, E2, E3]
+
+  # Timepoint prefixes in FASTQ file names.
+  timepoints: [T0, TSG, TLG, TLR]
+
+
+# ---------------------------------------------------------------------------
+# Samples (strains)
+# Each entry is a subdirectory of working_dir containing the FASTQ.gz files.
+# ---------------------------------------------------------------------------
+samples:
+  - name: 1_Wt
+    path: /path/to/your/experiment_directory/1_Wt
+    is_reference: true   # this strain is used as reference in rate comparisons
+
+  - name: 2_Mutant
+    path: /path/to/your/experiment_directory/2_Mutant
+
+
+# ---------------------------------------------------------------------------
+# Compute resources
+# ---------------------------------------------------------------------------
+resources:
+  threads: 8             # Threads per tool (bowtie -p, fastp --thread, etc.)
+  snakemake_cores: 8     # Total cores for the Snakemake scheduler (--cores)
+  use_conda: true        # Use the conda environment defined in workflow/envs/

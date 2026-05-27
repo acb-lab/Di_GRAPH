@@ -91,5 +91,10 @@ dependencies:
   - r-xfun=0.52
   - r-yaml=2
   - readline=8.2
+  - pydantic>=2.0
+  - pyyaml>=6.0
+  - rich>=13.0
   - samtools=1.22
   - scipy=1.13.1
+  - snakemake>=8.0
+  - typer>=0.12

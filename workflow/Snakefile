@@ -1,0 +1,56 @@
+"""
+Di-GRAPH Snakemake workflow — top-level entry point.
+
+Imports all stage sub-workflows and declares the terminal ``rule all``
+that collects every final output.  Run with:
+
+    snakemake --snakefile workflow/Snakefile --cores 8 --use-conda \\
+              --configfile config/config.yaml
+
+Or via the CLI wrapper:
+
+    digraph run --config config/config.yaml --cores 8
+"""
+
+configfile: "config/config.yaml"
+
+include: "rules/common.smk"
+include: "rules/stage1_coverage.smk"
+include: "rules/stage2_categories.smk"
+include: "rules/stage3_mutagenic.smk"
+include: "rules/stage4_discordant.smk"
+include: "rules/stage5_report.smk"
+
+
+# ---------------------------------------------------------------------------
+# Terminal targets
+# ---------------------------------------------------------------------------
+
+rule all:
+    """Collect all terminal outputs from every pipeline stage."""
+    input:
+        # Stage 1 + 2: coverage sentinels per strain
+        expand(
+            "{wd}/{strain}/.stage1_done",
+            wd=config["paths"]["working_dir"],
+            strain=get_sample_names(),
+        ),
+        expand(
+            "{wd}/{strain}/.stage2_done",
+            wd=config["paths"]["working_dir"],
+            strain=get_sample_names(),
+        ),
+        # Stage 3: mutagenic rate sentinels per strain
+        expand(
+            "{wd}/{strain}/.stage3_done",
+            wd=config["paths"]["working_dir"],
+            strain=get_sample_names(),
+        ),
+        # Stage 4: discordant analysis sentinels per strain
+        expand(
+            "{wd}/{strain}/.stage4_done",
+            wd=config["paths"]["working_dir"],
+            strain=get_sample_names(),
+        ),
+        # Stage 5: final report
+        f"{config['paths']['working_dir']}/Di-GRAPH_report.html",

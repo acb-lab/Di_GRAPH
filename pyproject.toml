@@ -1,0 +1,42 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "digraph"
+version = "0.5.0"
+description = "DSB-induced Genome-wide Repair Analysis and Profiling of Homologous recombination"
+authors = [
+  { name = "Lydia Iglesias" },
+  { name = "Narciso M. Quijada" },
+  { name = "Andrés Clemente-Blanco" },
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "snakemake>=8.0",
+  "pydantic>=2.0",
+  "pyyaml>=6.0",
+  "typer>=0.12",
+  "rich>=13.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.4",
+  "mypy>=1.10",
+]
+
+[project.scripts]
+digraph = "digraph.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/digraph"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
