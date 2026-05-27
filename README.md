@@ -18,19 +18,20 @@
 
 **Di-GRAPH** (<ins>D</ins>SB-<ins>i</ins>nduced <ins>G</ins>enome-wide <ins>R</ins>epair <ins>A</ins>nalysis and <ins>P</ins>rofiling of <ins>H</ins>omologous recombination)
 
-A pipeline to detect, classify and interpret recombination events at a defined break site and across the entire genome upon HO-induction of a single site-specific DSB in *S. cerevisiae*. 
+A pipeline to detect, classify and interpret recombination events at a defined break site and across the entire genome upon HO-induction of a single site-specific DSB in *S. cerevisiae*.
 ________________________________________________________________________________________________________________________________________________
 
 ## Table of contents<a name="idindex"></a>
 
-1.  [Introduction](#idintro)
-2.  [Installation](#idinstall)
-3.  [Instructions](#idinstr)
-4.  [Example usage](#idexample)
-5.  [Expected output](#idoutput)
-6.  [Optimisation opportunities](#idoptimise)
-7.  [Parallelisation](#idparallel)
-8.  [Visual summary](#idsummary)
+1. [Introduction](#idintro)
+2. [Installation](#idinstall)
+3. [Instructions](#idinstr)
+4. [Example usage](#idexample)
+5. [Expected output](#idoutput)
+6. [Optimisation opportunities](#idoptimise)
+7. [Parallelisation](#idparallel)
+8. [Documentation](#iddocs)
+9. [Visual summary](#idsummary)
 
 <br>
 
@@ -40,10 +41,9 @@ ________________________________________________________________________________
 
 At a genomic scale, Di-GRAPH identifies and maps DNA damage-dependent genome-wide gross chromosomal rearrangements in defined genomic regions to evaluate how the genome is reshaped in response to a DSB.
 
-This pipeline is designed to analyze how stage-specific HR repair factors differentially control DSB repair fidelity and genome-wide stability in the *S. cerevisiae* PMV genetic background, which allows the induction of a DSB in the *MATa* locus on chromosome III in a galactose-dependent manner; and contains an engineered *MATa'* locus on chromosome V used as donor for recombination. 
+This pipeline is designed to analyze how stage-specific HR repair factors differentially control DSB repair fidelity and genome-wide stability in the *S. cerevisiae* PMV genetic background, which allows the induction of a DSB in the *MATa* locus on chromosome III in a galactose-dependent manner; and contains an engineered *MATa'* locus on chromosome V used as donor for recombination.
 
 > Note: detailed information about the PMV genetic background is available in *Ramos et al.,2022 - Cell Reports*, <https://doi.org/10.1016/j.celrep.2021.110201>
-
 
 By comparing data prior to DSB induction, during its repair (non-selected survivors) and from survivor populations (selected survivors), Di-GRAPH enables the classification of lethal *vs* non-lethal rearrangements arising during the repair of the DSB. Additionally, Di-GRAPH incorporates the assessment of undamaged contitions (undamaged cells) to distinguish DNA damage-dependent from cell-cycle-dependent genomic alterations.
 
@@ -61,7 +61,7 @@ After providing paired-end genomic sequencing data from these 4 different timepo
 
 <br>
 
-You can find a **visual summary** of the different steps conducted by Di-GRAPH [here](#idsummary).
+A [visual summary](#idsummary) of the different steps conducted by Di-GRAPH is available at the bottom of this page.
 
 <br>
 
@@ -125,7 +125,7 @@ All other paths in the config file are relative to the repository root and will 
 
 ### Available CLI commands
 
-```
+```text
 digraph run      --config config/config.yaml [--cores N] [--dry-run] [--until RULE] [--force]
 digraph validate --config config/config.yaml
 digraph stage    coverage|categories|mutagenic|discordant|report --config config/config.yaml
@@ -231,7 +231,6 @@ digraph stage categories --config config/config.yaml --cores 8
 
 <br>
 
-
 [Back to index](#idindex)
 
 <br>
@@ -241,6 +240,7 @@ digraph stage categories --config config/config.yaml --cores 8
 For each strain defined in the working directory, Di-GRAPH will perform `bowtie/bowtie2/bwa` genomic alignments, characterize gene conversion products between *MATa/MATa'* loci, define HO associated mutagenic pattern, analyze coverage data regarding all genomic categories and identify global genomic rearrangements. The output files and plots will be stored in the `Working_directory/Strain_n` subfolder(s).
 
 To facilitate the interpretation of the results, Di-GRAPH will generate a `Di-GRAPH_report.html` file in the `Working_directory` folder. This report is a summary of the results obtained by Di-GRAPH for each strain and includes the following sections:
+
 - **Overview:** contains the alignment statistics and the script log file.
 - **MAT analysis:** contains coverage analysis and gene conversion analysis for the *MATa/MATa'* loci. It also contains the polymorphisms incorporation analysis.
 - **Mutagenic profiling at HO site:** contains the HO associated mutagenic pattern and repair pathway choice analysis.
@@ -248,7 +248,7 @@ To facilitate the interpretation of the results, Di-GRAPH will generate a `Di-GR
 
 <br>
 
-The Di-GRAPH report file generated after the analysis of paired-end genomic data from wild-type, *exo1∆*, *sgs1∆*, *srs2∆* and *rad51∆* PMV cells is included in the `test_dataset` directory. 
+The Di-GRAPH report file generated after the analysis of paired-end genomic data from wild-type, *exo1∆*, *sgs1∆*, *srs2∆* and *rad51∆* PMV cells is included in the `test_dataset` directory.
 
 <br>
 
@@ -342,10 +342,55 @@ The following changes would unlock additional concurrency beyond what Snakemake 
 
 <br>
 
-## 8. Visual summary<a name="idsummary"></a>
+## 8. Documentation<a name="iddocs"></a>
+
+Di-GRAPH's documentation is built with [MkDocs](https://www.mkdocs.org/) and the [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/) theme. Source files live in `docs/` and configuration in `mkdocs.yml`.
+
+### Install documentation dependencies
+
+Documentation dependencies are declared as an optional extra in `pyproject.toml`. Install them into your active conda environment:
+
+```bash
+pip install -e ".[docs]"
+```
+
+### Build static site
+
+Compile the documentation to static HTML in the `site/` directory:
+
+```bash
+mkdocs build
+```
+
+### Live preview
+
+Start a local development server with live reload on every file change:
+
+```bash
+mkdocs serve
+```
+
+Open <http://127.0.0.1:8000> in your browser. The page updates automatically whenever a file in `docs/` or `mkdocs.yml` changes.
+
+### Deploy to GitHub Pages
+
+Once a GitHub remote is configured, publish the site to the `gh-pages` branch with one command:
+
+```bash
+mkdocs gh-deploy
+```
+
+GitHub Pages then serves the site at `https://<org>.github.io/Di_GRAPH/`.
+
+<br>
+
+[Back to index](#idindex)
+
+<br>
+
+## 9. Visual summary<a name="idsummary"></a>
 
 <img width="1026" height="897" alt="Di-GRAPH" src="https://github.com/acb-lab/Di_GRAPH/blob/b5fc94f42fa9bbaba9324734c433b23ee4b31c6c/images/Di-GRAPH_visual_summary.png" />
-
 
 [Back to index](#idindex)
 
