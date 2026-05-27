@@ -28,7 +28,9 @@ ________________________________________________________________________________
 3.  [Instructions](#idinstr)
 4.  [Example usage](#idexample)
 5.  [Expected output](#idoutput)
-6.  [Visual summary](#idsummary)
+6.  [Optimisation opportunities](#idoptimise)
+7.  [Parallelisation](#idparallel)
+8.  [Visual summary](#idsummary)
 
 <br>
 
@@ -254,7 +256,93 @@ The Di-GRAPH report file generated after the analysis of paired-end genomic data
 
 <br>
 
-## 6. Visual summary<a name="idsummary"></a>
+## 6. Optimisation opportunities<a name="idoptimise"></a>
+
+The following areas have been identified as candidates for performance improvement in future development iterations.
+
+### Read trimming chain (Stage 1)
+
+The 75 nt coverage analysis requires extracting eight 75 bp fragments from each 150 bp paired-end read. Currently this is done with eight sequential `cutadapt` calls whose outputs are concatenated. A single `fastp` call with a sliding-window extraction parameter would reduce I/O and startup overhead by roughly 8×, and would also allow per-fragment quality trimming to be applied in one pass.
+
+### R script startup overhead (Stages 2–4)
+
+Each R rule spawns an independent R session that reloads the full package stack (tidyverse, ggplot2, ggraph, etc.) from scratch. On a cold filesystem this can dominate the runtime of short-running rules. Possible mitigations:
+
+- Bundle logically related scripts into fewer, larger R jobs.
+- Use [`callr`](https://callr.r-lib.org/) to reuse a persistent R subprocess across related rules within a stage.
+
+### BLAST cross-validation (Stage 4)
+
+The BLAST cross-validation iterates over all per-feature FASTA files inside a `while read` shell loop, running one `blastn` call at a time. Because each feature is independent, splitting this loop into individual Snakemake rules (one per FASTA file) would expose full parallelism at no algorithmic cost and is the highest-impact single change available in Stage 4.
+
+### Concordant/discordant SAM processing (Stage 4)
+
+The extraction of inter-discordant read pairs currently relies on a multi-stage `awk` pipeline operating on SAM text. Replacing this with a `pysam`-based Python script would give binary BAM I/O, eliminate intermediate text conversion, and enable per-read filtering logic to be unit-tested.
+
+### Polymorphism coverage calculation (Stage 1)
+
+The per-position baseline subtraction is already implemented in Python (replacing the original `awk` loop), but it reads coverage bedGraph files line-by-line. Switching to `pandas` vectorised operations would reduce memory allocations and improve speed on large coverage files.
+
+<br>
+
+[Back to index](#idindex)
+
+<br>
+
+## 7. Parallelisation<a name="idparallel"></a>
+
+### What runs in parallel today
+
+Di-GRAPH uses [Snakemake](https://snakemake.readthedocs.io/) to manage execution. Snakemake builds a directed acyclic graph (DAG) of all jobs and automatically dispatches every job whose dependencies are satisfied, up to the `--cores` limit. No manual coordination is needed.
+
+With the default dataset of 5 strains × 4 timepoints × 3 replicates, the following jobs are fully independent and run concurrently:
+
+| Stage | Independent unit | Concurrent jobs (5 strains) |
+| --- | --- | --- |
+| 1 — Coverage | strain × timepoint × replicate | up to 60 alignments |
+| 2 — Categories | strain × category (13) | up to 65 fingerprint jobs |
+| 3 — Mutagenic | strain × timepoint (T0/TLG/TLR) × replicate | up to 45 BWA jobs |
+| 4 — Discordant | strain × timepoint × replicate | up to 60 bowtie2 jobs |
+
+To take full advantage of this, set `resources.snakemake_cores` in `config/config.yaml` to match the number of cores available on your machine, or pass `--cores N` at runtime:
+
+```bash
+digraph run --config config/config.yaml --cores 16
+```
+
+Individual tools (bowtie, bowtie2, bwa, fastp, bamCoverage) also use multi-threading internally. Their thread count is controlled by `resources.threads` in the config, independently of the Snakemake-level parallelism.
+
+### Cluster and cloud execution
+
+Snakemake supports submitting each rule as an independent job to an HPC scheduler or a cloud provider with no changes to the workflow rules. This is the most impactful scaling option for large sample sets:
+
+- **SLURM / SGE / PBS** — install the corresponding [Snakemake executor plugin](https://snakemake.github.io/snakemake-plugin-catalog/) and add a `--executor` flag. Each rule becomes a cluster job with its own resource request.
+- **Cloud (AWS, GCP, Azure)** — Snakemake cloud executor plugins allow transparent job dispatch and output storage in object buckets.
+
+```bash
+# Example: SLURM cluster with 32 simultaneous jobs
+digraph run --config config/config.yaml \
+    --executor slurm \
+    --jobs 32 \
+    --default-resources mem_mb=8000 runtime=120
+```
+
+### Potential future parallelism improvements
+
+The following changes would unlock additional concurrency beyond what Snakemake currently exploits:
+
+- **BLAST per-feature rules** — splitting the Stage 4 BLAST loop into one rule per feature file (see [Optimisation opportunities](#idoptimise)) would add tens of independent jobs to the DAG in parallel with other Stage 4 analysis.
+- **Internal R parallelism** — R scripts that iterate over strains or genomic windows could use [`future`](https://future.futureverse.org/) or [`BiocParallel`](https://bioconductor.org/packages/BiocParallel/) to use multiple cores within a single rule, complementing Snakemake-level parallelism.
+- **Scatter/gather for Stage 2** — the 13 category fingerprint scripts already run as separate rules per category. Adding a gather rule that merges outputs in parallel (instead of sequentially ordering them) would reduce the critical path through Stage 2.
+- **Per-strain report rendering** — the final RMarkdown report currently processes all strains in one R session. Rendering a lightweight per-strain sub-report first (parallelised across strains) and then merging into the final dashboard would reduce the report generation bottleneck.
+
+<br>
+
+[Back to index](#idindex)
+
+<br>
+
+## 8. Visual summary<a name="idsummary"></a>
 
 <img width="1026" height="897" alt="Di-GRAPH" src="https://github.com/acb-lab/Di_GRAPH/blob/b5fc94f42fa9bbaba9324734c433b23ee4b31c6c/images/Di-GRAPH_visual_summary.png" />
 

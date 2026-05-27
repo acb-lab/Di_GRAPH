@@ -1,10 +1,30 @@
 """
-Programmatic Snakemake invocation.
+Programmatic Snakemake invocation for the Di-GRAPH pipeline.
 
-Builds the ``snakemake`` command from a validated :class:`DiGraphConfig`
+Builds the ``snakemake`` command from a validated :class:`~digraph.config.DiGraphConfig`
 and runs it via :func:`subprocess.run`.  Using subprocess rather than the
-Snakemake Python API avoids tight version coupling between the CLI package
-and the Snakemake library.
+Snakemake Python API keeps the CLI package decoupled from any specific Snakemake
+version — only the installed ``snakemake`` binary on ``PATH`` matters.
+
+The module also exposes :data:`STAGE_TERMINAL_RULES`, which maps human-readable
+stage names to the last Snakemake rule in each stage.  This is used by
+``digraph stage`` to pass ``--until <rule>`` to Snakemake.
+
+Usage
+-----
+::
+
+    from pathlib import Path
+    from digraph.config import load_config
+    from digraph.runner import run_snakemake
+
+    config = load_config(Path("config/config.yaml"))
+    exit_code = run_snakemake(
+        config,
+        Path("config/config.yaml"),
+        cores=8,
+        dry_run=False,
+    )
 """
 
 from __future__ import annotations
@@ -18,15 +38,19 @@ from pathlib import Path
 from digraph.config import DiGraphConfig
 from digraph.utils.io import snakemake_config_dict
 
+__all__ = ["STAGE_TERMINAL_RULES", "run_snakemake"]
+
 logger = logging.getLogger("digraph")
 
-# Map stage names to the terminal Snakemake rule for ``--until``
+#: Maps human-readable stage names to the terminal Snakemake rule of that stage.
+#: Passed to ``snakemake --until <rule>`` by :func:`run_snakemake` when a
+#: specific stage is requested via ``digraph stage <name>``.
 STAGE_TERMINAL_RULES: dict[str, str] = {
-    "coverage": "r_process_cov_18nt",
-    "categories": "r_plot_gal_vs_raf",
-    "mutagenic": "r_plot_repair_comparison",
-    "discordant": "r_discordant_network",
-    "report": "generate_report",
+    "coverage":   "r_process_cov_18nt",       # Stage 1 — coverage tracks + MAT quant
+    "categories": "r_plot_gal_vs_raf",         # Stage 2 — genomic category fingerprints
+    "mutagenic":  "r_plot_repair_comparison",  # Stage 3 — repair pathway choice
+    "discordant": "r_discordant_network",      # Stage 4 — genome-wide rearrangements
+    "report":     "generate_report",           # Stage 5 — HTML report
 }
 
 # Path to the top-level Snakefile relative to this file's package root

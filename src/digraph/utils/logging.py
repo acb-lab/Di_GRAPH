@@ -1,9 +1,28 @@
-"""Structured logging setup using the ``rich`` library."""
+"""
+Structured logging setup for Di-GRAPH using the ``rich`` library.
+
+All CLI commands call :func:`setup_logging` once at startup to configure a
+shared ``digraph`` logger.  The logger name is ``"digraph"`` so that any
+module can do ``logging.getLogger("digraph")`` and inherit the same handlers
+and level without needing to pass the logger object around.
+
+Usage
+-----
+::
+
+    from digraph.utils.logging import setup_logging
+
+    log = setup_logging(verbose=True)
+    log.info("Pipeline started")
+    log.debug("Detailed diagnostics here")
+"""
 
 import logging
 from pathlib import Path
 
 from rich.logging import RichHandler
+
+__all__ = ["setup_logging"]
 
 
 def setup_logging(log_file: Path | None = None, verbose: bool = False) -> logging.Logger:

@@ -10,6 +10,26 @@ app = typer.Typer(add_completion=False)
 
 
 def _extract_reads(bam_file: str, nucleotide: str, output_bam: str, ref_name: str, position: int) -> None:
+    """
+    Write to ``output_bam`` all reads in ``bam_file`` that carry ``nucleotide``
+    at reference position ``position`` on chromosome ``ref_name``.
+
+    The function uses pysam's ``get_aligned_pairs(matches_only=True)`` to map
+    each query base back to its reference coordinate; reads that do not overlap
+    the target position (e.g. soft-clipped or deleted at that site) are silently
+    skipped.
+
+    Args:
+        bam_file:   Path to the sorted, indexed input BAM.
+        nucleotide: Single character (``"T"`` or ``"C"``) to match against
+                    the query base.
+        output_bam: Path to write the filtered output BAM (header copied from input).
+        ref_name:   Reference sequence name to fetch (e.g. ``"CHRIII"``).
+        position:   1-based reference position to inspect.
+
+    Raises:
+        SystemExit: On any pysam error, prints to stderr and exits with code 1.
+    """
     try:
         bam = pysam.AlignmentFile(bam_file, "rb")
         out_bam = pysam.AlignmentFile(output_bam, "wb", template=bam)

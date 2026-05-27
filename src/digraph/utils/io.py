@@ -1,4 +1,22 @@
-"""Path helpers and input-file validation for Di-GRAPH."""
+"""
+Path helpers and input-file validation for Di-GRAPH.
+
+This module provides three public utilities consumed by the CLI before any
+Snakemake job is dispatched:
+
+:func:`check_fastq_inputs`
+    Enumerate every expected paired FASTQ.gz file and return a list of
+    those that are missing.  Called by ``digraph run`` and ``digraph validate``
+    to surface data-preparation errors before the pipeline starts.
+
+:func:`build_sample_map`
+    Build a ``{name: path}`` dict for quick lookups of sample directories.
+
+:func:`snakemake_config_dict`
+    Serialise the validated :class:`~digraph.config.DiGraphConfig` to a plain
+    ``dict`` (converting :class:`~pathlib.Path` objects to strings) suitable
+    for passing to Snakemake as a ``--config`` value or a temporary config file.
+"""
 
 from __future__ import annotations
 
@@ -6,6 +24,8 @@ import logging
 from pathlib import Path
 
 from digraph.config import DiGraphConfig, ExperimentConfig, SampleConfig
+
+__all__ = ["check_fastq_inputs", "build_sample_map", "snakemake_config_dict"]
 
 logger = logging.getLogger("digraph")
 

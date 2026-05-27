@@ -1,17 +1,34 @@
 """
 Di-GRAPH command-line interface.
 
-Provides three commands:
+This module defines the ``digraph`` Typer application and its three sub-commands.
+It is the entry point declared in ``pyproject.toml`` under ``[project.scripts]``.
 
-* ``digraph run``      — run the full pipeline
-* ``digraph validate`` — validate the config file without running anything
-* ``digraph stage``    — run a single named pipeline stage
+Commands
+--------
+``digraph run``
+    Load and validate the config, check that all FASTQ inputs exist, then
+    delegate to :func:`~digraph.runner.run_snakemake` for the full pipeline.
+    Supports ``--dry-run``, ``--force``, ``--until``, and ``--cores`` overrides.
 
-Usage (after ``pip install -e .`` or ``uv pip install -e .``):
+``digraph validate``
+    Parse and validate the config YAML, report any missing FASTQ files, and
+    print a summary — without launching any pipeline jobs.
 
-    digraph run --config config/config.yaml --cores 8
+``digraph stage``
+    Run the pipeline up to (and including) a single named stage by passing
+    ``--until <terminal_rule>`` to Snakemake.  Valid stage names are the keys
+    of :data:`~digraph.runner.STAGE_TERMINAL_RULES`.
+
+Usage
+-----
+::
+
+    digraph run      --config config/config.yaml --cores 8
+    digraph run      --config config/config.yaml --dry-run
     digraph validate --config config/config.yaml
-    digraph stage coverage --config config/config.yaml --dry-run
+    digraph stage coverage  --config config/config.yaml --cores 8
+    digraph stage mutagenic --config config/config.yaml --dry-run
 """
 
 from __future__ import annotations
@@ -27,6 +44,8 @@ from digraph.config import load_config
 from digraph.runner import STAGE_TERMINAL_RULES, run_snakemake
 from digraph.utils.io import check_fastq_inputs
 from digraph.utils.logging import setup_logging
+
+__all__ = ["app"]
 
 app = typer.Typer(
     name="digraph",
@@ -143,10 +162,21 @@ def stage(
 
 
 def _load_or_exit(config_path: Path, log) -> object:  # type: ignore[return]
-    """Load config, printing a friendly error and exiting on failure."""
-    try:
-        from digraph.config import DiGraphConfig  # local import for clarity
+    """
+    Load and validate ``config_path``, exiting with a user-friendly message on failure.
 
+    Args:
+        config_path: Path to the YAML config file.
+        log:         Logger instance for info/error messages.
+
+    Returns:
+        A validated :class:`~digraph.config.DiGraphConfig` instance.
+
+    Note:
+        Calls :func:`sys.exit(1)` on any config or file error so the CLI
+        always produces a readable error message rather than a raw traceback.
+    """
+    try:
         cfg = load_config(config_path)
         log.info("Config loaded: %s", config_path)
         return cfg
@@ -156,7 +186,17 @@ def _load_or_exit(config_path: Path, log) -> object:  # type: ignore[return]
 
 
 def _check_inputs_or_exit(config, log) -> None:
-    """Warn about missing FASTQ inputs; does not abort (some may be intentional)."""
+    """
+    Warn about missing FASTQ input files without aborting.
+
+    Reports the first five missing paths at WARNING level.  The run is not
+    aborted because some files may be generated later or the user may be
+    running a subset of the pipeline.
+
+    Args:
+        config: Validated :class:`~digraph.config.DiGraphConfig`.
+        log:    Logger instance.
+    """
     missing = check_fastq_inputs(config)
     if missing:
         log.warning("%d expected FASTQ files not found (first 5 shown):", len(missing))

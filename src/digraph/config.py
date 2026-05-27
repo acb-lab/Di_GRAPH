@@ -1,10 +1,52 @@
 """
-Pydantic models for Di-GRAPH configuration.
+Pydantic v2 models for Di-GRAPH configuration.
 
-All parameters that were hardcoded in Di-GRAPH_v0.4.0_COMPLETE.sh are now
-declared here with types, defaults, and validators. Config is loaded from a
-YAML file via ``load_config()``, which resolves relative paths against the
-directory that contains the config file.
+All parameters that were previously hardcoded in the monolithic bash script
+are declared here as typed, validated Pydantic models.  Config is loaded from
+a YAML file via :func:`load_config`, which resolves every relative path in the
+file against the directory that contains it — making the config fully portable
+across machines.
+
+Model hierarchy
+---------------
+:class:`DiGraphConfig`
+    Top-level model — composes all sub-models below.
+
+    :class:`PathsConfig`
+        All external directory references (working dir, genome, categories,
+        BLAST, report, scripts).
+
+    :class:`GenomeConfig`
+        FASTA paths, bowtie index prefix, chromosome order file, genome size.
+
+    :class:`MATCoordinates`
+        Genomic coordinates of the two MAT loci and the HO cut site.
+
+    :class:`PolymorphismConfig`
+        23 paired CHRIII/CHRV positions used for MAT quantification.
+
+    :class:`TrimConfig`
+        Read trimming lengths and quality threshold.
+
+    :class:`ExperimentConfig`
+        Replicate names and timepoint labels.
+
+    :class:`SampleConfig`
+        One strain subdirectory entry (name, path, is_reference flag).
+
+    :class:`ResourceConfig`
+        Compute resources (threads, Snakemake cores, conda flag).
+
+Usage
+-----
+::
+
+    from pathlib import Path
+    from digraph.config import load_config
+
+    config = load_config(Path("config/config.yaml"))
+    print(config.sample_names)          # ['1_Wt', '2_exo1', ...]
+    print(config.experiments.timepoints) # ['T0', 'TSG', 'TLG', 'TLR']
 """
 
 from __future__ import annotations
@@ -14,6 +56,19 @@ from typing import Annotated
 
 import yaml
 from pydantic import BaseModel, Field, field_validator, model_validator
+
+__all__ = [
+    "DiGraphConfig",
+    "PathsConfig",
+    "GenomeConfig",
+    "MATCoordinates",
+    "PolymorphismConfig",
+    "TrimConfig",
+    "ExperimentConfig",
+    "SampleConfig",
+    "ResourceConfig",
+    "load_config",
+]
 
 
 # ---------------------------------------------------------------------------
