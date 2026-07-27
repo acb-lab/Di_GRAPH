@@ -1079,6 +1079,7 @@ for strain in "$MYWD"*/; do
             # Prepare tsv file for R processing
             tail -n +20 "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique.sam" | \
             # Extract relevant columns (1, 3, 4, 7, 8, 10) and convert to tsv format
+            ### Add sam flag!!!!!!
             # Note: $1 is read name, $3 is reference sequence name, $4 is position, $7 is mate reference sequence name, $8 is mate position, $10 is sequence
             awk 'BEGIN{OFS="\t"} {print $1, $3, $4, $7, $8, $10}' > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique.tsv"
             
@@ -1147,8 +1148,12 @@ for strain in "${MYWD}"*/; do
         sed -n -e '1,19p' "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique.sam" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_header.sam"
 
         # Extract reads and cat them to a new file
-        awk ' ($3=="CHRIII" && $7=="CHRV" && $8>289178 && $8<290483) ' "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique.sam" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R1.sam"
-        awk ' ($3=="CHRV" && $7=="CHRIII" && $4>289178 && $4<290483) ' "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique.sam" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R2.sam"
+        # These positions include all the MATa' region, but now it is needed to ensure the read is mapping the last polymorphism
+        # awk ' ($3=="CHRIII" && $7=="CHRV" && $8>289178 && $8<290483) ' "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique.sam" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R1.sam"
+        # awk ' ($3=="CHRV" && $7=="CHRIII" && $4>289178 && $4<290483) ' "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique.sam" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R2.sam"
+        awk ' ($3=="CHRIII" && $7=="CHRV" && $8>289191 && $8<290473) ' "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique.sam" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R1.sam"
+        awk ' ($3=="CHRV" && $7=="CHRIII" && $4>289191 && $4<290473) ' "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique.sam" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R2.sam"
+
         cat "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_header.sam" "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R1.sam" "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R2.sam" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.sam"
         #cat "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_header.sam" "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R1.sam" "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_R2.sam" > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT.tsv"
         #rm  "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_header.sam"
