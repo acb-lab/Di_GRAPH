@@ -1,6 +1,6 @@
 #### R script to process inter-chromosomal discordant pairs (reads 75nt) for 10kb validation 
 ### Loop for each strain/sample/experiment in MYWD
-### 09/05/2026 - Lydia
+### 24/04/2026 - Lydia
 
 log_step <- function(message) {
   timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
@@ -252,63 +252,63 @@ write_tsv(control_file_1, file = paste0(strain, "/", "T0", "_", experiment, "_in
 write_tsv(blast_df_file_1, file = paste0(strain, "/", "T0", "_", experiment, "_inter_discordant_pairs_unique_processed_blast_chromosome.tsv"))
 
 
-# log_step(paste0("Processing file: " , path_to_file_2,  "..."))
-# # Process File_2 : from TSG/TLG/TLR
+log_step(paste0("Processing file: " , path_to_file_2,  "..."))
+# Process File_2 : from TSG/TLG/TLR
 
-# file_2 <- read_tsv(path_to_file_2, col_names = FALSE, show_col_types = FALSE)
+file_2 <- read_tsv(path_to_file_2, col_names = FALSE, show_col_types = FALSE)
 
-# file_2 <- file_2 %>%
-#   rename(
-#     Read_name = !!names(.)[1],
-#     Chr_name_A = !!names(.)[2],
-#     Start_pos_A = !!names(.)[3],
-#     Chr_name_B = !!names(.)[4],
-#     Start_pos_B = !!names(.)[5],
-#     Sequence = !!names(.)[6]
-#   )
+file_2 <- file_2 %>%
+  rename(
+    Read_name = !!names(.)[1],
+    Chr_name_A = !!names(.)[2],
+    Start_pos_A = !!names(.)[3],
+    Chr_name_B = !!names(.)[4],
+    Start_pos_B = !!names(.)[5],
+    Sequence = !!names(.)[6]
+  )
 
-# log_step("Filtering by Feature_name_A...") 
+log_step("Filtering by Feature_name_A...") 
 
-# df_chr_A_filtered_file_2 <- filter_by_chromosome_A(file_2, chromosomes, df_categories_list) %>% 
-#   bind_rows(.)
+df_chr_A_filtered_file_2 <- filter_by_chromosome_A(file_2, chromosomes, df_categories_list) %>% 
+  bind_rows(.)
 
-# log_step("Filtering by Feature_name_B...") 
+log_step("Filtering by Feature_name_B...") 
 
-# df_chr_AB_filtered_file_2 <- filter_by_chromosome_B(df_chr_A_filtered_file_2, chromosomes, df_categories_list) %>% 
-#   bind_rows(.) %>% 
-#   mutate(strain = rep(c(strain_name)), sample = rep(c(sample)), experiment = rep(c(experiment)))
+df_chr_AB_filtered_file_2 <- filter_by_chromosome_B(df_chr_A_filtered_file_2, chromosomes, df_categories_list) %>% 
+  bind_rows(.) %>% 
+  mutate(strain = rep(c(strain_name)), sample = rep(c(sample)), experiment = rep(c(experiment)))
 
-# df_chr_AB_filtered_file_2_nocontrols <- df_chr_AB_filtered_file_2 %>%
-#   filter (Category_A != "control", Category_B != "control" | Category_A != "control_norm", Category_B != "control_norm")
-
-
-# remove(df_chr_A_filtered_file_2)
-
-# log_step("Finding discordant_pairs not present in T0 sample...")
-
-# uncommon_pairs <- anti_join(df_chr_AB_filtered_file_2_nocontrols, df_chr_AB_filtered_file_1_nocontrols, by = c("Feature_name_A", "Feature_name_B")) 
-
-# log_step("Processing for BLAST analysis...") 
-
-# df_chr_AB_filtered_file_2_ID <- uncommon_pairs %>%
-#   mutate(pair_id = pmin(paste(Feature_name_A, Feature_name_B, sep = "_"), paste(Feature_name_B, Feature_name_A, sep = "_"))) %>%
-#   group_by(Read_name, pair_id) %>%
-#   mutate(pair_group = paste0("id", cur_group_id(), "-", row_number())) %>%
-#   separate(pair_group, c("pair_group_name", "number"), "-", remove = FALSE)  %>%  
-#   mutate(Read_name_ID = paste0(Read_name, "_", pair_group)) %>% 
-#   ungroup() %>%
-#   select(-pair_id) %>% 
-#   left_join(., df_categories_near_features, by = "Feature_name_B")
-
-# control_file_2 <- df_chr_AB_filtered_file_2 %>% filter (Category_A == "control" & Category_B == "control" | Category_A == "control_norm" & Category_B == "control_norm")
-
-# blast_df_file_2 <- prepare_for_blast(df_chr_AB_filtered_file_2_ID) %>% select(Read_name_ID, Sequence, Chromosome_B)
+df_chr_AB_filtered_file_2_nocontrols <- df_chr_AB_filtered_file_2 %>%
+  filter (Category_A != "control", Category_B != "control" | Category_A != "control_norm", Category_B != "control_norm")
 
 
-# # Write the new TSV
-# log_step("Saving processed dataframes...") 
-# log_step(paste0("Saving tsv files for: ", strain_name, " ",  sample, " ", experiment, "..."))
+remove(df_chr_A_filtered_file_2)
 
-# write_tsv(df_chr_AB_filtered_file_2_ID, file = paste0(strain, "/", sample, "_", experiment, "_inter_discordant_pairs_unique_processed.tsv"))
-# write_tsv(control_file_2, file = paste0(strain, "/", sample, "_", experiment, "_inter_discordant_pairs_unique_processed_control.tsv"))
-# write_tsv(blast_df_file_2, file = paste0(strain, "/", sample, "_", experiment, "_inter_discordant_pairs_unique_processed_blast_chromosome.tsv"))
+log_step("Finding discordant_pairs not present in T0 sample...")
+
+uncommon_pairs <- anti_join(df_chr_AB_filtered_file_2_nocontrols, df_chr_AB_filtered_file_1_nocontrols, by = c("Feature_name_A", "Feature_name_B")) 
+
+log_step("Processing for BLAST analysis...") 
+
+df_chr_AB_filtered_file_2_ID <- uncommon_pairs %>%
+  mutate(pair_id = pmin(paste(Feature_name_A, Feature_name_B, sep = "_"), paste(Feature_name_B, Feature_name_A, sep = "_"))) %>%
+  group_by(Read_name, pair_id) %>%
+  mutate(pair_group = paste0("id", cur_group_id(), "-", row_number())) %>%
+  separate(pair_group, c("pair_group_name", "number"), "-", remove = FALSE)  %>%  
+  mutate(Read_name_ID = paste0(Read_name, "_", pair_group)) %>% 
+  ungroup() %>%
+  select(-pair_id) %>% 
+  left_join(., df_categories_near_features, by = "Feature_name_B")
+
+control_file_2 <- df_chr_AB_filtered_file_2 %>% filter (Category_A == "control" & Category_B == "control" | Category_A == "control_norm" & Category_B == "control_norm")
+
+blast_df_file_2 <- prepare_for_blast(df_chr_AB_filtered_file_2_ID) %>% select(Read_name_ID, Sequence, Chromosome_B)
+
+
+# Write the new TSV
+log_step("Saving processed dataframes...") 
+log_step(paste0("Saving tsv files for: ", strain_name, " ",  sample, " ", experiment, "..."))
+
+write_tsv(df_chr_AB_filtered_file_2_ID, file = paste0(strain, "/", sample, "_", experiment, "_inter_discordant_pairs_unique_processed.tsv"))
+write_tsv(control_file_2, file = paste0(strain, "/", sample, "_", experiment, "_inter_discordant_pairs_unique_processed_control.tsv"))
+write_tsv(blast_df_file_2, file = paste0(strain, "/", sample, "_", experiment, "_inter_discordant_pairs_unique_processed_blast_chromosome.tsv"))
