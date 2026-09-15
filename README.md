@@ -193,7 +193,7 @@ You can see an example of Di-GRAPH usage in [this section](#idexample)
 
 Di-GRAPH has been tested on different Linux OS (Ubuntu distribution v24.04 and Debian distribution v11).
 
-You can test Di-GRAPH with paired-end genomic data from wild-type PMV cells available in the `Di-GRAPH wild-type dataset` Zenodo repository (https://doi.org/10.5281/zenodo.18470248; size 26 GB, uncompressed).  
+You can test Di-GRAPH with paired-end genomic data from wild-type PMV cells available in the `Di-GRAPH wild-type dataset` Zenodo repository (https://doi.org/10.5281/zenodo.18470248; size 27 GB, uncompressed).  
 
 ```bash
 ## Generate working directory
@@ -224,7 +224,7 @@ Di-GRAPH.sh -b $CONDA_PREFIX/files/BLAST/ -c $CONDA_PREFIX/files/Categories -g $
 
 ## 5. Expected output<a name="idoutput"></a>
 
-For each strain defined in the working directory, Di-GRAPH will perform `bowtie/bowtie2/bwa` genomic alignments, characterize gene conversion products between *MATa/MATa'* *loci*, define HO associated mutagenic pattern, analyze coverage data regarding all genomic categories and identify global genomic rearrangements. The output files and plots will be stored in the `working_directory/Strain_n` subfolder(s).
+For each strain defined in the working directory, Di-GRAPH will perform `Bowtie/Bowtie2/BWA` genomic alignments, characterize gene conversion products between *MATa/MATa'* *loci*, define HO associated mutagenic pattern, analyze coverage data regarding all genomic categories and identify global genomic rearrangements. The output files and plots will be stored in the `working_directory/Strain_n` subfolder(s).
 
 To facilitate the interpretation of the results, Di-GRAPH will generate a `Di-GRAPH_report.html` file in the `working_directory` folder. This report is a summary of the results obtained by Di-GRAPH for each strain and includes the following sections:
 - **Overview:** contains the alignment statistics and the script log file.
