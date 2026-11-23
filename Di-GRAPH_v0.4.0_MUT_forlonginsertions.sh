@@ -359,7 +359,7 @@ bwa index "${MYREF}/RG_PMV_v9.fasta"
 # Loop through each directory inside MYWD for alignments
 for subdir in "$MYWD"*/; do
   echo "Processing directory: $subdir"
-    for sample in TLG; do
+    for sample in T0 TSG TLG TLR; do
       for exp in "${EXP_LIST[@]}"; do
         file1_gz="${subdir}/${sample}_${exp}_R1.fastq.gz"
         file2_gz="${subdir}/${sample}_${exp}_R2.fastq.gz"
@@ -403,6 +403,9 @@ for subdir in "$MYWD"*/; do
             samtools sort -@ "$N_CPU" -o "${subdir}/${sample}_${exp}_processed.bam" "${subdir}/${sample}_${exp}_Q30_CHRIII_header.sam"
             samtools index "${subdir}/${sample}_${exp}_processed.bam" "${subdir}/${sample}_${exp}_processed.bai"
 
+            samtools sort -@ "$N_CPU" -o "${subdir}/${sample}_${exp}_processed_full.bam" "${subdir}/${sample}_${exp}_Q30.sam"
+            samtools index "${subdir}/${sample}_${exp}_processed_full.bam" "${subdir}/${sample}_${exp}_processed_full.bai"
+
             # # Extact reads mapping to the HO site
             # samtools view "${subdir}/${sample}_${exp}_processed.bam" "CHRIII:200753-200753" -h -O SAM > "${subdir}/${sample}_${exp}_HOs.sam"
             # samtools sort -@ "$N_CPU" -o "${subdir}/${sample}_${exp}_HOs.bam" "${subdir}/${sample}_${exp}_HOs.sam"
@@ -439,7 +442,7 @@ find "$MYWD" -type f \( -o -name "*.fastq" \) -exec rm {} + # intermediate align
 PYTHON_SCRIPT="MUT_extract_200689.py"
 
 for subdir in "$MYWD"*/; do
-  for sample in T0 TLG TLR; do
+  for sample in T0 TSG TLG TLR; do
     for exp in "${EXP_LIST[@]}"; do
       bam_file="${subdir}/${sample}_${exp}_processed.bam"
       output_bam_G="${subdir}/${sample}_${exp}_200689_G.bam"
@@ -469,142 +472,41 @@ for subdir in "$MYWD"*/; do
   done
 done
 
-# ### Invoque python script to extract reads with T or C at postion 200753 from reads with A at position 200689 ###
-# PYTHON_SCRIPT="MUT_extract_200753.py"
+### Invoque python script to extract reads with A or G at postion 200689 ###
+PYTHON_SCRIPT="MUT_extract_200689.py"
 
-# for subdir in "$MYWD"*/; do
-#   for sample in T0 TLG TLR; do
-#     for exp in "${EXP_LIST[@]}"; do
-#       bam_file="${subdir}/${sample}_${exp}_200689_A.bam"
-#       output_bam_T="${subdir}/${sample}_${exp}_200689_A_200753_T.bam"
-#       output_bam_C="${subdir}/${sample}_${exp}_200689_A_200753_C.bam"
-#       if [[ -f "$bam_file" ]]; then
-#         echo "Processing BAM file: $bam_file"
-#       else
-#         echo "Warning: BAM file $bam_file does not exist!"
-#       fi
+for subdir in "$MYWD"*/; do
+  for sample in T0 TSG TLG TLR; do
+    for exp in "${EXP_LIST[@]}"; do
+      bam_file="${subdir}/${sample}_${exp}_processed_full.bam"
+      output_bam_G="${subdir}/${sample}_${exp}_200689_G_full.bam"
+      output_bam_A="${subdir}/${sample}_${exp}_200689_A_full.bam"
+      if [[ -f "$bam_file" ]]; then
+        echo "Processing BAM file: $bam_file"
+      else
+        echo "Warning: BAM file $bam_file does not exist!"
+      fi
 
-#       if ! python3 ${MYSCRIPTS}/python_files/${PYTHON_SCRIPT} "$bam_file" "$output_bam_T" "$output_bam_C" 2>> "$log_file"; then
-#         echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR processing ${bam_file}" >> "$log_file"
-#         echo "Skipping file and continuing..." >> "$log_file"
-#         continue
-#       fi
+      if ! python3 ${MYSCRIPTS}/python_files/${PYTHON_SCRIPT} "$bam_file" "$output_bam_A" "$output_bam_G" 2>> "$log_file"; then
+        echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR processing ${bam_file}" >> "$log_file"
+        echo "Skipping file and continuing..." >> "$log_file"
+        continue
+      fi
   
+        #Generate bai index for the new bam files
+        samtools index "${output_bam_A}" "${output_bam_A}.bai"
+        samtools index "${output_bam_G}" "${output_bam_G}.bai"
+
+        # Add stats to the log file
+        echo "Read count for A at 200689: $(samtools view -c "${output_bam_A}")" 
+        samtools view -c "${output_bam_A}" > "${subdir}/${sample}_${exp}_200689A_row_count_full.tsv"
+        echo "Read count for G at 200689: $(samtools view -c "${output_bam_G}")" 
+        samtools view -c "${output_bam_G}" > "${subdir}/${sample}_${exp}_200689G_row_count_full.tsv"
+    done
+  done
+done
 
 
-#     #Generate bai index for the new bam files
-#     samtools index "${output_bam_T}" "${output_bam_T}.bai"
-#     samtools index "${output_bam_C}" "${output_bam_C}.bai"
-#     # Add stats to the log file
-#     echo "Read count for T at 200753 and A at 200689: $(samtools view -c "${output_bam_T}")" 
-#     samtools view -c "${output_bam_T}" > "${subdir}/${sample}_${exp}_200689AT_row_count.tsv"
-#     echo "Read count for C at 200753 and A at 200689: $(samtools view -c "${output_bam_C}")"
-#     samtools view -c "${output_bam_C}" > "${subdir}/${sample}_${exp}_200689AC_row_count.tsv"
-
-
-
-#     # Merge the two bam files
-#     samtools merge -f "${subdir}/${sample}_${exp}_200689_A_CT.bam" "${output_bam_C}" "${output_bam_T}"
-#     samtools view -c "${subdir}/${sample}_${exp}_200689_A_CT.bam" > "${subdir}/${sample}_${exp}_200689ACT_row_count.tsv"
-#     samtools index "${subdir}/${sample}_${exp}_200689_A_CT.bam" "${subdir}/${sample}_${exp}_200689_A_CT.bai"
-#     samtools merge -f "${subdir}/${sample}_${exp}_200689_A_CT_G.bam" "${subdir}/${sample}_${exp}_200689_A_CT.bam" "${subdir}/${sample}_${exp}_200689_G.bam"
-#     samtools view -c "${subdir}/${sample}_${exp}_200689_A_CT_G.bam" > "${subdir}/${sample}_${exp}_200689ACTG_row_count.tsv"
-#     samtools index "${subdir}/${sample}_${exp}_200689_A_CT_G.bam" "${subdir}/${sample}_${exp}_200689_A_CT_G.bai"
-    
-#     ### Assesing IGVtools for Del and Ins ###
-    
-#     # Extract base scores usign bcftools
-#     ref_fasta="${MYREF}/RG_PMV_v9_CHRIII.fasta"
-
-#     # Define the path to igvtools
-#     bam_file_igv_A_CT="${subdir}/${sample}_${exp}_200689_A_CT.bam"
-#     bam_file_igv_A_CT_G="${subdir}/${sample}_${exp}_200689_A_CT_G.bam"
-#     bam_file_igv_A_200753_T="${subdir}/${sample}_${exp}_200689_A_200753_T.bam"
-#     bam_file_igv_A_200753_C="${subdir}/${sample}_${exp}_200689_A_200753_C.bam"
-#     bam_file_igv_G="${subdir}/${sample}_${exp}_200689_G.bam"
-#     ref_fasta="${MYREF}/RG_PMV_v9_CHRIII.fasta"
-
-#     # Create a loop to assess 200689  ACTG, ATG, A_T, A_C or G polymorphisms
-#       ### Assesisng IGVtools - Del and Ins ###
-#       for poly in A_CT A_CT_G A_200753_T A_200753_C G ; do
-#         wig_output="${subdir}/${sample}_${exp}_200689_${poly}.wig"
-#         var_name="bam_file_igv_${poly}"
-#         bam_file="${!var_name}" # indirect expansion
-      
-#         # Run igvtools to generate the WIG file
-#         igvtools count -w 1 --bases --query CHRIII:200743-200762 "$bam_file" "$wig_output" "$ref_fasta"
-
-
-#         ### Assesing nucleotide variants by BCFtools ###
-
-#         tsv_output_BCF="${subdir}/${sample}_${exp}_${poly}_BCF.tsv"
-#         bam_file="${subdir}/${sample}_${exp}_200689_${poly}.bam"      
-#         vcf_file="${subdir}/${sample}_${exp}_${poly}_variants.vcf.gz"
-
-#         # Variant calling
-#         bcftools mpileup -Ou -f "$ref_fasta" -r CHRIII:200742-200762 "$bam_file" | \
-#         bcftools call -mA --ploidy 1 -Oz -o "$vcf_file"
-#         bcftools index "$vcf_file"
-
-#         # Fill in missing INFO tags like AF, AN, AC
-#         vcf_with_af="${vcf_file%.vcf.gz}_with_AF.vcf.gz"
-#         bcftools +fill-tags "$vcf_file" -Oz -o "$vcf_with_af" -- -t AF,AN,AC
-#         bcftools index "$vcf_with_af"
-
-#         # Extract the region and required fields
-#         filtered_vcf="${vcf_with_af%.vcf.gz}.filtered.vcf"
-#         bcftools view -r CHRIII:200743-200762 "$vcf_with_af" > "$filtered_vcf"
-#         bcftools query -f '%CHROM\t%POS\t%REF\t%ALT\t%INFO/DP\t%INFO/DP4\n' "$vcf_file" | \
-#         awk 'BEGIN { OFS="\t" }
-#         {
-#             split($6, dp4, ",");
-#             ref_count = dp4[1] + dp4[2];
-#             alt_count = dp4[3] + dp4[4];
-#             total = ref_count + alt_count;
-#             af = (total == 0) ? 0 : int((alt_count / total) * 100);
-#             print $1, $2, $3, $4, $5, af
-#         }' > "$tsv_output_BCF"
-
-#         find "$MYWD" -type f \( -name "*.vcf" -o -name "*.vcf.gz" -o -name "*.csi" \) -exec rm {} + # BCF intermediate files
-#          done
-#     done
-#   done
-# done
-
-# ### Calculate repair pathway frequency
-# R_SCRIPT="MUT_calc_rep_path_freq.R"
-
-# for strain in "${MYWD}"*/; do
-
-#     echo "Processing directory: ${strain}" >> "$log_file"
-
-#     root_dir="${strain}"
-#     wd_dir="${MYWD}"
-
-#     echo "$(basename "$strain")" >> "$log_file"
-#     echo "" >> "$log_file"
-#     echo "Plotting repair_pathway for ${strain}" >> "$log_file"
-
-#     if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir" "$strain" "$wd_dir"; then
-#         echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain}" >> "$log_file"
-#         echo "Skipping ${strain} and continuing..." >> "$log_file"
-#         continue
-#     fi
-
-# done
-
-
-# ### Plot repair pathway comparison
-# R_SCRIPT="MUT_plot_rep_path_comparison.R"
-
-# echo "Processing directory: ${MYWD}" >> "$log_file"
-# root_dir="${MYWD}"
-# echo "Plotting repair_pathway comparison" >> "$log_file"
-# start_time=$SECONDS
-# if ! Rscript "${MYSCRIPTS}/R_files/${R_SCRIPT}" "$root_dir"; then
-#   echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR running R script for ${strain}" >> "$log_file"
-#   echo "Skipping ${root_dir} and continuing..." >> "$log_file"
-# fi
       
 
 # Calculate total elapsed time
@@ -621,11 +523,14 @@ find "$MYWD" -type f \( -name "*_BFC.tsv" \) -exec rm {} + # BCF.tsv intermediat
 
 # Move data into subfolders
 for subdir in "$MYWD"*/; do
-  mkdir -p "${subdir}/HO_mut_rate/FASTQP" "${subdir}/HO_mut_rate/SVG" "${subdir}/HO_mut_rate/TSV"
+  mkdir -p "${subdir}/HO_mut_rate/FASTQP" "${subdir}/HO_mut_rate/SVG" "${subdir}/HO_mut_rate/TSV" "${subdir}/HO_mut_rate/BAM" "${subdir}/HO_mut_rate/SAM"
   mv "${subdir}"/*.fastq.html "${subdir}/HO_mut_rate/FASTQP/" 2> /dev/null
   mv "${subdir}"/*.fastq.json "${subdir}/HO_mut_rate/FASTQP/" 2> /dev/null
   mv "${subdir}"/*.svg "${subdir}/HO_mut_rate/SVG/" 2> /dev/null
   mv "${subdir}"/*.tsv "${subdir}/HO_mut_rate/TSV/" 2> /dev/null
+  mv "${subdir}"/*.bam "${subdir}/HO_mut_rate/BAM/" 2> /dev/null
+  mv "${subdir}"/*.bai "${subdir}/HO_mut_rate/BAM/" 2> /dev/null
+  mv "${subdir}"/*.sam "${subdir}/HO_mut_rate/SAM/" 2> /dev/null
 done
 
 # Remove unecesary files
