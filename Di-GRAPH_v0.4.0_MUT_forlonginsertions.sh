@@ -359,7 +359,7 @@ bwa index "${MYREF}/RG_PMV_v9.fasta"
 # Loop through each directory inside MYWD for alignments
 for subdir in "$MYWD"*/; do
   echo "Processing directory: $subdir"
-    for sample in T0 TSG TLG TLR; do
+    for sample in T0 TSG TLG; do
       for exp in "${EXP_LIST[@]}"; do
         file1_gz="${subdir}/${sample}_${exp}_R1.fastq.gz"
         file2_gz="${subdir}/${sample}_${exp}_R2.fastq.gz"
@@ -392,7 +392,7 @@ for subdir in "$MYWD"*/; do
             --json "${subdir}/${sample}_${exp}_Q30.fastq.json"
                 
             # BWA mapping
-            bwa mem -t "$N_CPU" "${MYREF}/RG_PMV_v9_CHRIII.fasta" "${subdir}/${sample}_${exp}_Q30.fastq" > "${subdir}/${sample}_${exp}_Q30.sam"
+            bwa mem -t "$N_CPU" "${MYREF}/RG_PMV_v9.fasta" "${subdir}/${sample}_${exp}_Q30.fastq" > "${subdir}/${sample}_${exp}_Q30.sam"
 
             # Filtering CHRIII reads
             sed -n -e '1,2p' "${subdir}/${sample}_${exp}_Q30.sam" > "${subdir}/${sample}_${exp}_cabecera.sam"
