@@ -1813,7 +1813,20 @@ for strain in "$MYWD"*/; do
             cat "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_header.sam" \
                 "${strain}/${sample}_${experiment}_"*"_inter_discordant_pairs_unique_MAT_r18.sam" \
               > "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_MAT_complete_r18.sam"
-            rm -f "${strain}/${sample}_${experiment}_inter_discordant_pairs_unique_header.sam"
+            # Original cleanup, kept verbatim: besides the per-pair files (no longer
+            # created), "*_pairs_unique.sam" also deletes the 75 nt
+            # ${sample}_${experiment}_inter_discordant_pairs_unique.sam, as before.
+            rm -f ${strain}/${sample}_${experiment}_*_pairs_unique.sam
+            rm -f ${strain}/${sample}_${experiment}_*_pairs_unique_R1.sam
+            rm -f ${strain}/${sample}_${experiment}_*_pairs_unique_R2.sam
+            rm -f ${strain}/${sample}_${experiment}_*_unique_header.sam
+            rm -f ${strain}/${sample}_${experiment}_*_pairs_unique_R2.sam
+            rm -f ${strain}/${sample}_${experiment}_*_unique_MAT_noheader_r18.sam
+            ###### remove this too
+            rm -f ${strain}/${sample}_${experiment}_R*_MAT.sam
+            rm -f ${strain}/${sample}_${experiment}_*_header.sam
+            rm -f ${strain}/${sample}_${experiment}_*_noheader_r18.sam
+            rm -f ${strain}/${sample}_${experiment}_R*_unique.sam
 
           else
           echo "Warning: Decompressed files missing for sample $sample in $strain!" >> "$log_file"
